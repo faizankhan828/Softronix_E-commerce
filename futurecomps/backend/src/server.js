@@ -14,6 +14,9 @@ import pushRoutes from "./routes/push.js";
 import todoRoutes from "./routes/todoRoutes.js";
 import paymentRoutes from "./routes/paymentRoutes.js";
 import productRoutes from "./routes/productRoutes.js";
+import cartRoutes from "./routes/cartRoutes.js";
+import couponRoutes from "./routes/couponRoutes.js";
+import clerkRoutes from "./routes/clerkRoutes.js";
 
 // Load environment variables
 dotenv.config();
@@ -71,6 +74,9 @@ app.use("/api/upload", apiLimiter, uploadRoutes);
 app.use("/api/push", apiLimiter, pushRoutes);
 app.use("/api/todos", apiLimiter, todoRoutes);
 app.use("/api/products", apiLimiter, productRoutes);
+app.use("/api/cart", apiLimiter, cartRoutes);
+app.use("/api/coupons", apiLimiter, couponRoutes);
+app.use("/api/clerk", apiLimiter, clerkRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {
