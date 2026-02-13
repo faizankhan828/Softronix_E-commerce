@@ -16,7 +16,18 @@ interface ProductCardProps {
 }
 
 export function ProductCard({ product, index = 0 }: ProductCardProps) {
-  const { addToCart } = useStore();
+  const { addToCart, addToWishlist, removeFromWishlist, isInWishlist } = useStore();
+
+  const toggleWishlist = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    if (isInWishlist(product._id)) {
+      await removeFromWishlist(product._id);
+    } else {
+      await addToWishlist(product._id);
+    }
+  };
 
   const displayPrice = product.discountedPrice || product.price;
   const hasDiscount = product.originalPrice && product.originalPrice > displayPrice;
@@ -32,7 +43,7 @@ export function ProductCard({ product, index = 0 }: ProductCardProps) {
         <div className="relative aspect-square overflow-hidden bg-gray-100 dark:bg-gray-800">
           <Link to={`/product/${product._id}`}>
             <img
-              src={product.imageUrl}
+              src={product.images?.[0] || product.imageUrl || '/placeholder.svg'}
               alt={product.name}
               className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
             />
@@ -54,8 +65,16 @@ export function ProductCard({ product, index = 0 }: ProductCardProps) {
 
           {/* Quick Actions */}
           <div className="absolute top-3 right-3 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-            <button className="w-9 h-9 rounded-full bg-white dark:bg-gray-800 shadow-lg flex items-center justify-center hover:bg-primary hover:text-white transition-colors">
-              <Heart className="w-4 h-4" />
+            <button 
+              onClick={toggleWishlist}
+              className={cn(
+                "w-9 h-9 rounded-full shadow-lg flex items-center justify-center transition-colors",
+                isInWishlist(product._id) 
+                  ? "bg-rose-500 text-white hover:bg-rose-600" 
+                  : "bg-white dark:bg-gray-800 hover:bg-primary hover:text-white"
+              )}
+            >
+              <Heart className={cn("w-4 h-4", isInWishlist(product._id) && "fill-current")} />
             </button>
             <Link
               to={`/product/${product._id}`}

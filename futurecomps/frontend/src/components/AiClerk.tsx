@@ -257,7 +257,7 @@ function ProductCardInChat({
     >
       <Link to={`/product/${product._id}`} className="shrink-0">
         <img
-          src={product.imageUrl}
+          src={product.images?.[0] || product.imageUrl || '/placeholder.svg'}
           alt={product.name}
           className="w-20 h-20 object-cover rounded-lg hover:opacity-90 transition-opacity"
         />
