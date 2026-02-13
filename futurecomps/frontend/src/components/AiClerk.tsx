@@ -964,7 +964,7 @@ export function AiClerk() {
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             onClick={() => setIsOpen(true)}
-            className="fixed bottom-6 right-6 z-50 flex items-center gap-3 px-5 py-4 bg-gradient-to-r from-primary to-blue-600 text-white rounded-full shadow-2xl shadow-primary/30 hover:shadow-primary/50 transition-shadow"
+            className="fixed bottom-6 right-6 z-50 flex items-center gap-3 px-5 py-4 bg-gradient-to-r from-[#4338ca] via-[#4f46e5] to-[#2563eb] text-white rounded-full shadow-2xl shadow-indigo-500/40 hover:shadow-indigo-500/60 hover:brightness-110 transition-all duration-300"
           >
             <div className="relative">
               <Bot className="w-6 h-6" />
@@ -991,7 +991,7 @@ export function AiClerk() {
             )}
           >
             {/* Header */}
-            <div className="flex items-center justify-between px-4 py-3 bg-gradient-to-r from-primary to-blue-600 text-white">
+            <div className="flex items-center justify-between px-4 py-3 bg-gradient-to-r from-[#4338ca] via-[#4f46e5] to-[#2563eb] text-white">
               <div className="flex items-center gap-3">
                 <div className="relative">
                   <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center">
@@ -1039,7 +1039,7 @@ export function AiClerk() {
                       )}
                     >
                       {message.role === "assistant" && (
-                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-blue-600 flex items-center justify-center flex-shrink-0">
+                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#4338ca] to-[#2563eb] flex items-center justify-center flex-shrink-0">
                           <Bot className="w-4 h-4 text-white" />
                         </div>
                       )}
@@ -1083,7 +1083,7 @@ export function AiClerk() {
 
                   {isLoading && (
                     <div className="flex gap-3">
-                      <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-blue-600 flex items-center justify-center">
+                      <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#4338ca] to-[#2563eb] flex items-center justify-center">
                         <Bot className="w-4 h-4 text-white" />
                       </div>
                       <div className="px-4 py-3 bg-white dark:bg-gray-800 rounded-2xl rounded-bl-md shadow-sm">
