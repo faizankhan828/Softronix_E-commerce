@@ -82,7 +82,7 @@ const defaultFilters: FilterState = {
 const StoreContext = createContext<StoreContextType | undefined>(undefined);
 
 export function StoreProvider({ children }: { children: React.ReactNode }) {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, loading: authLoading } = useAuth();
   const [products, setProducts] = useState<Product[]>([]);
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
@@ -115,6 +115,9 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   // Initialize cart and wishlist
   useEffect(() => {
     const initStore = async () => {
+      // Wait for auth to verify before deciding to load guest or user cart
+      if (authLoading) return;
+
       setCartLoading(true);
       setWishlistLoading(true);
       try {
@@ -158,7 +161,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     };
 
     initStore();
-  }, [isAuthenticated, calculateCartTotals]);
+  }, [isAuthenticated, authLoading, calculateCartTotals]);
 
   // Fetch products from API
   const fetchProducts = useCallback(async () => {

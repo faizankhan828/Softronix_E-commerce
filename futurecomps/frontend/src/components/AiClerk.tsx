@@ -26,8 +26,12 @@ import { cn } from "@/lib/utils";
 import type { Product, ClerkMessage, ClerkAction } from "@/types/store";
 import { Link, useLocation } from "react-router-dom";
 
-const GEMINI_API_KEY = "***REDACTED_GOOGLE_API_KEY_2***";
+const GEMINI_API_KEY =
+  import.meta.env.VITE_GEMINI_API_KEY ||
+  "***REDACTED_GOOGLE_API_KEY_1***";
 const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`;
+const MAX_RETRIES = 3;
+const RETRY_BASE_DELAY = 5000; // 5 seconds
 
 // ── Build the AI System Prompt ──────────────────────────
 function buildSystemPrompt(
@@ -886,49 +890,94 @@ Tags: ${product.tags?.join(", ") || "N/A"}
         convProductCtx,
       );
 
-      // Call Gemini API
-      const response = await fetch(GEMINI_API_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          contents: [
-            {
-              role: "user",
-              parts: [{ text: systemPrompt }],
-            },
-            {
-              role: "model",
-              parts: [
-                {
-                  text: JSON.stringify({
-                    message:
-                      "Ji boss, I'm ready to serve! I know all the products, I have my haggling game on, and I'm ready to help. Bring it on! 😎",
-                    products: [],
-                    action: null,
-                  }),
-                },
-              ],
-            },
-            ...conversationHistory,
-            { role: "user", parts: [{ text: currentInput }] },
-          ],
-          generationConfig: {
-            temperature: 0.8,
-            topP: 0.95,
-            maxOutputTokens: 1024,
+      // Call Gemini API with retry logic for rate limits
+      const requestBody = JSON.stringify({
+        contents: [
+          {
+            role: "user",
+            parts: [{ text: systemPrompt }],
           },
-        }),
+          {
+            role: "model",
+            parts: [
+              {
+                text: JSON.stringify({
+                  message:
+                    "Ji boss, I'm ready to serve! I know all the products, I have my haggling game on, and I'm ready to help. Bring it on! 😎",
+                  products: [],
+                  action: null,
+                }),
+              },
+            ],
+          },
+          ...conversationHistory,
+          { role: "user", parts: [{ text: currentInput }] },
+        ],
+        generationConfig: {
+          temperature: 0.8,
+          topP: 0.95,
+          maxOutputTokens: 1024,
+        },
       });
 
-      if (!response.ok) {
+      let responseText = "";
+      for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+        const response = await fetch(GEMINI_API_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: requestBody,
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          responseText = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
+          break;
+        }
+
+        if (response.status === 429) {
+          // Rate limited — parse retry delay or use exponential backoff
+          const errData = await response.json().catch(() => ({}));
+          const retryDetail = errData?.error?.details?.find(
+            (d: { "@type": string; retryDelay?: string }) =>
+              d["@type"]?.includes("RetryInfo"),
+          );
+          const delayStr = retryDetail?.retryDelay || "";
+          const delaySec = parseInt(delayStr) || 0;
+          const waitMs =
+            delaySec > 0
+              ? delaySec * 1000
+              : RETRY_BASE_DELAY * Math.pow(2, attempt);
+
+          if (attempt < MAX_RETRIES - 1) {
+            console.warn(
+              `Gemini rate limited (attempt ${attempt + 1}/${MAX_RETRIES}). Retrying in ${waitMs / 1000}s...`,
+            );
+            // Update the loading message to inform user
+            setMessages((prev) => {
+              const updated = [...prev];
+              const loadingIdx = updated.findIndex(
+                (m) => m.id === "loading-indicator",
+              );
+              if (loadingIdx !== -1) {
+                updated[loadingIdx] = {
+                  ...updated[loadingIdx],
+                  content: `Ek second boss, bahut traffic hai... retrying in ${Math.ceil(waitMs / 1000)}s ⏳`,
+                };
+              }
+              return updated;
+            });
+            await new Promise((resolve) => setTimeout(resolve, waitMs));
+            continue;
+          }
+          console.error("Gemini API quota exhausted after retries:", errData);
+          throw new Error("QUOTA_EXHAUSTED");
+        }
+
+        // Non-429 error
         const errData = await response.json().catch(() => ({}));
         console.error("Gemini API error:", response.status, errData);
         throw new Error(`Gemini API error: ${response.status}`);
       }
-
-      const data = await response.json();
-      const responseText =
-        data.candidates?.[0]?.content?.parts?.[0]?.text || "";
 
       // Parse AI response robustly
       const parsed = parseAIResponse(responseText);
@@ -1010,6 +1059,13 @@ Tags: ${product.tags?.join(", ") || "N/A"}
       // ── Smart Fallback ──────────────────────────────
       let fallbackMessage =
         "Arre yaar, my connection is acting up! 😅 Let me try to help you anyway...";
+
+      // Handle quota exhaustion specifically
+      if (error instanceof Error && error.message === "QUOTA_EXHAUSTED") {
+        fallbackMessage =
+          "Boss, bahut zyada rush ho gaya aaj! 😅 AI quota limit hit — but don't worry, I can still help with basic stuff. Try again in a minute or two!";
+      }
+
       let fallbackProducts: Product[] | undefined;
       let fallbackAction: ClerkAction | undefined;
 
