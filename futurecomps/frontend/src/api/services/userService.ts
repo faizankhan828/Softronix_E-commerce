@@ -1,5 +1,5 @@
 import api from "./api";
-import { User } from "../../components/Admin/UsersTable";
+import type { User } from "../../components/Admin/UsersTable";
 
 // Define User interface if not imported, or re-export
 // For now, we use the one from UsersTable or define a service-level one
@@ -58,17 +58,17 @@ const userService = {
       throw error;
     }
   },
-  
+
   // Get user by ID
   getUserById: async (id: string): Promise<User> => {
     try {
-        const response = await api.get(`/users/${id}`);
-        return response.data;
+      const response = await api.get(`/users/${id}`);
+      return response.data;
     } catch (error) {
-        console.error("Error fetching user:", error);
-        throw error;
+      console.error("Error fetching user:", error);
+      throw error;
     }
-  }
+  },
 };
 
 export default userService;

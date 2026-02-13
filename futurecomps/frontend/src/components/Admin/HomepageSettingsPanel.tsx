@@ -15,8 +15,8 @@ import { Separator } from "@/components/ui/Separator";
 import { useToast } from "@/components/ui/use-toast";
 import { Loader2, Plus, Trash2, Edit, Image } from "lucide-react";
 import homepageService, {
-  HomepageSettings,
-  CarouselItem,
+  type HomepageSettings,
+  type CarouselItem,
 } from "@/api/services/homepageService";
 import productService from "@/api/services/productService";
 // Product type is defined in the API service
@@ -36,12 +36,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/Dialog";
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@/components/ui/Tabs";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/Tabs";
 import { Textarea } from "@/components/ui/Textarea";
 
 export default function HomepageSettingsPanel() {
@@ -70,7 +65,7 @@ export default function HomepageSettingsPanel() {
       model: "",
       collection: "",
       displayOrder: 0,
-    }
+    },
   );
 
   // Fetch homepage settings and products
@@ -169,9 +164,8 @@ export default function HomepageSettingsPanel() {
       };
 
       // Add to carousel
-      const addedItem = await homepageService.addProductToCarousel(
-        carouselItem
-      );
+      const addedItem =
+        await homepageService.addProductToCarousel(carouselItem);
 
       // Update local state
       setSettings({
@@ -235,7 +229,7 @@ export default function HomepageSettingsPanel() {
       // Update carousel item
       const updatedItem = await homepageService.updateCarouselItem(
         selectedCarouselItem.productId,
-        selectedCarouselItem
+        selectedCarouselItem,
       );
 
       // Update local state
@@ -244,7 +238,7 @@ export default function HomepageSettingsPanel() {
         carousel: {
           ...settings.carousel,
           items: settings.carousel.items.map((item) =>
-            item.productId === updatedItem.productId ? updatedItem : item
+            item.productId === updatedItem.productId ? updatedItem : item,
           ),
         },
       });
@@ -285,7 +279,7 @@ export default function HomepageSettingsPanel() {
         carousel: {
           ...settings.carousel,
           items: settings.carousel.items.filter(
-            (item) => item.productId !== productId
+            (item) => item.productId !== productId,
           ),
         },
       });
@@ -321,7 +315,7 @@ export default function HomepageSettingsPanel() {
 
   // Handle updating new arrivals count
   const handleNewArrivalsCountChange = (
-    e: React.ChangeEvent<HTMLInputElement>
+    e: React.ChangeEvent<HTMLInputElement>,
   ) => {
     if (!settings) return;
 
@@ -407,7 +401,7 @@ export default function HomepageSettingsPanel() {
                   onChange={(e) =>
                     handleCarouselSettingsChange(
                       "autoplaySpeed",
-                      parseInt(e.target.value)
+                      parseInt(e.target.value),
                     )
                   }
                   min={1000}

@@ -1,5 +1,5 @@
 import axios from "axios";
-import { AxiosInstance } from "axios";
+import type { AxiosInstance } from "axios";
 import cookies from "../../utils/cookies";
 
 // Add a global flag to track if we're currently refreshing the token
@@ -106,7 +106,7 @@ api.interceptors.request.use(
   },
   (error) => {
     return Promise.reject(error);
-  }
+  },
 );
 
 // Response interceptor for API calls
@@ -131,7 +131,7 @@ api.interceptors.response.use(
       const isDeactivationRedirect =
         sessionStorage.getItem("accountDeactivated");
       const isOnDeactivatedPage = window.location.pathname.includes(
-        "/account-deactivated"
+        "/account-deactivated",
       );
 
       // Only redirect if we haven't been redirected before and aren't already on the page
@@ -217,7 +217,7 @@ api.interceptors.response.use(
             const currentPath =
               window.location.pathname + window.location.search;
             window.location.href = `/auth?redirectTo=${encodeURIComponent(
-              currentPath
+              currentPath,
             )}`;
           }
 
@@ -251,7 +251,7 @@ api.interceptors.response.use(
     // Skip logging for API errors
 
     return Promise.reject(error);
-  }
+  },
 );
 
 // Helper method to check API availability

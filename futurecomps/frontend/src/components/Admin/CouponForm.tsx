@@ -12,7 +12,7 @@ import {
   SelectValue,
 } from "@/components/ui/Select";
 import { Loader2 } from "lucide-react";
-import { Coupon } from "@/api/services/couponService";
+import type { Coupon } from "@/api/services/couponService";
 import productService from "@/api/services/productService";
 // Product type is defined in the API service
 
@@ -51,7 +51,7 @@ export default function CouponForm({
       applicableCategories: [],
       userRestriction: [],
       oneTimePerUser: false,
-    }
+    },
   );
 
   // Fetch products and categories
@@ -69,8 +69,8 @@ export default function CouponForm({
           new Set(
             productsData.products
               .map((product) => product.category)
-              .filter(Boolean)
-          )
+              .filter(Boolean),
+          ),
         );
         setCategories(uniqueCategories as string[]);
       } catch (error) {
@@ -87,7 +87,7 @@ export default function CouponForm({
   }, [toast]);
 
   const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
   ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
@@ -95,7 +95,7 @@ export default function CouponForm({
 
   const handleNumberChange = (
     e: React.ChangeEvent<HTMLInputElement>,
-    isNullable = false
+    isNullable = false,
   ) => {
     const { name, value } = e.target;
     const numberValue = value === "" ? (isNullable ? null : 0) : Number(value);
@@ -174,7 +174,7 @@ export default function CouponForm({
             onValueChange={(value) =>
               handleSelectChange(
                 "type",
-                value as "percentage" | "fixed" | "shipping"
+                value as "percentage" | "fixed" | "shipping",
               )
             }
             disabled={loading}
@@ -200,8 +200,8 @@ export default function CouponForm({
             {formData.type === "percentage"
               ? "(%)"
               : formData.type === "fixed"
-              ? "($)"
-              : ""}
+                ? "($)"
+                : ""}
           </Label>
           <Input
             id="value"
@@ -219,8 +219,8 @@ export default function CouponForm({
             {formData.type === "percentage"
               ? "Percentage discount (0-100)"
               : formData.type === "fixed"
-              ? "Fixed amount discount"
-              : "Shipping cost to deduct"}
+                ? "Fixed amount discount"
+                : "Shipping cost to deduct"}
           </p>
         </div>
 

@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "../context/AuthContext";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useSearchParams } from "react-router-dom";
 import { useToast } from "@/components/ui/use-toast";
 import {
   Dialog,
@@ -10,37 +10,36 @@ import {
   DialogTitle,
 } from "@/components/ui/Dialog";
 // import { fixUI } from "../../lib/ui-fix";
-import {
-  Tabs,
-  TabsContent,
-  //   TabsList,
-  //   TabsTrigger,
-} from "@/components/ui/Tabs";
+import { TabsContent } from "@/components/ui/Tabs";
 
 // API services
 import productService from "../api/services/productService";
 import dashboardService from "../api/services/dashboardService";
-import couponService, { Coupon } from "../api/services/couponService";
+import couponService from "../api/services/couponService";
 import type { Product } from "../api/services/productService";
+import type { Coupon } from "../api/services/couponService";
 
 import userService from "../api/services/userService";
-import api from "../api/services/api";
 
 // Custom components
 import AdminLayout from "../components/Admin/AdminLayout";
 import DashboardHeader from "../components/Admin/DashboardHeader";
 import ProductsTable from "../components/Admin/ProductsTable";
-import OrdersTable, { Order } from "../components/Admin/OrdersTable";
-import UsersTable, { User } from "../components/Admin/UsersTable";
+import OrdersTable from "../components/Admin/OrdersTable";
+import type { Order } from "../components/Admin/OrdersTable";
+import UsersTable from "../components/Admin/UsersTable";
+import type { User } from "../components/Admin/UsersTable";
 import ProductForm from "../components/Admin/ProductForm";
 import CouponsTable from "../components/Admin/CouponsTable";
 import CouponForm from "../components/Admin/CouponForm";
 import SettingsPanel from "../components/Admin/SettingsPanel";
 import RecentActivityComponent from "../components/Admin/RecentActivity";
-import SalesChart, { SalesData } from "../components/Admin/SalesChart";
-import TopProducts, { TopProduct } from "../components/Admin/TopProducts";
+import SalesChart from "../components/Admin/SalesChart";
+import type { SalesData } from "../components/Admin/SalesChart";
+import TopProducts from "../components/Admin/TopProducts";
+import type { TopProduct } from "../components/Admin/TopProducts";
 import UserAnalytics from "../components/Admin/UserAnalytics";
-import { RecentActivity as RecentActivityType } from "../api/services/dashboardService";
+import type { RecentActivity as RecentActivityType } from "../api/services/dashboardService";
 
 interface RecentActivityData extends RecentActivityType {}
 
@@ -50,8 +49,7 @@ const fixUI = () => {
 };
 
 export default function AdminDashboard() {
-  const { user: currentUser /* isAuthenticated */ } = useAuth();
-  const navigate = useNavigate();
+  const { user: currentUser } = useAuth();
   const { toast } = useToast();
   const [searchParams, setSearchParams] = useSearchParams();
 
@@ -95,8 +93,8 @@ export default function AdminDashboard() {
   const [isAddCouponOpen, setIsAddCouponOpen] = useState(false);
   const [isEditCouponOpen, setIsEditCouponOpen] = useState(false);
 
-  const [selectedProduct, setSelectedProduct] = useState(null);
-  const [selectedCoupon, setSelectedCoupon] = useState(null);
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [selectedCoupon, setSelectedCoupon] = useState<Coupon | null>(null);
   const [newProduct, setNewProduct] = useState({
     name: "",
     price: 0,

@@ -11,7 +11,7 @@ const cookieOptions = {
   expires: 7, // 7 days
   path: "/",
   secure:
-    process.env.NODE_ENV === "production" ||
+    import.meta.env.MODE === "production" ||
     window.location.protocol === "https:",
   sameSite: "strict" as const,
 };

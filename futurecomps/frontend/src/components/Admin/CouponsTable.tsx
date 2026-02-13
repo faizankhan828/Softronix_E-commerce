@@ -15,7 +15,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/DropdownMenu";
-import { Coupon } from "@/api/services/couponService";
+import type { Coupon } from "@/api/services/couponService";
 import {
   Edit,
   Trash2,

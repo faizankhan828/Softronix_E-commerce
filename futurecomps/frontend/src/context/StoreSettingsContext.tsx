@@ -3,10 +3,10 @@ import React, {
   useContext,
   useState,
   useEffect,
-  ReactNode,
+  type ReactNode,
 } from "react";
 import settingsService, {
-  StoreSettings,
+  type StoreSettings,
 } from "../api/services/settingsService";
 import { useToast } from "../components/ui/use-toast";
 
@@ -83,9 +83,8 @@ export const StoreSettingsProvider: React.FC<{ children: ReactNode }> = ({
       ) {
         try {
           // Update store settings
-          const updatedSettings = await settingsService.updateStoreSettings(
-            newSettings
-          );
+          const updatedSettings =
+            await settingsService.updateStoreSettings(newSettings);
           setSettings((prev) => ({ ...prev, ...updatedSettings }));
         } catch (error: any) {
           if (error?.response?.status === 401) {
@@ -105,7 +104,7 @@ export const StoreSettingsProvider: React.FC<{ children: ReactNode }> = ({
           // Cast to the correct type to fix TypeScript error
           const updatedSettings =
             await settingsService.updateNotificationSettings(
-              newSettings as Partial<StoreSettings["notifications"]>
+              newSettings as Partial<StoreSettings["notifications"]>,
             );
           setSettings((prev) => ({
             ...prev,
@@ -134,7 +133,7 @@ export const StoreSettingsProvider: React.FC<{ children: ReactNode }> = ({
           // Update security settings
           // Cast to the correct type to fix TypeScript error
           const updatedSettings = await settingsService.updateSecuritySettings(
-            newSettings as Partial<StoreSettings["security"]>
+            newSettings as Partial<StoreSettings["security"]>,
           );
           setSettings((prev) => ({
             ...prev,
@@ -199,7 +198,7 @@ export const useStoreSettings = () => {
   const context = useContext(StoreSettingsContext);
   if (context === undefined) {
     throw new Error(
-      "useStoreSettings must be used within a StoreSettingsProvider"
+      "useStoreSettings must be used within a StoreSettingsProvider",
     );
   }
   return context;
