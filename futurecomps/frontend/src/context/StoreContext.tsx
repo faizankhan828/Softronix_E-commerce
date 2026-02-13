@@ -64,8 +64,10 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     setError(null);
     try {
       const { data } = await axios.get(`${API_URL}/products`);
+      // Handle both array response and paginated response
+      const productsArray = Array.isArray(data) ? data : (data.products || []);
       // Transform backend products to match our Product type
-      const transformedProducts: Product[] = data.map((p: any) => ({
+      const transformedProducts: Product[] = productsArray.map((p: any) => ({
         _id: p._id,
         name: p.name,
         description: p.description || "",
