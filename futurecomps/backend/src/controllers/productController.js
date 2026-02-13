@@ -125,20 +125,27 @@ export const getProducts = async (req, res) => {
 export const getFeaturedProducts = async (req, res) => {
   try {
     const { limit = 10 } = req.query;
-    
-    const products = await Product.find({ 
-      isActive: true, 
-      isFeatured: true 
+
+    console.log("Fetching featured products with limit:", limit);
+
+    const products = await Product.find({
+      isActive: true,
+      isFeatured: true,
     })
       .sort({ createdAt: -1 })
       .limit(Number(limit))
-      .select('-hiddenBottomPrice -negotiationEnabled')
+      .select("-hiddenBottomPrice -negotiationEnabled")
       .lean();
-    
+
+    console.log(`Found ${products.length} featured products`);
     res.json(products);
   } catch (error) {
     console.error("getFeaturedProducts error:", error);
-    res.status(500).json({ message: "Failed to fetch featured products" });
+    console.error("Error stack:", error.stack);
+    res.status(500).json({
+      message: "Failed to fetch featured products",
+      error: process.env.NODE_ENV === "development" ? error.message : undefined,
+    });
   }
 };
 

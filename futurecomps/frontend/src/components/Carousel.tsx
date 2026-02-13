@@ -125,7 +125,7 @@ const ScrambleText = ({
             }
             return chars[Math.floor(Math.random() * chars.length)];
           })
-          .join("")
+          .join(""),
       );
 
       if (iteration >= originalText.length) {
@@ -147,7 +147,8 @@ export default function BoundaryCarousel() {
   const [isAnimating, setIsAnimating] = useState(false);
   const [isTextAnimating, setIsTextAnimating] = useState(false);
   const [lastInteraction, setLastInteraction] = useState(Date.now());
-  const [collections, setCollections] = useState<CarouselItem[]>(defaultCollections);
+  const [collections, setCollections] =
+    useState<CarouselItem[]>(defaultCollections);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -162,31 +163,49 @@ export default function BoundaryCarousel() {
       try {
         setLoading(true);
         const response = await api.get("/products/featured?limit=5");
-        
-        if (response.data && response.data.length > 0) {
-          const items: CarouselItem[] = response.data.map((product: any, index: number) => ({
-            productId: product._id || product.id || String(index + 1),
-            title: product.name?.toUpperCase() || "PRODUCT",
-            subTitle: product.category?.toUpperCase() || "COLLECTION",
-            description: product.description || "Premium quality product",
-            mainImage: product.imageUrl || product.images?.[0] || defaultCollections[index % 3].mainImage,
-            detailImage: product.images?.[1] || defaultCollections[index % 3].detailImage,
-            lightBackground: defaultCollections[index % 3].lightBackground,
-            darkBackground: defaultCollections[index % 3].darkBackground,
-            accentColor: defaultCollections[index % 3].accentColor,
-            darkAccentColor: defaultCollections[index % 3].darkAccentColor,
-            price: `$${product.price || 299}`,
-            material: product.material || "Premium Material",
-            model: `MODEL.0${index + 1}`,
-            collection: product.category || "COLLECTION",
-            displayOrder: index,
-          }));
+
+        console.log("Featured products response:", response.data);
+
+        if (
+          response.data &&
+          Array.isArray(response.data) &&
+          response.data.length > 0
+        ) {
+          const items: CarouselItem[] = response.data.map(
+            (product: any, index: number) => ({
+              productId: product._id || product.id || String(index + 1),
+              title: product.name?.toUpperCase() || "PRODUCT",
+              subTitle: product.category?.toUpperCase() || "COLLECTION",
+              description: product.description || "Premium quality product",
+              mainImage:
+                product.imageUrl ||
+                product.images?.[0] ||
+                defaultCollections[index % 3].mainImage,
+              detailImage:
+                product.images?.[1] ||
+                defaultCollections[index % 3].detailImage,
+              lightBackground: defaultCollections[index % 3].lightBackground,
+              darkBackground: defaultCollections[index % 3].darkBackground,
+              accentColor: defaultCollections[index % 3].accentColor,
+              darkAccentColor: defaultCollections[index % 3].darkAccentColor,
+              price: `$${product.price || 299}`,
+              material: product.material || "Premium Material",
+              model: `MODEL.0${index + 1}`,
+              collection: product.category || "COLLECTION",
+              displayOrder: index,
+            }),
+          );
           setCollections(items);
+          console.log("Loaded featured products for carousel:", items.length);
+        } else {
+          console.log("No featured products found, using default collections");
         }
         setError(null);
-      } catch (err) {
+      } catch (err: any) {
         console.error("Error fetching carousel items:", err);
-        // Keep default collections on error
+        console.error("Error response:", err.response?.data);
+        // Keep default collections on error - don't break the UI
+        setError(err.message || "Failed to load featured products");
       } finally {
         setLoading(false);
       }
@@ -370,7 +389,10 @@ export default function BoundaryCarousel() {
 
       {/* Noise texture overlay */}
       <div className="absolute inset-0 z-10 opacity-10 pointer-events-none mix-blend-overlay">
-        <div className="w-full h-full bg-repeat" style={{ backgroundImage: "url('/noise.svg')" }} />
+        <div
+          className="w-full h-full bg-repeat"
+          style={{ backgroundImage: "url('/noise.svg')" }}
+        />
       </div>
 
       {/* Main container */}
@@ -479,7 +501,10 @@ export default function BoundaryCarousel() {
 
             {/* Diagonal pattern overlay */}
             <div className="absolute inset-0 z-30 pointer-events-none">
-              <div className="w-full h-full bg-repeat opacity-5" style={{ backgroundImage: "url('/diagonal-lines.svg')" }} />
+              <div
+                className="w-full h-full bg-repeat opacity-5"
+                style={{ backgroundImage: "url('/diagonal-lines.svg')" }}
+              />
             </div>
           </div>
 
@@ -644,7 +669,7 @@ export default function BoundaryCarousel() {
               "group relative w-14 h-1 rounded-full transition-all duration-300",
               index === activeIndex
                 ? "bg-gray-800 dark:bg-gray-200"
-                : "bg-gray-400/50 hover:bg-gray-600/50 dark:bg-gray-700/50 dark:hover:bg-gray-500/50"
+                : "bg-gray-400/50 hover:bg-gray-600/50 dark:bg-gray-700/50 dark:hover:bg-gray-500/50",
             )}
           >
             {/* Preview on hover */}
@@ -680,7 +705,7 @@ export default function BoundaryCarousel() {
           onClick={handlePrev}
           className={cn(
             "w-12 h-12 rounded-full border border-gray-300 dark:border-gray-600 flex items-center justify-center bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm hover:border-gray-400 dark:hover:border-gray-500 transition-colors shadow-sm",
-            isAnimating && "opacity-50 cursor-not-allowed"
+            isAnimating && "opacity-50 cursor-not-allowed",
           )}
           disabled={isAnimating}
           whileHover={
@@ -697,7 +722,7 @@ export default function BoundaryCarousel() {
           onClick={handleNext}
           className={cn(
             "w-12 h-12 rounded-full border border-gray-300 dark:border-gray-600 flex items-center justify-center bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm hover:border-gray-400 dark:hover:border-gray-500 transition-colors shadow-sm",
-            isAnimating && "opacity-50 cursor-not-allowed"
+            isAnimating && "opacity-50 cursor-not-allowed",
           )}
           disabled={isAnimating}
           whileHover={
