@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { Button } from '../ui/button';
-import { ImageUpload } from '../ui/image-upload';
+import { Button } from '@/components/ui/Button';
+import { ImageUpload } from '@/components/ui/ImageUpload';
 import { Plus, X } from 'lucide-react';
 
 interface ProductImageUploadProps {

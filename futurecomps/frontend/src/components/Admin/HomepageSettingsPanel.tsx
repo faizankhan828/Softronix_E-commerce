@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
-import { Button } from "../../components/ui/button";
-import { Input } from "../../components/ui/input";
-import { Label } from "../../components/ui/label";
-import { Switch } from "../../components/ui/switch";
+import { Button } from "@/components/ui/Button";
+import { Input } from "@/components/ui/Input";
+import { Label } from "@/components/ui/Label";
+import { Switch } from "@/components/ui/Switch";
 import {
   Card,
   CardContent,
@@ -10,15 +10,15 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from "../../components/ui/card";
-import { Separator } from "../../components/ui/separator";
-import { useToast } from "../../components/ui/use-toast";
+} from "@/components/ui/Card";
+import { Separator } from "@/components/ui/Separator";
+import { useToast } from "@/components/ui/use-toast";
 import { Loader2, Plus, Trash2, Edit, Image } from "lucide-react";
 import homepageService, {
   HomepageSettings,
   CarouselItem,
-} from "../../api/services/homepageService";
-import productService from "../../api/services/productService";
+} from "@/api/services/homepageService";
+import productService from "@/api/services/productService";
 // Product type is defined in the API service
 import {
   Select,
@@ -26,7 +26,7 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "../../components/ui/select";
+} from "@/components/ui/Select";
 import {
   Dialog,
   DialogContent,
@@ -35,14 +35,14 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "../../components/ui/dialog";
+} from "@/components/ui/Dialog";
 import {
   Tabs,
   TabsContent,
   TabsList,
   TabsTrigger,
-} from "../../components/ui/tabs";
-import { Textarea } from "../ui/textarea";
+} from "@/components/ui/Tabs";
+import { Textarea } from "@/components/ui/Textarea";
 
 export default function HomepageSettingsPanel() {
   const { toast } = useToast();
