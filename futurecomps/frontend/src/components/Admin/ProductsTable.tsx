@@ -33,23 +33,7 @@ import {
   MoreHorizontal,
   Search,
 } from "lucide-react";
-
-interface Product {
-  id: string;
-  name: string;
-  price: number;
-  description: string;
-  category: string;
-  images: string[];
-  inventory?: number;
-  colors: string[];
-  sizes: string[];
-  inStock: boolean;
-  discountedPrice?: number;
-  tags?: string[];
-  isNew: boolean;
-  isFeatured: boolean;
-}
+import type { Product } from "../../api/services/productService";
 
 interface ProductsTableProps {
   products: Product[];

@@ -218,6 +218,7 @@ export default function SettingsPanel() {
                     name="storeName"
                     value={storeSettings.storeName}
                     onChange={handleStoreSettingsChange}
+                    className="bg-white dark:bg-black text-black dark:text-white border-gray-200 dark:border-gray-800"
                   />
                 </div>
                 <div className="space-y-2">
@@ -228,6 +229,7 @@ export default function SettingsPanel() {
                     type="email"
                     value={storeSettings.storeEmail}
                     onChange={handleStoreSettingsChange}
+                    className="bg-white dark:bg-black text-black dark:text-white border-gray-200 dark:border-gray-800"
                   />
                 </div>
                 <div className="space-y-2">
@@ -237,6 +239,7 @@ export default function SettingsPanel() {
                     name="storePhone"
                     value={storeSettings.storePhone}
                     onChange={handleStoreSettingsChange}
+                    className="bg-white dark:bg-black text-black dark:text-white border-gray-200 dark:border-gray-800"
                   />
                 </div>
                 <div className="space-y-2">
@@ -246,6 +249,7 @@ export default function SettingsPanel() {
                     name="currency"
                     value={storeSettings.currency}
                     onChange={handleStoreSettingsChange}
+                    className="bg-white dark:bg-black text-black dark:text-white border-gray-200 dark:border-gray-800"
                   />
                 </div>
               </div>
@@ -257,6 +261,7 @@ export default function SettingsPanel() {
                   name="storeAddress"
                   value={storeSettings.storeAddress}
                   onChange={handleStoreSettingsChange}
+                  className="bg-white dark:bg-black text-black dark:text-white border-gray-200 dark:border-gray-800"
                 />
               </div>
 
@@ -269,6 +274,7 @@ export default function SettingsPanel() {
                   step="0.01"
                   value={storeSettings.taxRate}
                   onChange={handleStoreSettingsChange}
+                  className="bg-white dark:bg-black text-black dark:text-white border-gray-200 dark:border-gray-800"
                 />
               </div>
             </CardContent>
@@ -362,6 +368,7 @@ export default function SettingsPanel() {
                     type="number"
                     value={securitySettings.sessionTimeout}
                     onChange={handleSecuritySettingsChange}
+                    className="bg-white dark:bg-black text-black dark:text-white border-gray-200 dark:border-gray-800"
                   />
                   <p className="text-sm text-muted-foreground">
                     Time before your session expires due to inactivity.
@@ -376,6 +383,7 @@ export default function SettingsPanel() {
                     type="number"
                     value={securitySettings.passwordExpiry}
                     onChange={handleSecuritySettingsChange}
+                    className="bg-white dark:bg-black text-black dark:text-white border-gray-200 dark:border-gray-800"
                   />
                   <p className="text-sm text-muted-foreground">
                     Number of days before password change is required.
