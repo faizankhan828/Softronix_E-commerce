@@ -403,7 +403,15 @@ function parseAIResponse(raw: string): {
     }
   }
 
-  // Strategy 4: Plain text fallback
+  // Strategy 4: Extract message from incomplete JSON
+  const incompleteMatch = raw.match(/"message"\s*:\s*"([^"]*)/i);
+  if (incompleteMatch && incompleteMatch[1]) {
+    return {
+      message: incompleteMatch[1].replace(/\\n/g, "\n").replace(/\\"/g, '"'),
+    };
+  }
+
+  // Strategy 5: Plain text fallback
   return {
     message:
       raw.replace(/```[\s\S]*?```/g, "").trim() ||
@@ -422,10 +430,15 @@ function cleanMessageContent(content: string): string {
       const parsed = JSON.parse(cleaned);
       if (parsed.message) return parsed.message;
     } catch {
-      // Try to extract message field with regex
+      // Try to extract message field with regex (works even for incomplete JSON)
       const msgMatch = cleaned.match(/"message"\s*:\s*"((?:[^"\\]|\\.)*)"/);
       if (msgMatch)
         return msgMatch[1].replace(/\\n/g, "\n").replace(/\\"/g, '"');
+      // If even that fails, check for incomplete message
+      const incompleteMsgMatch = cleaned.match(/"message"\s*:\s*"([^"]*)/);
+      if (incompleteMsgMatch && incompleteMsgMatch[1]) {
+        return incompleteMsgMatch[1] + "...";
+      }
     }
   }
   // Remove any trailing JSON objects that leaked into the message
@@ -1029,7 +1042,7 @@ Tags: ${product.tags?.join(", ") || "N/A"}
         generationConfig: {
           temperature: 0.8,
           topP: 0.95,
-          maxOutputTokens: 1024,
+          maxOutputTokens: 2048,
         },
       });
 
@@ -1055,6 +1068,36 @@ Tags: ${product.tags?.join(", ") || "N/A"}
               const data = await response.json();
               responseText =
                 data.candidates?.[0]?.content?.parts?.[0]?.text || "";
+
+              // Check for MAX_TOKENS finish reason
+              const finishReason = data.candidates?.[0]?.finishReason;
+              if (finishReason === "MAX_TOKENS") {
+                console.warn(`⚠️ Response truncated due to MAX_TOKENS`);
+                // Try to extract whatever valid content we have
+                if (responseText) {
+                  // If incomplete JSON, try to fix it
+                  if (
+                    responseText.trim().startsWith("{") &&
+                    !responseText.trim().endsWith("}")
+                  ) {
+                    // Close the JSON properly
+                    responseText = responseText.trim();
+                    // Count open/close braces
+                    const openBraces = (responseText.match(/\{/g) || []).length;
+                    const closeBraces = (responseText.match(/\}/g) || [])
+                      .length;
+                    const missing = openBraces - closeBraces;
+                    if (missing > 0) {
+                      // Close any open strings first
+                      if (responseText.match(/"[^"]*$/)) {
+                        responseText += '"';
+                      }
+                      // Add missing braces
+                      responseText += "}".repeat(missing);
+                    }
+                  }
+                }
+              }
               succeeded = true;
               console.log(`✅ Success with model: ${model}`);
               break;
