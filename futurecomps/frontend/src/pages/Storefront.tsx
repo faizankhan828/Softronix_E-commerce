@@ -13,9 +13,6 @@ export function Storefront() {
         {/* Hero Carousel - mamo style */}
         <BoundaryCarousel />
 
-        {/* Shop Benefits Bar */}
-        <ShopBenefits />
-
         {/* New Arrivals / Featured Products */}
         <NewArrivals />
 
@@ -24,6 +21,9 @@ export function Storefront() {
 
         {/* Sustainable Section */}
         <SustainableFashion />
+
+        {/* Shop Benefits Bar */}
+        <ShopBenefits />
 
         {/* Newsletter */}
         <Newsletter />

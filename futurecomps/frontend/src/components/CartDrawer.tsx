@@ -7,6 +7,8 @@ import { Badge } from "@/components/ui/Badge";
 import { useStore } from "@/context/StoreContext";
 import { formatCurrency } from "@/lib/utils";
 import { useState } from "react";
+import { useAuth } from "@/context/AuthContext";
+
 
 export function CartDrawer() {
   const {
@@ -19,6 +21,8 @@ export function CartDrawer() {
     removeDiscount,
   } = useStore();
 
+  const { user } = useAuth();
+  const [loading, setLoading] = useState(false);
   const [couponCode, setCouponCode] = useState("");
   const [couponError, setCouponError] = useState("");
 
@@ -40,6 +44,41 @@ export function CartDrawer() {
       setCouponCode("");
     } else {
       setCouponError("Invalid coupon code");
+    }
+  };
+
+
+  const handleCheckout = async () => {
+    if (!user) {
+      // You might want to redirect to login or show a toast
+      window.location.href = "/login"; 
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const token = localStorage.getItem("token"); // Assuming token is stored here
+      const response = await fetch(`${import.meta.env.VITE_API_URL || "http://localhost:5000/api"}/payment/create-checkout-session`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.url) {
+        window.location.href = data.url;
+      } else {
+        console.error("Checkout failed:", data.message);
+        alert("Failed to initiate checkout");
+      }
+    } catch (error) {
+      console.error("Error creating checkout session:", error);
+      alert("Failed to initiate checkout");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -218,10 +257,13 @@ export function CartDrawer() {
 
                 {/* Actions */}
                 <div className="space-y-2">
-                  <Button asChild className="w-full" size="lg">
-                    <Link to="/checkout" onClick={() => setCartOpen(false)}>
-                      Proceed to Checkout
-                    </Link>
+                  <Button 
+                    className="w-full" 
+                    size="lg"
+                    onClick={handleCheckout}
+                    disabled={loading}
+                  >
+                    {loading ? "Processing..." : "Proceed to Checkout"}
                   </Button>
                   <Button
                     variant="ghost"
