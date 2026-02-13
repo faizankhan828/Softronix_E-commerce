@@ -5,18 +5,18 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-} from "../../components/ui/card";
+} from "@/components/ui/Card";
 import {
   Tabs,
   TabsContent,
   TabsList,
   TabsTrigger,
-} from "../../components/ui/tabs";
+} from "@/components/ui/Tabs";
 import { ShoppingBag, User, Package } from "lucide-react";
-import { Badge } from "../../components/ui/badge";
-import { Skeleton } from "../../components/ui/skeleton";
-import { Button } from "../../components/ui/button";
-import { Avatar, AvatarFallback } from "../../components/ui/avatar";
+import { Badge } from "@/components/ui/Badge";
+import { Skeleton } from "@/components/ui/Skeleton";
+import { Button } from "@/components/ui/Button";
+import { Avatar, AvatarFallback } from "@/components/ui/Avatar";
 
 interface Order {
   id: string;

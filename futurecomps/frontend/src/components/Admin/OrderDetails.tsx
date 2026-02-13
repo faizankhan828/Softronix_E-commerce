@@ -1,5 +1,5 @@
-import { Button } from "../../components/ui/button";
-import { Badge } from "../../components/ui/badge";
+import { Button } from "@/components/ui/Button";
+import { Badge } from "@/components/ui/Badge";
 import {
   Dialog,
   DialogContent,
@@ -7,16 +7,16 @@ import {
   DialogTitle,
   DialogFooter,
   DialogClose,
-} from "../../components/ui/dialog";
+} from "@/components/ui/Dialog";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "../../components/ui/select";
+} from "@/components/ui/Select";
 import { useState, useEffect } from "react";
-import productService from "../../api/services/productService";
+import productService from "@/api/services/productService";
 
 interface Product {
   id: string;

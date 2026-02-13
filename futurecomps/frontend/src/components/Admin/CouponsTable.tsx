@@ -6,16 +6,16 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "../../components/ui/table";
-import { Button } from "../../components/ui/button";
-import { Badge } from "../../components/ui/badge";
+} from "@/components/ui/Table";
+import { Button } from "@/components/ui/Button";
+import { Badge } from "@/components/ui/Badge";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "../../components/ui/dropdown-menu";
-import { Coupon } from "../../api/services/couponService";
+} from "@/components/ui/DropdownMenu";
+import { Coupon } from "@/api/services/couponService";
 import {
   Edit,
   Trash2,
@@ -33,7 +33,7 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "../../components/ui/alert-dialog";
+} from "@/components/ui/AlertDialog";
 
 interface CouponsTableProps {
   coupons: Coupon[];

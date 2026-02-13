@@ -1,13 +1,13 @@
 import { useState, useEffect } from "react";
-import { fixUI } from "../../lib/ui-fix";
-import { Button } from "../../components/ui/button";
-import { Input } from "../../components/ui/input";
-import { Label } from "../../components/ui/label";
-import { Textarea } from "../../components/ui/textarea";
-import { Switch } from "../../components/ui/switch";
+import { fixUI } from "@/lib/ui-fix";
+import { Button } from "@/components/ui/Button";
+import { Input } from "@/components/ui/Input";
+import { Label } from "@/components/ui/Label";
+import { Textarea } from "@/components/ui/Textarea";
+import { Switch } from "@/components/ui/Switch";
 // import { Separator } from "../../components/ui/separator";
-import { Badge } from "../../components/ui/badge";
-import { Card, CardContent } from "../../components/ui/card";
+import { Badge } from "@/components/ui/Badge";
+import { Card, CardContent } from "@/components/ui/Card";
 import {
   X,
   Plus,
@@ -27,7 +27,7 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "../../components/ui/select";
+} from "@/components/ui/Select";
 import { ProductImageUpload } from "./ProductImageUpload";
 
 interface Product {

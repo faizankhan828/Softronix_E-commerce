@@ -4,12 +4,12 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-} from "../../components/ui/card";
-// import { Badge } from "../../components/ui/badge";
-import { Skeleton } from "../../components/ui/skeleton";
+} from "@/components/ui/Card";
+// import { Badge } from "@/components/ui/Badge";
+import { Skeleton } from "@/components/ui/Skeleton";
 import { Package, TrendingUp, TrendingDown } from "lucide-react";
 
-interface TopProduct {
+export interface TopProduct {
   id: string;
   name: string;
   price: number;

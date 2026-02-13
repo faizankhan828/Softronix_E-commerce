@@ -10,8 +10,8 @@ import {
   CheckCircle2,
   RefreshCw,
 } from "lucide-react";
-import { Skeleton } from "../../components/ui/skeleton";
-import { Button } from "../../components/ui/button";
+import { Skeleton } from "@/components/ui/Skeleton";
+import { Button } from "@/components/ui/Button";
 
 interface StatCardProps {
   title: string;

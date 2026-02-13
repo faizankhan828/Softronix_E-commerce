@@ -1,6 +1,6 @@
-import { ReactNode, useState, useEffect } from "react";
+import { type ReactNode, useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { useToast } from "../../components/ui/use-toast";
+import { useToast } from "@/components/ui/use-toast";
 import {
   LayoutDashboard,
   Package,
@@ -15,15 +15,15 @@ import {
   ExternalLink,
   Tag,
 } from "lucide-react";
-import { cn } from "../../lib/utils";
-import { Button } from "../../components/ui/button";
-import { useAuth } from "../../contexts/AuthContext";
+import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/Button";
+import { useAuth } from "@/context/AuthContext";
 import {
   Avatar,
   AvatarFallback,
   AvatarImage,
-} from "../../components/ui/avatar";
-import { Logo } from "../../components/ui/logo";
+} from "@/components/ui/Avatar";
+import { Logo } from "@/components/ui/Logo";
 
 type NavItem = {
   title: string;

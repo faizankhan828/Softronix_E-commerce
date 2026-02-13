@@ -5,17 +5,17 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-} from "../../components/ui/card";
+} from "@/components/ui/Card";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "../../components/ui/select";
-import { Skeleton } from "../../components/ui/skeleton";
+} from "@/components/ui/Select";
+import { Skeleton } from "@/components/ui/Skeleton";
 
-interface SalesData {
+export interface SalesData {
   date: string;
   amount: number;
 }

@@ -1,19 +1,19 @@
 import { useState, useEffect } from "react";
-import { useToast } from "../../components/ui/use-toast";
-import { Button } from "../../components/ui/button";
-import { Input } from "../../components/ui/input";
-import { Label } from "../../components/ui/label";
-import { Switch } from "../../components/ui/switch";
+import { useToast } from "@/components/ui/use-toast";
+import { Button } from "@/components/ui/Button";
+import { Input } from "@/components/ui/Input";
+import { Label } from "@/components/ui/Label";
+import { Switch } from "@/components/ui/Switch";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "../../components/ui/select";
+} from "@/components/ui/Select";
 import { Loader2 } from "lucide-react";
-import { Coupon } from "../../api/services/couponService";
-import productService from "../../api/services/productService";
+import { Coupon } from "@/api/services/couponService";
+import productService from "@/api/services/productService";
 // Product type is defined in the API service
 
 interface CouponFormProps {

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useToast } from "../../components/ui/use-toast";
+import { useToast } from "@/components/ui/use-toast";
 import {
   Table,
   TableBody,
@@ -7,17 +7,17 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "../../components/ui/table";
-import { Button } from "../../components/ui/button";
-import { Input } from "../../components/ui/input";
-import { Badge } from "../../components/ui/badge";
+} from "@/components/ui/Table";
+import { Button } from "@/components/ui/Button";
+import { Input } from "@/components/ui/Input";
+import { Badge } from "@/components/ui/Badge";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "../../components/ui/select";
+} from "@/components/ui/Select";
 import {
   DropdownMenu,
   DropdownMenuContent,

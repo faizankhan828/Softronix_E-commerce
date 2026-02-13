@@ -1,14 +1,14 @@
 import { useState, useEffect } from "react";
-import { Button } from "../../components/ui/button";
-import { Input } from "../../components/ui/input";
-import { Label } from "../../components/ui/label";
-import { Switch } from "../../components/ui/switch";
+import { Button } from "@/components/ui/Button";
+import { Input } from "@/components/ui/Input";
+import { Label } from "@/components/ui/Label";
+import { Switch } from "@/components/ui/Switch";
 import {
   Tabs,
   TabsContent,
   TabsList,
   TabsTrigger,
-} from "../../components/ui/tabs";
+} from "@/components/ui/Tabs";
 import {
   Card,
   CardContent,
@@ -16,11 +16,11 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from "../../components/ui/card";
-import { Separator } from "../../components/ui/separator";
-import { useToast } from "../../components/ui/use-toast";
-import settingsService from "../../api/services/settingsService";
-import { useStoreSettings } from "../../contexts/StoreSettingsContext";
+} from "@/components/ui/Card";
+import { Separator } from "@/components/ui/Separator";
+import { useToast } from "@/components/ui/use-toast";
+import settingsService from "@/api/services/settingsService";
+import { useStoreSettings } from "@/context/StoreSettingsContext";
 import { Loader2 } from "lucide-react";
 import HomepageSettingsPanel from "./HomepageSettingsPanel";
 

@@ -21,23 +21,31 @@ import {
 import productService from "../api/services/productService";
 import dashboardService from "../api/services/dashboardService";
 import couponService, { Coupon } from "../api/services/couponService";
+import type { Product } from "../api/services/productService";
+
+
 import api from "../api/services/api";
 
 // Custom components
 import AdminLayout from "../components/Admin/AdminLayout";
 import DashboardHeader from "../components/Admin/DashboardHeader";
 import ProductsTable from "../components/Admin/ProductsTable";
-import OrdersTable from "../components/Admin/OrdersTable";
-import UsersTable from "../components/Admin/UsersTable";
+import OrdersTable, { Order } from "../components/Admin/OrdersTable";
+import UsersTable, { User } from "../components/Admin/UsersTable";
 import ProductForm from "../components/Admin/ProductForm";
 import CouponsTable from "../components/Admin/CouponsTable";
 import CouponForm from "../components/Admin/CouponForm";
-// import OrderDetails from "../components/Admin/OrderDetails";
-import UserAnalytics from "../components/Admin/UserAnalytics";
 import SettingsPanel from "../components/Admin/SettingsPanel";
 import RecentActivity from "../components/Admin/RecentActivity";
-import SalesChart from "../components/Admin/SalesChart";
-import TopProducts from "../components/Admin/TopProducts";
+import SalesChart, { SalesData } from "../components/Admin/SalesChart";
+import TopProducts, { TopProduct } from "../components/Admin/TopProducts";
+
+
+interface RecentActivityData {
+  orders: Order[];
+  users: User[];
+  products: any[]; // Product in recent activity might be different structure or same
+}
 
 // Helper function to replace fixUI
 const fixUI = () => {
@@ -51,10 +59,10 @@ export default function AdminDashboard() {
   const [searchParams, setSearchParams] = useSearchParams();
 
   // State
-  const [products, setProducts] = useState([]);
-  const [orders, setOrders] = useState([]);
-  const [users, setUsers] = useState([]);
-  const [coupons, setCoupons] = useState([]);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [users, setUsers] = useState<User[]>([]);
+  const [coupons, setCoupons] = useState<Coupon[]>([]);
   const [dashboardStats, setDashboardStats] = useState({
     totalRevenue: 0,
     totalOrders: 0,
@@ -70,9 +78,9 @@ export default function AdminDashboard() {
     products: { value: 3, isPositive: true },
   });
 
-  const [salesData, setSalesData] = useState([]);
-  const [topProducts, setTopProducts] = useState([]);
-  const [recentActivity, setRecentActivity] = useState({
+  const [salesData, setSalesData] = useState<SalesData[]>([]);
+  const [topProducts, setTopProducts] = useState<TopProduct[]>([]);
+  const [recentActivity, setRecentActivity] = useState<RecentActivityData>({
     orders: [],
     users: [],
     products: [],
@@ -114,7 +122,7 @@ export default function AdminDashboard() {
   const tabFromUrl = searchParams.get("tab") || "dashboard";
   const [activeTab, setActiveTab] = useState(tabFromUrl);
 
-  const handleTabChange = (value) => {
+  const handleTabChange = (value: string) => {
     setActiveTab(value);
     setSearchParams({ tab: value });
   };

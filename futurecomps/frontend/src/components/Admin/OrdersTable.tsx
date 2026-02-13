@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useToast } from "../../components/ui/use-toast";
+import { useToast } from "@/components/ui/use-toast";
 import { useNavigate } from "react-router-dom";
 import {
   Table,
@@ -8,17 +8,17 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "../../components/ui/table";
-import { Button } from "../../components/ui/button";
-import { Input } from "../../components/ui/input";
+} from "@/components/ui/Table";
+import { Button } from "@/components/ui/Button";
+import { Input } from "@/components/ui/Input";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "../../components/ui/select";
-import { Badge } from "../../components/ui/badge";
+} from "@/components/ui/Select";
+import { Badge } from "@/components/ui/Badge";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -26,7 +26,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "../../components/ui/dropdown-menu";
+} from "@/components/ui/DropdownMenu";
 import {
   Search,
   MoreHorizontal,
@@ -35,7 +35,7 @@ import {
   AlertCircle,
 } from "lucide-react";
 
-interface OrderItem {
+export interface OrderItem {
   productId: string;
   quantity: number;
   price: number;
@@ -47,7 +47,7 @@ interface OrderItem {
   };
 }
 
-interface Order {
+export interface Order {
   id?: string;
   _id?: string;
   orderId?: string; // Added for compatibility with MongoDB _id vs orderId
