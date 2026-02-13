@@ -13,7 +13,7 @@ import AdminRoute from "./components/AdminRoute";
 import { Storefront } from "./pages/Storefront";
 import { ProductListing } from "./pages/ProductListing";
 import { ProductDetail } from "./pages/ProductDetail";
-import { Checkout } from "./pages/Checkout";
+
 
 // Auth & Admin Pages
 import Auth from "./pages/Auth";
@@ -40,7 +40,7 @@ function App() {
             <Route path="/" element={<Storefront />} />
             <Route path="/shop" element={<ProductListing />} />
             <Route path="/product/:id" element={<ProductDetail />} />
-            <Route path="/checkout" element={<Checkout />} />
+
             
             {/* Auth Routes */}
             <Route path="/login" element={<Auth />} />
