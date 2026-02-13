@@ -37,11 +37,35 @@ const GEMINI_API_KEY =
 // Models to try in order — each has its own separate free-tier quota
 // If one is rate-limited (429), we automatically try the next
 const GEMINI_MODELS = [
+  "gemini-3-flash-preview", // newest: works great on free tier
   "gemini-2.5-flash", // best: fast, smart, free tier
   "gemini-2.5-flash-lite", // fallback: cheapest, highest quota
   "gemini-2.0-flash-lite", // fallback: lightweight
-  "gemini-2.0-flash", // original model
+  "gemini-2.0-flash", // original model (deprecated Mar 2026)
 ];
+
+// Puter.js image generation models (free, unlimited)
+// These are used via puter.ai.txt2img() loaded from https://js.puter.com/v2/
+const PUTER_IMAGE_MODELS = [
+  "gpt-image-1", // Best quality
+  "dall-e-3", // Great quality
+  "flux-schnell", // Fast
+  "dall-e-2", // Fallback
+];
+
+// Declare puter global (loaded via script tag in index.html)
+declare const puter: {
+  ai: {
+    txt2img: (
+      prompt: string,
+      options?: { model?: string; quality?: string; size?: string },
+    ) => Promise<HTMLImageElement>;
+    chat: (
+      prompt: string,
+      options?: { model?: string },
+    ) => Promise<{ message: { content: string } }>;
+  };
+};
 const GEMINI_BASE_URL = `https://generativelanguage.googleapis.com/v1beta/models`;
 const MAX_RETRIES_PER_MODEL = 1; // try each model once before moving on
 const RETRY_DELAY = 2000; // 2s between retries
@@ -257,7 +281,7 @@ function ProductCardInChat({
     >
       <Link to={`/product/${product._id}`} className="shrink-0">
         <img
-          src={product.images?.[0] || product.imageUrl || '/placeholder.svg'}
+          src={product.images?.[0] || product.imageUrl || "/placeholder.svg"}
           alt={product.name}
           className="w-20 h-20 object-cover rounded-lg hover:opacity-90 transition-opacity"
         />
@@ -1369,6 +1393,16 @@ Tags: ${product.tags?.join(", ") || "N/A"}
     if (e.target) e.target.value = "";
   };
 
+  // Helper: Convert an HTMLImageElement to base64 data URL
+  const imgElementToBase64 = (img: HTMLImageElement): string => {
+    const canvas = document.createElement("canvas");
+    canvas.width = img.naturalWidth || img.width || 1024;
+    canvas.height = img.naturalHeight || img.height || 1024;
+    const ctx = canvas.getContext("2d")!;
+    ctx.drawImage(img, 0, 0);
+    return canvas.toDataURL("image/png");
+  };
+
   const handleVirtualTryOn = async (product: Product) => {
     if (!tryOnImage) {
       setMessages((prev) => [
@@ -1396,7 +1430,6 @@ Tags: ${product.tags?.join(", ") || "N/A"}
     ]);
 
     try {
-      // Extract base64 data (remove data:image/...;base64, prefix)
       const base64Data = tryOnImage.split(",")[1];
       const mimeType = tryOnImage.match(/data:(.*?);/)?.[1] || "image/jpeg";
 
@@ -1408,44 +1441,21 @@ Tags: ${product.tags?.join(", ") || "N/A"}
         base64Data?.length,
       );
 
-      const tryOnPrompt = `You are a virtual fashion try-on assistant. I'm providing a photo of a person and a product description. Create a realistic visualization showing this person wearing/using this product.
+      // ─── Step 1: Analyze user photo with Gemini (text model) ───
+      let userDescription = "a person";
+      console.log("[TryOn] Step 1: Analyzing user photo with Gemini...");
 
-PRODUCT DETAILS:
-- Name: ${product.name}
-- Category: ${product.category || "Fashion"}
-- Description: ${product.description || ""}
-- Colors: ${product.colors?.join(", ") || "as shown"}
-- Price: $${product.price}
+      const analyzePrompt = `Look at this photo and describe the person in it for a fashion visualization. Be concise (2-3 sentences max). Include:
+- Gender (man/woman/person), approximate age range
+- Skin tone, hair color/style
+- Build (slim, athletic, average, etc.)
+- Current pose/expression
+Do NOT mention clothing they're wearing. Output ONLY the description, no JSON, no labels.`;
 
-INSTRUCTIONS:
-1. Keep the person's face, body shape, skin tone, and background as close to the original as possible
-2. Realistically overlay/place the product on the person
-3. Match the product's color, style, and proportions accurately
-4. Make it look natural - proper lighting, shadows, and fit
-5. If the product is clothing, show it being WORN properly
-6. If it's an accessory (watch, bag, shoes), show it being USED/WORN appropriately
-
-Generate a single photorealistic image of this person trying on the product.`;
-
-      // Models that support image generation (rotate through them)
-      const IMAGE_GEN_MODELS = [
-        "gemini-2.0-flash-exp-image-generation", // experimental image gen
-        "gemini-2.0-flash", // may support with responseModalities
-        "gemini-2.5-flash-preview-native-audio-dialog", // alternate preview
-        "gemini-2.0-flash-lite", // lightweight fallback
-      ];
-
-      let generatedImage: string | null = null;
-      let responseMessage = "";
-      let imageGenSuccess = false;
-
-      // --- Phase 1: Try image generation with model rotation ---
-      for (const model of IMAGE_GEN_MODELS) {
-        const tryOnUrl = `${GEMINI_BASE_URL}/${model}:generateContent?key=${GEMINI_API_KEY}`;
-        console.log(`[TryOn] Attempting image gen with model: ${model}`);
-
+      for (const model of GEMINI_MODELS) {
         try {
-          const response = await fetch(tryOnUrl, {
+          const analyzeUrl = `${GEMINI_BASE_URL}/${model}:generateContent?key=${GEMINI_API_KEY}`;
+          const analyzeResponse = await fetch(analyzeUrl, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
@@ -1453,241 +1463,191 @@ Generate a single photorealistic image of this person trying on the product.`;
                 {
                   role: "user",
                   parts: [
-                    { text: tryOnPrompt },
-                    {
-                      inlineData: {
-                        mimeType,
-                        data: base64Data,
-                      },
-                    },
+                    { text: analyzePrompt },
+                    { inlineData: { mimeType, data: base64Data } },
                   ],
                 },
               ],
-              generationConfig: {
-                temperature: 0.4,
-                maxOutputTokens: 4096,
-                responseModalities: ["TEXT", "IMAGE"],
-              },
+              generationConfig: { temperature: 0.3, maxOutputTokens: 200 },
             }),
           });
 
-          console.log(`[TryOn] ${model} response status:`, response.status);
-
-          if (!response.ok) {
-            const errBody = await response.text();
-            console.warn(
-              `[TryOn] ${model} failed (${response.status}):`,
-              errBody.slice(0, 500),
-            );
-            // Try without responseModalities for this model
-            console.log(
-              `[TryOn] Retrying ${model} WITHOUT responseModalities...`,
-            );
-            const retryResponse = await fetch(tryOnUrl, {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                contents: [
-                  {
-                    role: "user",
-                    parts: [
-                      { text: tryOnPrompt },
-                      {
-                        inlineData: {
-                          mimeType,
-                          data: base64Data,
-                        },
-                      },
-                    ],
-                  },
-                ],
-                generationConfig: {
-                  temperature: 0.4,
-                  maxOutputTokens: 4096,
-                },
-              }),
-            });
-            console.log(`[TryOn] ${model} retry status:`, retryResponse.status);
-            if (!retryResponse.ok) {
-              const retryErr = await retryResponse.text();
-              console.warn(
-                `[TryOn] ${model} retry also failed:`,
-                retryErr.slice(0, 500),
-              );
-              continue; // next model
-            }
-            const retryData = await retryResponse.json();
-            console.log(
-              `[TryOn] ${model} retry response keys:`,
-              JSON.stringify(Object.keys(retryData)),
-            );
-            const retryParts = retryData.candidates?.[0]?.content?.parts || [];
-            for (const part of retryParts) {
-              if (part.inlineData?.data) {
-                generatedImage = `data:${part.inlineData.mimeType || "image/png"};base64,${part.inlineData.data}`;
-                console.log("[TryOn] Got image from retry!");
-              }
-              if (part.text) responseMessage += part.text;
-            }
-            if (generatedImage) {
-              imageGenSuccess = true;
+          if (analyzeResponse.ok) {
+            const analyzeData = await analyzeResponse.json();
+            const desc =
+              analyzeData.candidates?.[0]?.content?.parts?.[0]?.text || "";
+            if (desc.length > 20) {
+              userDescription = desc.trim();
+              console.log("[TryOn] User description:", userDescription);
               break;
             }
-            // Got text but no image from retry — try next model for image
-            console.log(
-              `[TryOn] ${model} gave text but no image, trying next model...`,
-            );
-            continue;
           }
-
-          const data = await response.json();
-          console.log(
-            `[TryOn] ${model} response keys:`,
-            JSON.stringify(Object.keys(data)),
-          );
-          const parts = data.candidates?.[0]?.content?.parts || [];
-          console.log(
-            `[TryOn] ${model} parts count:`,
-            parts.length,
-            "types:",
-            parts.map(
-              (p: { text?: string; inlineData?: { mimeType?: string } }) =>
-                p.text
-                  ? "text"
-                  : p.inlineData
-                    ? `image(${p.inlineData.mimeType})`
-                    : "unknown",
-            ),
-          );
-
-          for (const part of parts) {
-            if (part.inlineData?.data) {
-              generatedImage = `data:${part.inlineData.mimeType || "image/png"};base64,${part.inlineData.data}`;
-              console.log("[TryOn] Successfully got generated image!");
-            }
-            if (part.text) {
-              responseMessage += part.text;
-            }
-          }
-
-          if (generatedImage) {
-            imageGenSuccess = true;
-            console.log(
-              `[TryOn] Image generation succeeded with model: ${model}`,
-            );
-            break;
-          }
-          console.log(
-            `[TryOn] ${model} succeeded but no image in response, trying next...`,
-          );
-        } catch (modelErr) {
-          console.warn(`[TryOn] ${model} threw error:`, modelErr);
-          continue;
+          console.warn(`[TryOn] ${model} analyze failed, trying next...`);
+        } catch (e) {
+          console.warn(`[TryOn] ${model} analyze error:`, e);
         }
       }
 
-      // --- Phase 2: If image gen failed, do text-description fallback ---
-      if (!imageGenSuccess) {
-        console.log(
-          "[TryOn] No image generated, falling back to text description...",
-        );
+      // ─── Step 2: Generate try-on image using Puter.js (FREE!) ───
+      console.log("[TryOn] Step 2: Generating try-on image with Puter.js...");
 
-        // Use the regular chat models for a vivid text description
-        for (const model of GEMINI_MODELS) {
-          const fallbackUrl = `${GEMINI_BASE_URL}/${model}:generateContent?key=${GEMINI_API_KEY}`;
-          console.log(`[TryOn] Text fallback with model: ${model}`);
+      const tryOnPrompt = `Photorealistic fashion photography of ${userDescription} wearing ${product.name}. ${product.description || ""}. The ${product.category || "clothing"} is ${product.colors?.join(" and ") || "as described"} colored. The person is posing naturally in a clean studio setting with soft professional lighting. Full body shot, fashion catalog style. The clothing fits perfectly and looks natural. High quality, detailed, 4K resolution.`;
 
+      console.log(
+        "[TryOn] Image gen prompt:",
+        tryOnPrompt.slice(0, 200) + "...",
+      );
+
+      let generatedImage: string | null = null;
+
+      // Check if Puter.js is loaded
+      if (typeof puter !== "undefined" && puter?.ai?.txt2img) {
+        for (const puterModel of PUTER_IMAGE_MODELS) {
+          console.log(`[TryOn] Trying Puter model: ${puterModel}`);
           try {
-            const descResponse = await fetch(fallbackUrl, {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                contents: [
-                  {
-                    role: "user",
-                    parts: [
-                      {
-                        text: `I uploaded my photo and want to try on "${product.name}" (${product.category || "fashion"}, ${product.colors?.join("/") || "various colors"}, $${product.price}). Since you can't generate an image, give me a VIVID, fun, detailed description of how I'd look wearing this product. Describe the fit, the vibe, how it complements my look. Be specific and enthusiastic like a desi shopkeeper complimenting a customer! Use lots of emojis. Also suggest styling tips.`,
-                      },
-                      {
-                        inlineData: {
-                          mimeType,
-                          data: base64Data,
-                        },
-                      },
-                    ],
-                  },
-                ],
-                generationConfig: {
-                  temperature: 0.9,
-                  maxOutputTokens: 1024,
-                },
-              }),
+            const imgElement = await puter.ai.txt2img(tryOnPrompt, {
+              model: puterModel,
+              quality: "low",
             });
-
             console.log(
-              `[TryOn] Text fallback ${model} status:`,
-              descResponse.status,
+              `[TryOn] Puter ${puterModel} returned:`,
+              typeof imgElement,
+              imgElement?.tagName,
             );
 
-            if (descResponse.ok) {
-              const descData = await descResponse.json();
-              const descText =
-                descData.candidates?.[0]?.content?.parts?.[0]?.text || "";
-              console.log(
-                `[TryOn] Got text description (${descText.length} chars)`,
-              );
-
-              if (descText) {
-                setMessages((prev) => [
-                  ...prev,
-                  {
-                    id: generateId(),
-                    role: "assistant",
-                    content:
-                      `📸 *Virtual Styling Report for "${product.name}":*\n\n` +
-                      cleanMessageContent(descText) +
-                      `\n\n💡 _Image try-on isn't available right now, but this description is based on YOUR photo!_ Want me to add it to your cart? 🛒`,
-                    timestamp: new Date(),
-                  },
-                ]);
-                return; // done
+            if (imgElement && imgElement instanceof HTMLImageElement) {
+              // Wait for image to load if needed
+              if (!imgElement.complete) {
+                await new Promise<void>((resolve, reject) => {
+                  imgElement.onload = () => resolve();
+                  imgElement.onerror = () =>
+                    reject(new Error("Image load failed"));
+                  setTimeout(() => resolve(), 15000); // 15s timeout
+                });
               }
+              generatedImage = imgElementToBase64(imgElement);
+              console.log(
+                `[TryOn] SUCCESS with Puter ${puterModel}! Base64 length: ${generatedImage.length}`,
+              );
+              break;
             }
-            console.warn(
-              `[TryOn] Text fallback ${model} failed, trying next...`,
-            );
-          } catch (descErr) {
-            console.warn(`[TryOn] Text fallback ${model} error:`, descErr);
+          } catch (puterErr) {
+            console.warn(`[TryOn] Puter ${puterModel} failed:`, puterErr);
             continue;
           }
         }
+      } else {
+        console.warn(
+          "[TryOn] Puter.js not loaded! Falling back to text description.",
+        );
+      }
 
-        // If even text fallback failed completely
+      // ─── Step 3: Show result ───
+      if (generatedImage) {
         setMessages((prev) => [
           ...prev,
           {
             id: generateId(),
             role: "assistant",
-            content: `Boss, the try-on service is busy right now! 😅 But "${product.name}" is a 🔥 pick — you've got great taste. Want me to add it to your cart? 🛒`,
+            content: `Here's how you'd look in "${product.name}", boss! 🎨🔥\n\n_This is an AI-generated visualization based on your photo description._ Looking sharp! Want me to add it to your cart?`,
             timestamp: new Date(),
+            image: generatedImage,
+            userImage: tryOnImage, // show original photo side by side
           },
         ]);
         return;
       }
 
-      // --- Phase 3: Image generation succeeded ---
-      console.log("[TryOn] Displaying generated try-on image!");
+      // ─── Fallback: Text-based AI Styling Report ───
+      console.log(
+        "[TryOn] No image gen available, using AI styling analysis...",
+      );
+
+      const stylingPrompt = `You are a fun, enthusiastic desi shopkeeper with amazing fashion sense. I'm showing you MY PHOTO and I want to virtually try on a product.
+
+PRODUCT:
+- Name: ${product.name}
+- Category: ${product.category || "Fashion"}
+- Description: ${product.description || "A stylish product"}
+- Colors: ${product.colors?.join(", ") || "as shown"}
+- Price: $${product.price}
+
+Look at MY PHOTO carefully and give me a PERSONALIZED virtual styling report:
+
+1. 👤 PHOTO ANALYSIS: Briefly note my skin tone, build, and current style (2-3 lines)
+2. 👕 HOW IT WOULD LOOK: Describe vividly how this specific product would look ON ME — the fit, the drape, how the color complements my complexion
+3. 🔥 STYLE RATING: Rate the match out of 10 with a fun reason
+4. 💡 STYLING TIPS: 2-3 specific tips on what to pair this with (jeans, accessories, shoes etc.)
+5. 🎯 VERDICT: One punchy line — would you recommend this for me?
+
+Be specific to MY appearance from the photo! Use emojis, be enthusiastic, and talk like a cool desi shopkeeper ("boss", "bhai", "yaar"). Keep it under 300 words. DO NOT output any JSON.`;
+
+      for (const model of GEMINI_MODELS) {
+        const fallbackUrl = `${GEMINI_BASE_URL}/${model}:generateContent?key=${GEMINI_API_KEY}`;
+        console.log(`[TryOn] Styling analysis with model: ${model}`);
+
+        try {
+          const descResponse = await fetch(fallbackUrl, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              contents: [
+                {
+                  role: "user",
+                  parts: [
+                    { text: stylingPrompt },
+                    { inlineData: { mimeType, data: base64Data } },
+                  ],
+                },
+              ],
+              generationConfig: { temperature: 0.9, maxOutputTokens: 1024 },
+            }),
+          });
+
+          console.log(
+            `[TryOn] ${model} styling status: ${descResponse.status}`,
+          );
+
+          if (descResponse.ok) {
+            const descData = await descResponse.json();
+            const descText =
+              descData.candidates?.[0]?.content?.parts?.[0]?.text || "";
+            console.log(
+              `[TryOn] Got styling report (${descText.length} chars)`,
+            );
+
+            if (descText.length > 50) {
+              setMessages((prev) => [
+                ...prev,
+                {
+                  id: generateId(),
+                  role: "assistant",
+                  content:
+                    `📸 **Virtual Styling Report — "${product.name}"**\n\n` +
+                    cleanMessageContent(descText) +
+                    `\n\n🛒 _Want me to add it to your cart?_`,
+                  timestamp: new Date(),
+                  userImage: tryOnImage,
+                },
+              ]);
+              return;
+            }
+          }
+          console.warn(`[TryOn] ${model} styling failed, trying next...`);
+        } catch (descErr) {
+          console.warn(`[TryOn] ${model} styling error:`, descErr);
+          continue;
+        }
+      }
+
+      // All models failed
       setMessages((prev) => [
         ...prev,
         {
           id: generateId(),
           role: "assistant",
-          content:
-            cleanMessageContent(responseMessage) ||
-            `Here's how you'd look in "${product.name}", boss! 🎨🔥 Looking sharp! Want me to add it to your cart?`,
+          content: `Boss, the styling service is busy right now! 😅 But "${product.name}" is a 🔥 pick — you've got great taste. Want me to add it to your cart? 🛒`,
           timestamp: new Date(),
-          image: generatedImage!,
         },
       ]);
     } catch (err) {
