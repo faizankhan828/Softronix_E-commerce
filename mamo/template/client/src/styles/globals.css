@@ -1,0 +1,39 @@
+/* 3D Transform Styles */
+.preserve-3d {
+  transform-style: preserve-3d;
+}
+
+.perspective {
+  perspective: 1000px;
+}
+
+/* Gradient Animations */
+@keyframes gradient-shift {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.animate-gradient {
+  background-size: 200% 200%;
+  animation: gradient-shift 15s ease infinite;
+}
+
+/* Glassmorphism */
+.glass {
+  backdrop-filter: blur(16px) saturate(180%);
+  background-color: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.glass-dark {
+  backdrop-filter: blur(16px) saturate(180%);
+  background-color: rgba(17, 25, 40, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
