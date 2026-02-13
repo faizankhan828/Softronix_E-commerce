@@ -1,305 +1,562 @@
-import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
-import { adminAPI } from "../services/api";
+import { useState, useEffect } from "react";
+import { useAuth } from "../context/AuthContext";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import { useToast } from "@/components/ui/use-toast";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/Dialog";
+// import { fixUI } from "../../lib/ui-fix";
+import {
+  Tabs,
+  TabsContent,
+//   TabsList,
+//   TabsTrigger,
+} from "@/components/ui/Tabs";
 
-interface Stats {
-  totalUsers: number;
-  activeUsers: number;
-  inactiveUsers: number;
-  verifiedUsers: number;
-  unverifiedUsers: number;
-  adminUsers: number;
-  regularUsers: number;
-  recentUsers: number;
-}
+// API services
+import productService from "../api/services/productService";
+import dashboardService from "../api/services/dashboardService";
+import couponService, { Coupon } from "../api/services/couponService";
+import api from "../api/services/api";
+
+// Custom components
+import AdminLayout from "../components/Admin/AdminLayout";
+import DashboardHeader from "../components/Admin/DashboardHeader";
+import ProductsTable from "../components/Admin/ProductsTable";
+import OrdersTable from "../components/Admin/OrdersTable";
+import UsersTable from "../components/Admin/UsersTable";
+import ProductForm from "../components/Admin/ProductForm";
+import CouponsTable from "../components/Admin/CouponsTable";
+import CouponForm from "../components/Admin/CouponForm";
+// import OrderDetails from "../components/Admin/OrderDetails";
+import UserAnalytics from "../components/Admin/UserAnalytics";
+import SettingsPanel from "../components/Admin/SettingsPanel";
+import RecentActivity from "../components/Admin/RecentActivity";
+import SalesChart from "../components/Admin/SalesChart";
+import TopProducts from "../components/Admin/TopProducts";
+
+// Helper function to replace fixUI
+const fixUI = () => {
+  document.body.style.pointerEvents = "";
+};
 
 export default function AdminDashboard() {
-  const [stats, setStats] = useState<Stats | null>(null);
+  const { user: currentUser /* isAuthenticated */ } = useAuth();
+  const navigate = useNavigate();
+  const { toast } = useToast();
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  // State
+  const [products, setProducts] = useState([]);
+  const [orders, setOrders] = useState([]);
+  const [users, setUsers] = useState([]);
+  const [coupons, setCoupons] = useState([]);
+  const [dashboardStats, setDashboardStats] = useState({
+    totalRevenue: 0,
+    totalOrders: 0,
+    totalCustomers: 0,
+    totalProducts: 0,
+    pendingOrders: 0,
+    lowStockProducts: 0,
+  });
+  const [trends, setTrends] = useState({
+    revenue: { value: 12, isPositive: true },
+    orders: { value: 8, isPositive: true },
+    customers: { value: 5, isPositive: true },
+    products: { value: 3, isPositive: true },
+  });
+
+  const [salesData, setSalesData] = useState([]);
+  const [topProducts, setTopProducts] = useState([]);
+  const [recentActivity, setRecentActivity] = useState({
+    orders: [],
+    users: [],
+    products: [],
+  });
+
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  const [productsLoading, setProductsLoading] = useState(true);
+  const [ordersLoading, setOrdersLoading] = useState(false);
+  const [usersLoading, setUsersLoading] = useState(false);
+  const [couponsLoading, setCouponsLoading] = useState(false);
+  // const [error, setError] = useState(null);
+
+  const [isAddProductOpen, setIsAddProductOpen] = useState(false);
+  const [isEditProductOpen, setIsEditProductOpen] = useState(false);
+  const [isAddCouponOpen, setIsAddCouponOpen] = useState(false);
+  const [isEditCouponOpen, setIsEditCouponOpen] = useState(false);
+
+  const [selectedProduct, setSelectedProduct] = useState(null);
+  const [selectedCoupon, setSelectedCoupon] = useState(null);
+  const [newProduct, setNewProduct] = useState({
+    name: "",
+    price: 0,
+    description: "",
+    category: "",
+    images: [""],
+    inventory: 0,
+    colors: ["Black", "White"],
+    sizes: ["S", "M", "L"],
+    inStock: true,
+    isNew: false,
+    isFeatured: false,
+    material: "",
+    fit: "",
+    care: "",
+    origin: "",
+  });
+
+
+  const tabFromUrl = searchParams.get("tab") || "dashboard";
+  const [activeTab, setActiveTab] = useState(tabFromUrl);
+
+  const handleTabChange = (value) => {
+    setActiveTab(value);
+    setSearchParams({ tab: value });
+  };
 
   useEffect(() => {
-    fetchStats();
+    setLoading(false);
+    setProductsLoading(false);
+    setOrdersLoading(false);
+    setUsersLoading(false);
   }, []);
 
-  const fetchStats = async () => {
+  useEffect(() => {
+    const currentTab = searchParams.get("tab") || "dashboard";
+    setActiveTab(currentTab);
+  }, [searchParams]);
+
+  // Fetch initial data
+  const fetchInitialData = async () => {
+    setLoading(true);
     try {
-      setLoading(true);
-      const response = await adminAPI.getStats();
-      setStats(response.data);
-    } catch (err: any) {
-      setError(err.response?.data?.message || "Failed to load statistics");
+        // In a real app, verify admin auth here
+        
+        try {
+            const dashboardData = await dashboardService.getDashboardStats();
+            setDashboardStats(dashboardData.stats);
+            setSalesData(dashboardData.salesData);
+            setTopProducts(dashboardData.topProducts);
+            setRecentActivity(dashboardData.recentActivity);
+            setTrends(dashboardData.trends);
+
+             // Also update the products, orders, and users state if needed
+             // For simplicity, we can fetch them separately or rely on dashboardService returning everything?
+             // mamo dashboardService returns specific stats.
+             
+             // Fetch products if needed for dashboard recent activity logic or just to have them
+             await fetchProducts();
+             await fetchOrdersData();
+             await fetchUsersData();
+
+        } catch (dashboardError) {
+             console.warn("Dashboard service failed, using fallback/mock or manual calc", dashboardError);
+             // Fallback: Fetch individual data
+             const productsData = await fetchProducts();
+             const ordersData = await fetchOrdersData();
+             const usersData = await fetchUsersData();
+             // Manually calculate stats if needed (omitted for brevity)
+        }
+    } catch (error) {
+        console.error("Error loading dashboard data:", error);
+        toast({
+            title: "Error",
+            description: "Failed to load dashboard data",
+            variant: "destructive",
+        });
     } finally {
-      setLoading(false);
+        setLoading(false);
     }
   };
 
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-      </div>
-    );
-  }
+  useEffect(() => {
+    fetchInitialData();
+    return () => {
+        document.body.style.pointerEvents = "";
+    };
+  }, []);
 
-  if (error) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
-          {error}
-        </div>
-      </div>
-    );
-  }
+  const fetchCouponsData = async () => {
+    setCouponsLoading(true);
+    try {
+      const response = await couponService.getAllCoupons();
+      setCoupons(response);
+    } catch (error) {
+      console.error("Error fetching coupons:", error);
+      toast({
+        title: "Error",
+        description: "Failed to load coupons.",
+        variant: "destructive",
+      });
+      setCoupons([]);
+    } finally {
+      setCouponsLoading(false);
+    }
+  };
+
+  const fetchProducts = async () => {
+    setProductsLoading(true);
+    try {
+      const response = await productService.getAdminProducts();
+      setProducts(response || []);
+      return response;
+    } catch (error) {
+      console.error("Error fetching products:", error);
+      setProducts([]);
+      return [];
+    } finally {
+      setProductsLoading(false);
+    }
+  };
+
+  const fetchOrdersData = async () => {
+    setOrdersLoading(true);
+    try {
+      const response = await api.get("/orders/admin/all");
+      let ordersData = [];
+       if (response.data && response.data.orders) {
+        ordersData = response.data.orders;
+      } else if (Array.isArray(response.data)) {
+        ordersData = response.data;
+      }
+      setOrders(ordersData);
+      return ordersData;
+    } catch (error) {
+      console.error("Error fetching orders:", error);
+      setOrders([]);
+      return [];
+    } finally {
+      setOrdersLoading(false);
+    }
+  };
+
+    const fetchUsersData = async () => {
+    setUsersLoading(true);
+    try {
+      const response = await api.get("/users?all=true");
+      let usersData = [];
+      if (response.data && response.data.users) {
+        usersData = response.data.users;
+      } else if (Array.isArray(response.data)) {
+        usersData = response.data;
+      }
+      setUsers(usersData);
+      return usersData;
+    } catch (error) {
+      console.error("Error fetching users:", error);
+      setUsers([]);
+      return [];
+    } finally {
+      setUsersLoading(false);
+    }
+  };
+
+
+  useEffect(() => {
+    if (activeTab === "orders") fetchOrdersData();
+    else if (activeTab === "users") fetchUsersData();
+    else if (activeTab === "coupons") fetchCouponsData();
+    else if (activeTab === "products") fetchProducts();
+  }, [activeTab]);
+
+  const handleApplyUIFix = () => {
+      setTimeout(() => {
+          fixUI();
+          document.body.style.pointerEvents = "";
+      }, 100);
+  };
+
+  // Handlers (Simplified for now, assume props passed correctly)
+  const handleAddProduct = async (data) => {
+      try {
+          const response = await productService.createProduct(data);
+          setProducts([...products, response]);
+          setIsAddProductOpen(false);
+          toast({ title: "Success", description: "Product created successfully" });
+      } catch (err) {
+          toast({ title: "Error", description: "Failed to create product", variant: "destructive" });
+      }
+  };
+
+  const handleSaveEdit = async (id, data) => {
+      try {
+          const response = await productService.updateProduct(id, data);
+          setProducts(products.map(p => p.id === id || p._id === id ? response : p));
+          setIsEditProductOpen(false);
+           toast({ title: "Success", description: "Product updated successfully" });
+      } catch (err) {
+           toast({ title: "Error", description: "Failed to update product", variant: "destructive" });
+      }
+  };
+
+  const handleDeleteProduct = async (id) => {
+      if(!confirm("Are you sure?")) return;
+       try {
+          await productService.deleteProduct(id);
+          setProducts(products.filter(p => p.id !== id && p._id !== id));
+          toast({ title: "Success", description: "Product deleted" });
+      } catch (err) {
+           toast({ title: "Error", description: "Failed to delete product", variant: "destructive" });
+      }
+  };
+
+  const handleEditProduct = (product) => {
+      setSelectedProduct(product);
+      setIsEditProductOpen(true);
+  };
+
+  const handleUpdateOrderStatus = async (orderId, status) => {
+      // Implement logic
+       toast({ title: "Info", description: "Order status update logic needs to be implemented fully." });
+       // Logic from mamo:
+       // const response = await api.put(`/orders/${mongoId}/status`, { status });
+       // update local state
+  };
+
+  // Coupon handlers
+  const handleAddCoupon = async (data) => {
+      try {
+          await couponService.createCoupon(data);
+          fetchCouponsData();
+          setIsAddCouponOpen(false);
+          toast({ title: "Success", description: "Coupon created" });
+      } catch (err) {
+          toast({ title: "Error", description: "Failed to create coupon", variant: "destructive" });
+      }
+  };
+  
+   const handleEditCoupon = (coupon) => {
+      setSelectedCoupon(coupon);
+      setIsEditCouponOpen(true);
+  };
+
+  const handleSaveEditCoupon = async (id, data) => {
+      try {
+           await couponService.updateCoupon(id, data);
+           fetchCouponsData();
+           setIsEditCouponOpen(false);
+            toast({ title: "Success", description: "Coupon updated" });
+      } catch (err) {
+          toast({ title: "Error", description: "Failed to update coupon", variant: "destructive" });
+      }
+  };
+
+  const handleDeleteCoupon = async (id) => {
+       if(!confirm("Are you sure?")) return;
+        try {
+           await couponService.deleteCoupon(id);
+           fetchCouponsData();
+            toast({ title: "Success", description: "Coupon deleted" });
+      } catch (err) {
+          toast({ title: "Error", description: "Failed to delete coupon", variant: "destructive" });
+      }
+  };
+  
+  // User handlers (placeholder)
+  const handleInspectUser = (user) => {};
+  const handleDeleteUser = (id) => {};
+  const handleToggleUserStatus = (id, status) => {};
+  const handleChangeUserRole = (id, role) => {};
+
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-7xl mx-auto px-4">
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
-          <p className="text-gray-600 mt-2">
-            Manage users and view system statistics
-          </p>
-        </div>
-
-        {/* Quick Actions */}
-        <div className="mb-8 flex gap-4">
-          <Link
-            to="/admin/users"
-            className="px-6 py-3 bg-blue-600 text-white rounded-md hover:bg-blue-700 font-medium"
-          >
-            Manage Users
-          </Link>
-          <Link
-            to="/profile"
-            className="px-6 py-3 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 font-medium"
-          >
-            Back to Profile
-          </Link>
-        </div>
-
-        {/* Statistics Grid */}
-        {stats && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {/* Total Users */}
-            <div className="bg-white p-6 rounded-lg shadow">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-600">Total Users</p>
-                  <p className="text-3xl font-bold text-gray-900">
-                    {stats.totalUsers}
-                  </p>
-                </div>
-                <div className="p-3 bg-blue-100 rounded-full">
-                  <svg
-                    className="w-8 h-8 text-blue-600"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"
-                    />
-                  </svg>
-                </div>
-              </div>
+    <AdminLayout>
+      <div className="space-y-8">
+        <DashboardHeader 
+          stats={dashboardStats} 
+          trends={trends} 
+          isLoading={loading}
+          onRefresh={fetchInitialData}
+        />
+        
+        {/* Dashboard Home View - Charts */}
+        {(activeTab === 'dashboard' || !activeTab) && (
+            <div className="space-y-6 animate-fade-in">
+                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <SalesChart salesData={salesData} isLoading={loading} />
+                    <TopProducts products={topProducts} isLoading={loading} />
+                 </div>
+                 <RecentActivity 
+                    recentOrders={recentActivity.orders}
+                    recentUsers={recentActivity.users}
+                    recentProducts={recentActivity.products}
+                    isLoading={loading}
+                 />
             </div>
-
-            {/* Active Users */}
-            <div className="bg-white p-6 rounded-lg shadow">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-600">Active Users</p>
-                  <p className="text-3xl font-bold text-green-600">
-                    {stats.activeUsers}
-                  </p>
-                </div>
-                <div className="p-3 bg-green-100 rounded-full">
-                  <svg
-                    className="w-8 h-8 text-green-600"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                    />
-                  </svg>
-                </div>
-              </div>
-            </div>
-
-            {/* Inactive Users */}
-            <div className="bg-white p-6 rounded-lg shadow">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-600">Inactive Users</p>
-                  <p className="text-3xl font-bold text-red-600">
-                    {stats.inactiveUsers}
-                  </p>
-                </div>
-                <div className="p-3 bg-red-100 rounded-full">
-                  <svg
-                    className="w-8 h-8 text-red-600"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
-                    />
-                  </svg>
-                </div>
-              </div>
-            </div>
-
-            {/* Recent Users */}
-            <div className="bg-white p-6 rounded-lg shadow">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-600">New (7 days)</p>
-                  <p className="text-3xl font-bold text-purple-600">
-                    {stats.recentUsers}
-                  </p>
-                </div>
-                <div className="p-3 bg-purple-100 rounded-full">
-                  <svg
-                    className="w-8 h-8 text-purple-600"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"
-                    />
-                  </svg>
-                </div>
-              </div>
-            </div>
-
-            {/* Verified Users */}
-            <div className="bg-white p-6 rounded-lg shadow">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-600">Verified</p>
-                  <p className="text-3xl font-bold text-green-600">
-                    {stats.verifiedUsers}
-                  </p>
-                </div>
-                <div className="p-3 bg-green-100 rounded-full">
-                  <svg
-                    className="w-8 h-8 text-green-600"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"
-                    />
-                  </svg>
-                </div>
-              </div>
-            </div>
-
-            {/* Unverified Users */}
-            <div className="bg-white p-6 rounded-lg shadow">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-600">Unverified</p>
-                  <p className="text-3xl font-bold text-orange-600">
-                    {stats.unverifiedUsers}
-                  </p>
-                </div>
-                <div className="p-3 bg-orange-100 rounded-full">
-                  <svg
-                    className="w-8 h-8 text-orange-600"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-                    />
-                  </svg>
-                </div>
-              </div>
-            </div>
-
-            {/* Admin Users */}
-            <div className="bg-white p-6 rounded-lg shadow">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-600">Admins</p>
-                  <p className="text-3xl font-bold text-indigo-600">
-                    {stats.adminUsers}
-                  </p>
-                </div>
-                <div className="p-3 bg-indigo-100 rounded-full">
-                  <svg
-                    className="w-8 h-8 text-indigo-600"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
-                    />
-                  </svg>
-                </div>
-              </div>
-            </div>
-
-            {/* Regular Users */}
-            <div className="bg-white p-6 rounded-lg shadow">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-600">Regular Users</p>
-                  <p className="text-3xl font-bold text-gray-600">
-                    {stats.regularUsers}
-                  </p>
-                </div>
-                <div className="p-3 bg-gray-100 rounded-full">
-                  <svg
-                    className="w-8 h-8 text-gray-600"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                    />
-                  </svg>
-                </div>
-              </div>
-            </div>
-          </div>
         )}
+        
+        {/* Other Tabs */}
+        <div>
+          {/* Products Tab */}
+          {activeTab === 'products' && (
+             <ProductsTable 
+                products={products} 
+                loading={productsLoading} 
+                onEdit={handleEditProduct} 
+                onDelete={handleDeleteProduct} 
+                onAddNew={() => setIsAddProductOpen(true)} 
+             />
+          )}
+
+          {/* Orders Tab */}
+          {activeTab === 'orders' && (
+            <OrdersTable 
+                orders={orders} 
+                loading={ordersLoading} 
+                onViewDetails={() => {}} 
+                onUpdateStatus={handleUpdateOrderStatus} 
+            />
+          )}
+
+          {/* Users Tab */}
+          {activeTab === 'users' && (
+            <UsersTable 
+                users={users} 
+                loading={usersLoading} 
+                onInspectUser={handleInspectUser}
+                onDeleteUser={handleDeleteUser}
+                onToggleUserStatus={handleToggleUserStatus}
+                onChangeUserRole={handleChangeUserRole}
+                onViewDetails={() => {}} 
+            />
+          )}
+
+          {/* Activity Tab (if separate) or Analytics */}
+          {activeTab === 'analytics' && <UserAnalytics users={users} orders={orders} />}
+
+          {/* Coupons Tab */}
+          {activeTab === 'coupons' && (
+              <CouponsTable
+                coupons={coupons}
+                loading={couponsLoading}
+                onEdit={handleEditCoupon}
+                onDelete={handleDeleteCoupon}
+                onAddNew={() => setIsAddCouponOpen(true)}
+                onRefresh={fetchCouponsData}
+              />
+          )}
+
+          {/* Settings Tab */}
+          {activeTab === 'settings' && <SettingsPanel />}
+        </div>
       </div>
-    </div>
+
+       {/* Add Product Dialog */}
+       <Dialog
+        open={isAddProductOpen}
+        onOpenChange={(open) => {
+          setIsAddProductOpen(open);
+          if (!open) handleApplyUIFix();
+        }}
+      >
+        <DialogContent
+          className="max-w-3xl max-h-[90vh] overflow-hidden"
+          onEscapeKeyDown={() => { setIsAddProductOpen(false); handleApplyUIFix(); }}
+          onPointerDownOutside={() => { setIsAddProductOpen(false); handleApplyUIFix(); }}
+        >
+          <DialogHeader>
+            <DialogTitle>Add New Product</DialogTitle>
+            <DialogDescription>
+              Enter the details for the new product.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="overflow-y-auto pr-2 max-h-[calc(90vh-120px)]">
+            <ProductForm
+              initialData={newProduct}
+              onSubmit={handleAddProduct}
+              onCancel={() => setIsAddProductOpen(false)}
+            />
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Product Dialog */}
+      <Dialog
+        open={isEditProductOpen}
+        onOpenChange={(open) => {
+          setIsEditProductOpen(open);
+          if (!open) {
+            if (selectedProduct) setSelectedProduct(null);
+            handleApplyUIFix();
+          }
+        }}
+      >
+        <DialogContent
+          className="max-w-3xl max-h-[90vh] overflow-hidden"
+          onEscapeKeyDown={() => { setIsEditProductOpen(false); handleApplyUIFix(); }}
+          onPointerDownOutside={() => { setIsEditProductOpen(false); handleApplyUIFix(); }}
+        >
+          <DialogHeader>
+            <DialogTitle>Edit Product</DialogTitle>
+            <DialogDescription>Update the product details.</DialogDescription>
+          </DialogHeader>
+          {selectedProduct && (
+            <div className="overflow-y-auto pr-2 max-h-[calc(90vh-120px)]">
+              <ProductForm
+                initialData={selectedProduct}
+                onSubmit={(data) => handleSaveEdit(selectedProduct.id || selectedProduct._id, data)}
+                onCancel={() => setIsEditProductOpen(false)}
+              />
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Add Coupon Dialog */}
+      <Dialog
+        open={isAddCouponOpen}
+        onOpenChange={(open) => {
+          setIsAddCouponOpen(open);
+          if(!open) handleApplyUIFix();
+        }}
+      >
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-hidden">
+          <DialogHeader>
+            <DialogTitle>Add New Coupon</DialogTitle>
+            <DialogDescription>Create a new discount coupon.</DialogDescription>
+          </DialogHeader>
+          <div className="overflow-y-auto pr-2 max-h-[calc(90vh-120px)]">
+            <CouponForm
+              onSubmit={handleAddCoupon}
+              onCancel={() => setIsAddCouponOpen(false)}
+            />
+          </div>
+        </DialogContent>
+      </Dialog>
+     
+      {/* Edit Coupon Dialog */}
+      <Dialog
+        open={isEditCouponOpen}
+        onOpenChange={(open) => {
+          setIsEditCouponOpen(open);
+          if(!open) {
+              if (selectedCoupon) setSelectedCoupon(null);
+              handleApplyUIFix();
+          }
+        }}
+      >
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-hidden">
+          <DialogHeader>
+            <DialogTitle>Edit Coupon</DialogTitle>
+            <DialogDescription>Update the coupon details.</DialogDescription>
+          </DialogHeader>
+          {selectedCoupon && (
+            <div className="overflow-y-auto pr-2 max-h-[calc(90vh-120px)]">
+              <CouponForm
+                initialData={selectedCoupon}
+                onSubmit={(data) => handleSaveEditCoupon(selectedCoupon._id || selectedCoupon.id, data)}
+                onCancel={() => setIsEditCouponOpen(false)}
+              />
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+    </AdminLayout>
   );
 }

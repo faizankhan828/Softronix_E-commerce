@@ -7,6 +7,8 @@ import {
   ShoppingBag,
   User,
   Search,
+  Sun,
+  Moon,
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
@@ -44,6 +46,19 @@ export function Navbar() {
     setMobileMenuOpen(false);
   }, [location]);
 
+  useEffect(() => {
+    // Initialize theme
+    const savedTheme = localStorage.getItem("theme");
+    const systemTheme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+    const theme = savedTheme || systemTheme;
+    
+    if (theme === "dark") {
+      document.documentElement.classList.add("dark");
+    } else {
+      document.documentElement.classList.remove("dark");
+    }
+  }, []);
+
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (searchQuery.trim()) {
@@ -73,7 +88,7 @@ export function Navbar() {
 
       {/* Main Navbar */}
       <div className="container mx-auto px-4">
-        <div className="flex items-center justify-between h-16 lg:h-20">
+        <div className="flex items-center justify-between h-14 lg:h-16">
           {/* Mobile Menu Button */}
           <button
             className="lg:hidden p-2 -ml-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
@@ -113,6 +128,24 @@ export function Navbar() {
 
           {/* Right Actions */}
           <div className="flex items-center gap-2">
+            {/* Theme Toggle */}
+            <button
+              onClick={() => {
+                const newTheme = document.documentElement.classList.contains("dark") ? "light" : "dark";
+                if (newTheme === "dark") {
+                  document.documentElement.classList.add("dark");
+                } else {
+                  document.documentElement.classList.remove("dark");
+                }
+                localStorage.setItem("theme", newTheme);
+              }}
+              className="p-2.5 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl transition-colors"
+              aria-label="Toggle theme"
+            >
+              <span className="dark:hidden"><Moon className="w-5 h-5" /></span>
+              <span className="hidden dark:block"><Sun className="w-5 h-5" /></span>
+            </button>
+
             {/* Search Button */}
             <button
               onClick={() => setSearchOpen(!searchOpen)}
