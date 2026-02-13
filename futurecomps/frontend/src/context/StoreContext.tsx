@@ -122,31 +122,33 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         if (isAuthenticated) {
           await Promise.all([
             cartService.syncCartAfterLogin(),
-            wishlistService.syncWishlistAfterLogin()
+            wishlistService.syncWishlistAfterLogin(),
           ]);
         }
-        
+
         const [cartItems, wishlistItems] = await Promise.all([
           cartService.getCart(),
-          wishlistService.getWishlist()
+          wishlistService.getWishlist(),
         ]);
-        
+
         // Transform items to ensure they match CartItem interface
         const mappedCartItems: CartItem[] = cartItems.map((item: any) => ({
-             productId: item.productId,
-             quantity: item.quantity,
-             size: item.size,
-             color: item.color,
-             product: item.product,
+          productId: item.productId,
+          quantity: item.quantity,
+          size: item.size,
+          color: item.color,
+          product: item.product,
         })) as unknown as CartItem[];
 
-        setCart(prev => ({
-            ...calculateCartTotals(mappedCartItems, prev.discount > 0 ? (prev.discount / prev.subtotal) * 100 : 0),
-            discountCode: prev.discountCode
+        setCart((prev) => ({
+          ...calculateCartTotals(
+            mappedCartItems,
+            prev.discount > 0 ? (prev.discount / prev.subtotal) * 100 : 0,
+          ),
+          discountCode: prev.discountCode,
         }));
 
         setWishlist(wishlistItems);
-
       } catch (err) {
         console.error("Failed to initialize store", err);
       } finally {
@@ -157,7 +159,6 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
 
     initStore();
   }, [isAuthenticated, calculateCartTotals]);
-
 
   // Fetch products from API
   const fetchProducts = useCallback(async () => {
@@ -274,7 +275,6 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     setFilteredProducts(result);
   }, [products, filters]);
 
-
   // Cart actions
   const addToCart = useCallback(
     async (product: Product, quantity = 1, size?: string, color?: string) => {
@@ -307,12 +307,16 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
             discountCode: prev.discountCode,
           };
         });
-        
+
         setIsCartOpen(true);
 
         // Sync with service
-        await cartService.addToCart(product._id, quantity, size || "", color || "");
-
+        await cartService.addToCart(
+          product._id,
+          quantity,
+          size || "",
+          color || "",
+        );
       } catch (err) {
         console.error("Failed to add to cart", err);
         // revert logic could go here
@@ -324,24 +328,23 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   const removeFromCart = useCallback(
     async (productId: string) => {
       try {
-          // Optimistic update
-          setCart((prev) => {
-            const newItems = prev.items.filter(
-              (item) => item.productId !== productId,
-            );
-            const discountPercent = prev.discountCode
-              ? (prev.discount / prev.subtotal) * 100
-              : 0;
-            return {
-              ...calculateCartTotals(newItems, discountPercent),
-              discountCode: prev.discountCode,
-            };
-          });
+        // Optimistic update
+        setCart((prev) => {
+          const newItems = prev.items.filter(
+            (item) => item.productId !== productId,
+          );
+          const discountPercent = prev.discountCode
+            ? (prev.discount / prev.subtotal) * 100
+            : 0;
+          return {
+            ...calculateCartTotals(newItems, discountPercent),
+            discountCode: prev.discountCode,
+          };
+        });
 
-          await cartService.removeFromCart(productId);
-
+        await cartService.removeFromCart(productId);
       } catch (err) {
-          console.error("Failed to remove from cart", err);
+        console.error("Failed to remove from cart", err);
       }
     },
     [calculateCartTotals],
@@ -354,25 +357,24 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         return;
       }
       try {
-          // Optimistic update
-          setCart((prev) => {
-            const newItems = prev.items.map((item) =>
-              item.productId === productId ? { ...item, quantity } : item,
-            );
-            const discountPercent = prev.discountCode
-              ? (prev.discount / prev.subtotal) * 100
-              : 0;
-            return {
-              ...calculateCartTotals(newItems, discountPercent),
-              discountCode: prev.discountCode,
-            };
-          });
+        // Optimistic update
+        setCart((prev) => {
+          const newItems = prev.items.map((item) =>
+            item.productId === productId ? { ...item, quantity } : item,
+          );
+          const discountPercent = prev.discountCode
+            ? (prev.discount / prev.subtotal) * 100
+            : 0;
+          return {
+            ...calculateCartTotals(newItems, discountPercent),
+            discountCode: prev.discountCode,
+          };
+        });
 
-          // Sync
-          await cartService.updateCartItem(productId, quantity);
-
+        // Sync
+        await cartService.updateCartItem(productId, quantity);
       } catch (err) {
-          console.error("Failed to update cart quantity", err);
+        console.error("Failed to update cart quantity", err);
       }
     },
     [calculateCartTotals, removeFromCart],
@@ -380,10 +382,10 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
 
   const clearCart = useCallback(async () => {
     try {
-        setCart(defaultCart);
-        await cartService.clearCart();
+      setCart(defaultCart);
+      await cartService.clearCart();
     } catch (err) {
-        console.error("Failed to clear cart", err);
+      console.error("Failed to clear cart", err);
     }
   }, []);
 
@@ -406,31 +408,35 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
 
   // Wishlist Actions
   const addToWishlist = useCallback(async (productId: string) => {
-      try {
-        // Optimistic update: we need the product details to add it nicely
-        // But for now, just sync with backend and refresh wishlist
-        await wishlistService.addToWishlist(productId);
-        const updatedWishlist = await wishlistService.getWishlist();
-        setWishlist(updatedWishlist);
-      } catch (err) {
-        console.error("Failed to add to wishlist", err);
-      }
-    }, []);
+    try {
+      // Optimistic update: we need the product details to add it nicely
+      // But for now, just sync with backend and refresh wishlist
+      await wishlistService.addToWishlist(productId);
+      const updatedWishlist = await wishlistService.getWishlist();
+      setWishlist(updatedWishlist);
+    } catch (err) {
+      console.error("Failed to add to wishlist", err);
+    }
+  }, []);
 
   const removeFromWishlist = useCallback(async (productId: string) => {
     try {
       // Optimistic
-      setWishlist(prev => prev.filter(item => item.productId !== productId));
+      setWishlist((prev) =>
+        prev.filter((item) => item.productId !== productId),
+      );
       await wishlistService.removeFromWishlist(productId);
     } catch (err) {
       console.error("Failed to remove from wishlist", err);
     }
   }, []);
 
-  const isInWishlist = useCallback((productId: string) => {
-    return wishlist.some(item => item.productId === productId);
-  }, [wishlist]);
-
+  const isInWishlist = useCallback(
+    (productId: string) => {
+      return wishlist.some((item) => item.productId === productId);
+    },
+    [wishlist],
+  );
 
   const setFilters = useCallback((newFilters: Partial<FilterState>) => {
     setFiltersState((prev) => ({ ...prev, ...newFilters }));
@@ -497,10 +503,15 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
           } else if (action.payload?.productId) {
             // Find product by ID from current products list
             const product = products.find(
-              (p) => p._id === action.payload.productId
+              (p) => p._id === action.payload.productId,
             );
             if (product) {
-              addToCart(product, action.payload.quantity || 1, action.payload?.size, action.payload?.color);
+              addToCart(
+                product,
+                action.payload.quantity || 1,
+                action.payload?.size,
+                action.payload?.color,
+              );
             }
           }
           break;

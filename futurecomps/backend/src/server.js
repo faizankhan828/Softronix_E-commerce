@@ -58,14 +58,7 @@ app.use(mongoSanitize()); // Prevent MongoDB injection
 // });
 
 // Middleware
-app.use(
-  cors({
-    origin: "*",
-    methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization", "x-csrf-token"],
-    // credentials: true, // Cannot be true with wildcard origin
-  }),
-);
+app.use(cors()); // Allow all origins and headers
 
 // Webhook route must be registered BEFORE express.json()
 // because it needs the raw body for signature verification

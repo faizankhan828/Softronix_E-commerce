@@ -302,12 +302,38 @@ async function testCartAndCheckout() {
   console.log("🛒 CART & CHECKOUT TEST");
   console.log("=".repeat(60));
 
-  if (!adminToken || !testProductId) {
-    fail("Cart tests", "Missing prerequisites");
+  if (!adminToken) {
+    fail("Cart tests", "Missing admin token");
     return;
   }
 
   const headers = { Authorization: `Bearer ${adminToken}` };
+
+  // Setup: Create a temp product specifically for cart testing
+  let cartTestProductId = "";
+  const tempProduct = {
+    name: "Cart Test Product",
+    description: "Temporary product for cart testing",
+    price: 19.99,
+    category: "Test",
+    images: ["https://via.placeholder.com/150"],
+    colors: ["Black"],
+    sizes: ["M"], // Explicitly set size M
+    stock: 50,
+  };
+
+  const createRes = await request("/products", {
+    method: "POST",
+    headers,
+    body: JSON.stringify(tempProduct),
+  });
+
+  if (createRes.ok && createRes.data._id) {
+    cartTestProductId = createRes.data._id;
+  } else {
+    fail("Setup cart test", "Failed to create temp product");
+    return;
+  }
 
   // Test 1: Get Empty Cart
   const emptyCart = await request("/cart", { headers });
@@ -322,7 +348,7 @@ async function testCartAndCheckout() {
     method: "POST",
     headers,
     body: JSON.stringify({
-      productId: testProductId,
+      productId: cartTestProductId,
       quantity: 2,
       size: "M",
       color: "Black",
@@ -332,40 +358,64 @@ async function testCartAndCheckout() {
   if (addToCart.ok) {
     pass("Add product to cart");
 
-    // Test 3: Get Cart with Items
+    // Test 3: Get Cart with Items & Extract Item ID
     const cart = await request("/cart", { headers });
+    let cartItemId = null;
+
     if (cart.ok && cart.data.items && cart.data.items.length > 0) {
       pass(`Get cart with items (${cart.data.items.length} items)`);
+      
+      // Find the item corresponding to our test product
+      const foundItem = cart.data.items.find(item => {
+        const pId = item.productId._id || item.productId;
+        return pId === cartTestProductId;
+      });
+
+      if (foundItem) {
+        cartItemId = foundItem._id;
+      } else {
+        fail("Find item in cart", "Added product not found in cart items");
+      }
     } else {
       fail("Get cart with items", "No items found");
     }
 
-    // Test 4: Update Cart Item
-    const updateCart = await request(`/cart/update/${testProductId}`, {
-      method: "PUT",
-      headers,
-      body: JSON.stringify({ quantity: 3 }),
-    });
+    if (cartItemId) {
+      // Test 4: Update Cart Item
+      const updateCart = await request("/cart/update", {
+        method: "PUT",
+        headers,
+        body: JSON.stringify({ itemId: cartItemId, quantity: 3 }),
+      });
 
-    if (updateCart.ok) {
-      pass("Update cart item quantity");
-    } else {
-      fail("Update cart item", updateCart.data.message || "Failed");
-    }
+      if (updateCart.ok) {
+        pass("Update cart item quantity");
+      } else {
+        fail("Update cart item", updateCart.data.message || "Failed");
+      }
 
-    // Test 5: Remove from Cart
-    const removeFromCart = await request(`/cart/remove/${testProductId}`, {
-      method: "DELETE",
-      headers,
-    });
+      // Test 5: Remove from Cart
+      const removeFromCart = await request(`/cart/remove/${cartItemId}`, {
+        method: "DELETE",
+        headers,
+      });
 
-    if (removeFromCart.ok) {
-      pass("Remove item from cart");
-    } else {
-      fail("Remove from cart", removeFromCart.data.message || "Failed");
+      if (removeFromCart.ok) {
+        pass("Remove item from cart");
+      } else {
+        fail("Remove from cart", removeFromCart.data.message || "Failed");
+      }
     }
   } else {
     fail("Add to cart", addToCart.data.message || "Failed");
+  }
+
+  // Cleanup: Delete temp product
+  if (cartTestProductId) {
+    await request(`/products/${cartTestProductId}`, {
+      method: "DELETE",
+      headers,
+    });
   }
 }
 
