@@ -12,6 +12,7 @@ interface User {
   role?: string;
   isActive?: boolean;
   isVerified: boolean;
+  createdAt?: string;
 }
 
 interface AuthContextType {
