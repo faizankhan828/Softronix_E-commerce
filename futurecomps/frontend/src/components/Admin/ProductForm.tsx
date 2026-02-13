@@ -38,6 +38,7 @@ interface Product {
   description: string;
   category: string;
   images: string[];
+  imageUrl?: string;
   stock?: number;
   colors: string[];
   sizes: string[];
@@ -94,6 +95,8 @@ export default function ProductForm({
   const [imageUrls, setImageUrls] = useState<string[]>(
     initialData.images && initialData.images.length > 0
       ? initialData.images
+      : initialData.imageUrl
+      ? [initialData.imageUrl]
       : [""]
   );
   const [colors, setColors] = useState<string[]>(
@@ -196,6 +199,7 @@ export default function ProductForm({
     const finalData = {
       ...formData,
       images: imageUrls.filter((url) => url.trim()),
+      imageUrl: imageUrls.find((url) => url.trim()) || "",
       colors: colors.filter((color) => color.trim()),
       sizes: sizes.filter((size) => size.trim()),
       tags: tags.filter((tag) => tag.trim()),
