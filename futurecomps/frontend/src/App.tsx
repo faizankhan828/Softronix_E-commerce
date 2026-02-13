@@ -7,6 +7,7 @@ import {
 import { AuthProvider } from "./context/AuthContext";
 import { StoreProvider } from "./context/StoreContext";
 import { ThemeProvider } from "./context/ThemeContext";
+import { StoreSettingsProvider } from "./context/StoreSettingsContext";
 import ProtectedRoute from "./components/ProtectedRoute";
 import AdminRoute from "./components/AdminRoute";
 
@@ -25,6 +26,7 @@ import AdminDashboard from "./pages/AdminDashboard";
 import UserManagement from "./pages/UserManagement";
 import AdminProducts from "./pages/AdminProducts";
 import Checkout from "./pages/Checkout";
+import Wishlist from "./pages/Wishlist";
 
 // Other Pages
 import Todos from "./pages/Todos";
@@ -34,14 +36,16 @@ import Cancel from "./pages/Cancel";
 function App() {
   return (
     <ThemeProvider>
-      <AuthProvider>
-        <StoreProvider>
-          <Router>
+      <StoreSettingsProvider>
+        <AuthProvider>
+          <StoreProvider>
+            <Router>
             <Routes>
               {/* Store Routes */}
               <Route path="/" element={<Storefront />} />
               <Route path="/shop" element={<ProductListing />} />
               <Route path="/product/:id" element={<ProductDetail />} />
+              <Route path="/wishlist" element={<Wishlist />} />
 
               {/* Auth Routes */}
               <Route path="/login" element={<Auth />} />
@@ -115,6 +119,7 @@ function App() {
           </Router>
         </StoreProvider>
       </AuthProvider>
+      </StoreSettingsProvider>
     </ThemeProvider>
   );
 }

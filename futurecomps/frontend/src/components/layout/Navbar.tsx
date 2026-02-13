@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Menu, X, ShoppingBag, User, Search, Truck } from "lucide-react";
+import { Menu, X, ShoppingBag, User, Search, Truck, Heart } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Logo } from "@/components/ui/Logo";
@@ -27,7 +27,7 @@ export function Navbar() {
   const [isTrackingOpen, setTrackingOpen] = useState(false);
   const location = useLocation();
 
-  const { cart, setCartOpen, setFilters } = useStore();
+  const { cart, setCartOpen, setFilters, wishlist } = useStore();
   const { user } = useAuth();
   const { toggleTheme, ThemeIcon } = useTheme();
 
@@ -139,6 +139,20 @@ export function Navbar() {
                 Track Package
               </span>
             </button>
+
+            {/* Wishlist Button */}
+            <Link
+              to="/wishlist"
+              className="relative p-2.5 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl transition-colors"
+              aria-label="Wishlist"
+            >
+              <Heart className="w-5 h-5" />
+              {wishlist.length > 0 && (
+                <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center">
+                  {wishlist.length > 9 ? "9+" : wishlist.length}
+                </span>
+              )}
+            </Link>
 
             {/* User Menu */}
             <Link

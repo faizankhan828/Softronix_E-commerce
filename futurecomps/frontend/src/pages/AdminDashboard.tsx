@@ -36,7 +36,8 @@ import TopProducts from "../components/Admin/TopProducts";
 
 // Types
 interface Product {
-  id: string;
+  id?: string;
+  _id?: string;
   name: string;
   price: number;
   description: string;
@@ -403,8 +404,14 @@ export default function AdminDashboard() {
         return [];
       }
 
-      setProducts(response);
-      return response;
+      // Normalize products to always have an id field
+      const normalizedProducts = response.map((product: any) => ({
+        ...product,
+        id: product.id || product._id || "",
+      }));
+
+      setProducts(normalizedProducts);
+      return normalizedProducts;
     } catch (error) {
       console.error("Error fetching products:", error);
       toast({
@@ -753,8 +760,9 @@ export default function AdminDashboard() {
     try {
       const response = await productService.createProduct(productData);
 
-      // Add the new product to the state
-      setProducts([...products, response]);
+      // Add the new product to the state (normalize id field)
+      const newProductWithId = { ...response, id: response.id || response._id || "" };
+      setProducts([...products, newProductWithId]);
 
       // Close the dialog
       setIsAddProductOpen(false);
@@ -815,10 +823,11 @@ export default function AdminDashboard() {
         productData,
       );
 
-      // Update the product in the state
+      // Update the product in the state (normalize id field)
+      const updatedProductWithId = { ...response, id: response.id || response._id || productId };
       setProducts(
         products.map((product) =>
-          product.id === productId ? { ...response } : product,
+          (product.id === productId || product._id === productId) ? updatedProductWithId : product,
         ),
       );
 
@@ -859,7 +868,7 @@ export default function AdminDashboard() {
       await productService.deleteProduct(productId);
 
       // Remove the product from the state
-      setProducts(products.filter((product) => product.id !== productId));
+      setProducts(products.filter((product) => product.id !== productId && product._id !== productId));
 
       toast({
         title: "Success",
@@ -1294,7 +1303,7 @@ export default function AdminDashboard() {
             <div className="overflow-y-auto pr-2 max-h-[calc(90vh-120px)]">
               <ProductForm
                 initialData={selectedProduct}
-                onSubmit={(data) => handleSaveEdit(selectedProduct.id, data)}
+                onSubmit={(data) => handleSaveEdit(selectedProduct.id || selectedProduct._id || "", data)}
                 onCancel={() => setIsEditProductOpen(false)}
               />
             </div>

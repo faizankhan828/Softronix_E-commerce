@@ -63,9 +63,10 @@ export function ProductDetail() {
   const [selectedSize, setSelectedSize] = useState<string>("");
   const [selectedColor, setSelectedColor] = useState<string>("");
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  const [isWishlisted, setIsWishlisted] = useState(false);
 
-  const { products, addToCart, setCartOpen } = useStore();
+  const { products, addToCart, setCartOpen, addToWishlist, removeFromWishlist, isInWishlist } = useStore();
+  
+  const isWishlisted = product ? isInWishlist(product._id) : false;
 
   useEffect(() => {
     // Find product by ID
@@ -347,7 +348,15 @@ export function ProductDetail() {
                   Buy Now
                 </Button>
                 <button
-                  onClick={() => setIsWishlisted(!isWishlisted)}
+                  onClick={() => {
+                    if (product) {
+                      if (isWishlisted) {
+                        removeFromWishlist(product._id);
+                      } else {
+                        addToWishlist(product._id);
+                      }
+                    }
+                  }}
                   className={cn(
                     "w-12 h-12 rounded-xl flex items-center justify-center transition-colors",
                     isWishlisted

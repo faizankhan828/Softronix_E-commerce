@@ -15,6 +15,8 @@ import type {
 } from "@/types/store";
 import axios from "axios";
 import cartService from "@/api/services/cartService";
+import wishlistService from "@/api/services/wishlistService";
+import type { WishlistItem } from "@/api/services/wishlistService";
 import { useAuth } from "./AuthContext";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
@@ -33,6 +35,10 @@ interface StoreContextType {
   isCartOpen: boolean;
   cartLoading: boolean;
 
+  // Wishlist
+  wishlist: WishlistItem[];
+  wishlistLoading: boolean;
+
   // Actions
   fetchProducts: () => Promise<void>;
   setFilters: (filters: Partial<FilterState>) => void;
@@ -49,6 +55,11 @@ interface StoreContextType {
   applyDiscount: (code: string, percentage: number) => void;
   removeDiscount: () => void;
   setCartOpen: (open: boolean) => void;
+
+  // Wishlist Actions
+  addToWishlist: (productId: string) => Promise<void>;
+  removeFromWishlist: (productId: string) => Promise<void>;
+  isInWishlist: (productId: string) => boolean;
 
   // Clerk Actions
   handleClerkAction: (action: ClerkAction) => void;
@@ -80,6 +91,8 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   const [cart, setCart] = useState<Cart>(defaultCart);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [cartLoading, setCartLoading] = useState(true);
+  const [wishlist, setWishlist] = useState<WishlistItem[]>([]);
+  const [wishlistLoading, setWishlistLoading] = useState(true);
 
   // Calculate cart totals helper
   const calculateCartTotals = useCallback(
@@ -99,47 +112,50 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     [],
   );
 
-  // Initialize cart
+  // Initialize cart and wishlist
   useEffect(() => {
-    const initCart = async () => {
+    const initStore = async () => {
       setCartLoading(true);
+      setWishlistLoading(true);
       try {
-        // If authenticated, we might want to sync local cart first
+        // If authenticated, we might want to sync local cart/wishlist first
         if (isAuthenticated) {
-          await cartService.syncCartAfterLogin();
-          // Transform backend items to CartItem format if needed
-          // Assuming cartService returns matching format or handles it
-           // For now, let's just fetch the cart
+          await Promise.all([
+            cartService.syncCartAfterLogin(),
+            wishlistService.syncWishlistAfterLogin()
+          ]);
         }
         
-        const items = await cartService.getCart();
+        const [cartItems, wishlistItems] = await Promise.all([
+          cartService.getCart(),
+          wishlistService.getWishlist()
+        ]);
         
         // Transform items to ensure they match CartItem interface
-        // This might need adjustment based on exactly what cartService returns vs internal type
-        // Assuming cartService returns compatible items for now, or we map them:
-        const mappedItems: CartItem[] = items.map((item: any) => ({
+        const mappedCartItems: CartItem[] = cartItems.map((item: any) => ({
              productId: item.productId,
              quantity: item.quantity,
              size: item.size,
              color: item.color,
-             product: item.product, // Ensure product structure matches
-             // Add other fields if missing
+             product: item.product,
         })) as unknown as CartItem[];
 
-
         setCart(prev => ({
-            ...calculateCartTotals(mappedItems, prev.discount > 0 ? (prev.discount / prev.subtotal) * 100 : 0),
+            ...calculateCartTotals(mappedCartItems, prev.discount > 0 ? (prev.discount / prev.subtotal) * 100 : 0),
             discountCode: prev.discountCode
         }));
 
+        setWishlist(wishlistItems);
+
       } catch (err) {
-        console.error("Failed to initialize cart", err);
+        console.error("Failed to initialize store", err);
       } finally {
         setCartLoading(false);
+        setWishlistLoading(false);
       }
     };
 
-    initCart();
+    initStore();
   }, [isAuthenticated, calculateCartTotals]);
 
 
@@ -322,14 +338,6 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
             };
           });
 
-          // Sync with service
-          // Note: cartService.removeFromCart expects an itemId (mapped to _id in CartItem usually), 
-          // but here we are passing productId. 
-          // If the cart items have a unique _id separate from productId, we should use that.
-          // However, based on cartService it seems to use itemId which might be confused with productId in local storage implementation.
-          // Let's assume for local/optimistic, we use productId to identify, but for service we might need the item's _id if available.
-          // The current cart structure in context uses productId as key sometimes. 
-          // Let's pass productId as that's what we have. 
           await cartService.removeFromCart(productId);
 
       } catch (err) {
@@ -395,6 +403,34 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       discountCode: undefined,
     }));
   }, [calculateCartTotals]);
+
+  // Wishlist Actions
+  const addToWishlist = useCallback(async (productId: string) => {
+      try {
+        // Optimistic update: we need the product details to add it nicely
+        // But for now, just sync with backend and refresh wishlist
+        await wishlistService.addToWishlist(productId);
+        const updatedWishlist = await wishlistService.getWishlist();
+        setWishlist(updatedWishlist);
+      } catch (err) {
+        console.error("Failed to add to wishlist", err);
+      }
+    }, []);
+
+  const removeFromWishlist = useCallback(async (productId: string) => {
+    try {
+      // Optimistic
+      setWishlist(prev => prev.filter(item => item.productId !== productId));
+      await wishlistService.removeFromWishlist(productId);
+    } catch (err) {
+      console.error("Failed to remove from wishlist", err);
+    }
+  }, []);
+
+  const isInWishlist = useCallback((productId: string) => {
+    return wishlist.some(item => item.productId === productId);
+  }, [wishlist]);
+
 
   const setFilters = useCallback((newFilters: Partial<FilterState>) => {
     setFiltersState((prev) => ({ ...prev, ...newFilters }));
@@ -515,6 +551,8 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         cart,
         isCartOpen,
         cartLoading,
+        wishlist,
+        wishlistLoading,
         fetchProducts,
         setFilters,
         clearFilters,
@@ -525,6 +563,9 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         applyDiscount,
         removeDiscount,
         setCartOpen,
+        addToWishlist,
+        removeFromWishlist,
+        isInWishlist,
         handleClerkAction,
         updateProductPrice,
       }}
