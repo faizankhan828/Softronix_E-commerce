@@ -22,7 +22,6 @@ export function CartDrawer() {
   } = useStore();
 
   const { user } = useAuth();
-  const [loading, setLoading] = useState(false);
   const [couponCode, setCouponCode] = useState("");
   const [couponError, setCouponError] = useState("");
 
@@ -61,45 +60,9 @@ export function CartDrawer() {
       return;
     }
 
-    try {
-      setLoading(true);
-      console.log("🛒 Initiating Stripe checkout with cart:", cart);
-      const token = localStorage.getItem("token");
-      
-      if (!token) {
-        console.log("❌ No auth token found");
-        window.location.href = "/login";
-        return;
-      }
-      
-      const response = await fetch(`${import.meta.env.VITE_API_URL || "http://localhost:5000/api"}/payment/create-checkout-session`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          cartItems: cart.items,
-          couponCode: cart.appliedCoupon?.code || null
-        }),
-      });
-
-      const data = await response.json();
-      console.log("💳 Stripe response:", data);
-
-      if (response.ok && data.url) {
-        console.log("✅ Redirecting to Stripe checkout:", data.url);
-        window.location.href = data.url;
-      } else {
-        console.error("❌ Checkout failed:", data.message);
-        alert(`Failed to initiate checkout: ${data.message || 'Unknown error'}`);
-      }
-    } catch (error) {
-      console.error("❌ Error creating checkout session:", error);
-      alert("Failed to initiate checkout. Please try again.");
-    } finally {
-      setLoading(false);
-    }
+    // Navigate to checkout page instead of directly creating Stripe session
+    console.log("✅ Navigating to checkout page");
+    window.location.href = "/checkout";
   };
 
   return (
@@ -281,9 +244,8 @@ export function CartDrawer() {
                     className="w-full" 
                     size="lg"
                     onClick={handleCheckout}
-                    disabled={loading}
                   >
-                    {loading ? "Processing..." : "Proceed to Checkout"}
+                    Proceed to Checkout
                   </Button>
                   <Button
                     variant="ghost"

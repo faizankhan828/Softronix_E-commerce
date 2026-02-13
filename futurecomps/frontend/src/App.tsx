@@ -24,6 +24,7 @@ import ChangePassword from "./pages/ChangePassword";
 import AdminDashboard from "./pages/AdminDashboard";
 import UserManagement from "./pages/UserManagement";
 import AdminProducts from "./pages/AdminProducts";
+import Checkout from "./pages/Checkout";
 
 // Other Pages
 import Todos from "./pages/Todos";
@@ -69,7 +70,7 @@ function App() {
 
               {/* Admin Routes */}
               <Route
-                path="/admin/dashboard"
+                path="/admin"
                 element={
                   <AdminRoute>
                     <AdminDashboard />
@@ -90,6 +91,16 @@ function App() {
                   <AdminRoute>
                     <AdminProducts />
                   </AdminRoute>
+                }
+              />
+
+              {/* Checkout Route */}
+              <Route
+                path="/checkout"
+                element={
+                  <ProtectedRoute>
+                    <Checkout />
+                  </ProtectedRoute>
                 }
               />
 

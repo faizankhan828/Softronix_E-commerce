@@ -57,7 +57,7 @@ export function Navbar() {
   );
 
   return (
-    <header
+  <>  <header
       className={cn(
         "sticky top-0 z-40 w-full transition-all duration-300",
         isScrolled
@@ -237,5 +237,7 @@ export function Navbar() {
         )}
       </AnimatePresence>
     </header>
+    <div className="h-[0.05vh]"></div>
+  </>
   );
 }

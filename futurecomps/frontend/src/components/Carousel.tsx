@@ -537,9 +537,9 @@ export default function BoundaryCarousel() {
                 {/* Collection title with scramble effect */}
                 <div className="space-y-2">
                   <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 0.7, y: 0 }}
-                    exit={{ opacity: 0, y: -20 }}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 0.7 }}
+                    exit={{ opacity: 0 }}
                     transition={{ duration: 0.4 }}
                     className="text-sm tracking-[0.3em] text-gray-600 dark:text-gray-400"
                   >
@@ -550,9 +550,9 @@ export default function BoundaryCarousel() {
                   </motion.div>
 
                   <motion.h1
-                    initial={{ opacity: 0, y: 40 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -40 }}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
                     transition={{ duration: 0.5, delay: 0.1 }}
                     className="text-3xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-black tracking-tighter relative z-10 glitch-container text-gray-900 dark:text-white"
                     data-text={currentCollection?.title || "Product"}
@@ -579,11 +579,11 @@ export default function BoundaryCarousel() {
 
                 {/* Description with text */}
                 <motion.p
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 0.8, y: 0 }}
-                  exit={{ opacity: 0, y: -20 }}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 0.8 }}
+                  exit={{ opacity: 0 }}
                   transition={{ duration: 0.5, delay: 0.2 }}
-                  className="text-lg max-w-md text-gray-700 dark:text-gray-300"
+                  className="text-lg max-w-md text-gray-700 dark:text-gray-300 line-clamp-3"
                 >
                   {currentCollection?.description ||
                     "No description available."}
@@ -591,11 +591,11 @@ export default function BoundaryCarousel() {
 
                 {/* CTA buttons */}
                 <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -20 }}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
                   transition={{ duration: 0.5, delay: 0.3 }}
-                  className="flex flex-col space-y-4"
+                  className="flex flex-col space-y-4 mt-auto"
                 >
                   <Link to={`/product/${currentCollection?.productId || ""}`}>
                     <motion.button
