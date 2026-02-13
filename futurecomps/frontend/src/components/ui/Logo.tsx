@@ -34,7 +34,7 @@ export function Logo({
   const iconAnimationProps = animated ? {
     initial: { scale: 0, rotate: -180 },
     animate: { scale: 1, rotate: 0 },
-    transition: { type: "spring", stiffness: 200, damping: 15 }
+    transition: { type: "spring" as const, stiffness: 200, damping: 15 }
   } : {};
 
   const textAnimationProps = animated ? {

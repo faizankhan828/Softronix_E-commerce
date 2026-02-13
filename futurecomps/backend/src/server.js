@@ -3,7 +3,7 @@ import dotenv from "dotenv";
 import cors from "cors";
 import helmet from "helmet";
 import mongoSanitize from "express-mongo-sanitize";
-import rateLimit from "express-rate-limit";
+// import rateLimit from "express-rate-limit"; // Disabled rate limiting for development
 import connectDB from "./config/db.js";
 import authRoutes from "./routes/authRoutes.js";
 import profileRoutes from "./routes/profileRoutes.js";
@@ -32,25 +32,25 @@ app.use(helmet({
 })); // Set security headers
 app.use(mongoSanitize()); // Prevent MongoDB injection
 
-// Rate limiting for auth routes
-const authLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 5, // Limit each IP to 5 requests per windowMs
-  message: {
-    message: "Too many login attempts, please try again after 15 minutes",
-  },
-  standardHeaders: true,
-  legacyHeaders: false,
-});
+// Rate limiting disabled for development
+// const authLimiter = rateLimit({
+//   windowMs: 15 * 60 * 1000, // 15 minutes
+//   max: 5, // Limit each IP to 5 requests per windowMs
+//   message: {
+//     message: "Too many login attempts, please try again after 15 minutes",
+//   },
+//   standardHeaders: true,
+//   legacyHeaders: false,
+// });
 
 // General API rate limiter
-const apiLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // Limit each IP to 100 requests per windowMs
-  message: {
-    message: "Too many requests, please try again later",
-  },
-});
+// const apiLimiter = rateLimit({
+//   windowMs: 15 * 60 * 1000, // 15 minutes
+//   max: 100, // Limit each IP to 100 requests per windowMs
+//   message: {
+//     message: "Too many requests, please try again later",
+//   },
+// });
 
 // Middleware
 app.use(cors({
@@ -72,17 +72,17 @@ app.get("/", (req, res) => {
 });
 
 // API Routes
-app.use("/api/auth", authLimiter, authRoutes);
-app.use("/api/profile", apiLimiter, profileRoutes);
-app.use("/api/examples", apiLimiter, exampleRoutes);
-app.use("/api/admin", apiLimiter, adminRoutes);
-app.use("/api/upload", apiLimiter, uploadRoutes);
-app.use("/api/push", apiLimiter, pushRoutes);
-app.use("/api/todos", apiLimiter, todoRoutes);
-app.use("/api/products", apiLimiter, productRoutes);
-app.use("/api/cart", apiLimiter, cartRoutes);
-app.use("/api/coupons", apiLimiter, couponRoutes);
-app.use("/api/clerk", apiLimiter, clerkRoutes);
+app.use("/api/auth", authRoutes);
+app.use("/api/profile", profileRoutes);
+app.use("/api/examples", exampleRoutes);
+app.use("/api/admin", adminRoutes);
+app.use("/api/upload", uploadRoutes);
+app.use("/api/push", pushRoutes);
+app.use("/api/todos", todoRoutes);
+app.use("/api/products", productRoutes);
+app.use("/api/cart", cartRoutes);
+app.use("/api/coupons", couponRoutes);
+app.use("/api/clerk", clerkRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {

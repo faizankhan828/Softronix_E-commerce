@@ -119,6 +119,30 @@ export const getProducts = async (req, res) => {
 };
 
 /**
+ * GET /api/products/featured
+ * Get featured products with optional limit
+ */
+export const getFeaturedProducts = async (req, res) => {
+  try {
+    const { limit = 10 } = req.query;
+    
+    const products = await Product.find({ 
+      isActive: true, 
+      isFeatured: true 
+    })
+      .sort({ createdAt: -1 })
+      .limit(Number(limit))
+      .select('-hiddenBottomPrice -negotiationEnabled')
+      .lean();
+    
+    res.json(products);
+  } catch (error) {
+    console.error("getFeaturedProducts error:", error);
+    res.status(500).json({ message: "Failed to fetch featured products" });
+  }
+};
+
+/**
  * GET /api/products/categories
  */
 export const getCategories = async (_req, res) => {
