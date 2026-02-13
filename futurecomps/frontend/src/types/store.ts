@@ -36,17 +36,20 @@ export interface Cart {
 }
 
 export interface ClerkAction {
-  type: 
+  type:
     | "show_products"
     | "filter_products"
     | "sort_products"
     | "add_to_cart"
     | "remove_from_cart"
     | "apply_discount"
+    | "apply_coupon"
     | "navigate"
     | "show_product_cards"
     | "update_price"
-    | "clear_filters";
+    | "clear_filters"
+    | "check_inventory"
+    | "trigger_checkout";
   payload?: any;
 }
 
@@ -59,7 +62,12 @@ export interface ClerkMessage {
   action?: ClerkAction;
 }
 
-export type SortOption = "relevance" | "price-low" | "price-high" | "rating" | "newest";
+export type SortOption =
+  | "relevance"
+  | "price-low"
+  | "price-high"
+  | "rating"
+  | "newest";
 
 export interface FilterState {
   category?: string;

@@ -494,6 +494,14 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         case "add_to_cart":
           if (action.payload?.product) {
             addToCart(action.payload.product, action.payload.quantity || 1);
+          } else if (action.payload?.productId) {
+            // Find product by ID from current products list
+            const product = products.find(
+              (p) => p._id === action.payload.productId
+            );
+            if (product) {
+              addToCart(product, action.payload.quantity || 1, action.payload?.size, action.payload?.color);
+            }
           }
           break;
         case "remove_from_cart":
@@ -502,6 +510,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
           }
           break;
         case "apply_discount":
+        case "apply_coupon":
           if (action.payload?.code && action.payload?.percentage) {
             applyDiscount(action.payload.code, action.payload.percentage);
           }
@@ -514,12 +523,26 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
             );
           }
           break;
+        case "check_inventory":
+          // Inventory checks are handled in AiClerk via backend API
+          // This is a no-op on store side
+          break;
+        case "trigger_checkout":
+          // Navigate to checkout page
+          if (cart.items.length > 0) {
+            window.location.href = "/checkout";
+          } else {
+            setIsCartOpen(true);
+          }
+          break;
         case "clear_filters":
           clearFilters();
           break;
       }
     },
     [
+      products,
+      cart.items.length,
       addToCart,
       removeFromCart,
       applyDiscount,

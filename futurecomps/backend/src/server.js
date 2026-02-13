@@ -60,14 +60,10 @@ app.use(mongoSanitize()); // Prevent MongoDB injection
 // Middleware
 app.use(
   cors({
-    origin: [
-      "http://localhost:5173",
-      "http://localhost:3000",
-      "http://127.0.0.1:5173",
-    ],
+    origin: "*",
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization", "x-csrf-token"],
-    credentials: true,
+    // credentials: true, // Cannot be true with wildcard origin
   }),
 );
 

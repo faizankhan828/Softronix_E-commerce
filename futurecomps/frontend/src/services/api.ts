@@ -80,6 +80,42 @@ export const uploadAPI = {
   deleteImage: (fileId: string) => api.delete(`/upload/${fileId}`),
 };
 
+// Clerk AI API
+export const clerkAPI = {
+  // Semantic product search (includes AI-only context fields)
+  searchProducts: (params: {
+    query?: string;
+    category?: string;
+    minPrice?: number;
+    maxPrice?: number;
+    colors?: string[];
+    sizes?: string[];
+    occasion?: string[];
+    vibe?: string[];
+    tags?: string[];
+    limit?: number;
+  }) => api.post("/clerk/search", params),
+
+  // Check product inventory & availability
+  inventoryCheck: (data: { productId?: string; productIds?: string[] }) =>
+    api.post("/clerk/inventory-check", data),
+
+  // Get personalized recommendations
+  getRecommendations: (limit?: number) =>
+    api.get("/clerk/recommendations", { params: { limit } }),
+
+  // Generate negotiation coupon (haggle mode)
+  generateCoupon: (data: {
+    productId: string;
+    discountType: "percentage" | "fixed";
+    discountValue: number;
+    reason?: string;
+  }) => api.post("/clerk/generate-coupon", data),
+
+  // Get user context (cart + purchase history)
+  getUserContext: () => api.get("/clerk/user-context"),
+};
+
 // Admin API
 export const adminAPI = {
   // User management
