@@ -8,6 +8,7 @@ import {
   bulkUpdateUsers,
   getAllOrders,
   updateOrderStatus,
+  updateOrderTracking,
   getNegotiationCoupons,
   setBottomPrice,
 } from "../controllers/adminController.js";
@@ -34,6 +35,7 @@ router.post("/users/bulk-update", bulkUpdateUsers);
 // Order management
 router.get("/orders", getAllOrders);
 router.put("/orders/:id/status", updateOrderStatus);
+router.put("/orders/:id/tracking", updateOrderTracking);
 
 // Negotiation / Pricing controls
 router.get("/negotiation-coupons", getNegotiationCoupons);

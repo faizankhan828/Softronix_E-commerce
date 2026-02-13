@@ -246,7 +246,7 @@ export default function Profile() {
                       <motion.button
                         whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}
-                        onClick={() => navigate("/admin/dashboard")}
+                        onClick={() => navigate("/admin")}
                         className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-medium rounded-xl shadow-lg shadow-purple-500/30 transition-all"
                       >
                         <Settings className="w-4 h-4" />

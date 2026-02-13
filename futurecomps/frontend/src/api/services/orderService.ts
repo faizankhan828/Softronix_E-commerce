@@ -11,6 +11,8 @@ export interface OrderItem {
     image?: string;
     images?: string[];
   };
+  name?: string;  // From Order model
+  imageUrl?: string;  // From Order model
   quantity?: number;
   price?: number;
   total?: number;

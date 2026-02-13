@@ -374,7 +374,7 @@ export const getAllOrders = async (req, res) => {
 
 export const updateOrderStatus = async (req, res) => {
   try {
-    const { status } = req.body;
+    const { status, tracking } = req.body;
     const validStatuses = [
       "pending",
       "paid",
@@ -384,7 +384,7 @@ export const updateOrderStatus = async (req, res) => {
       "cancelled",
       "refunded",
     ];
-    if (!validStatuses.includes(status)) {
+    if (status && !validStatuses.includes(status)) {
       return res
         .status(400)
         .json({
@@ -397,13 +397,105 @@ export const updateOrderStatus = async (req, res) => {
       return res.status(404).json({ message: "Order not found" });
     }
 
-    order.status = status;
+    // Update status if provided
+    if (status) {
+      order.status = status;
+      
+      // Add to tracking history
+      if (!order.tracking) {
+        order.tracking = { history: [] };
+      }
+      order.tracking.history.push({
+        status: status,
+        description: `Order status updated to ${status}`,
+        timestamp: new Date(),
+      });
+      order.tracking.lastUpdate = new Date();
+    }
+
+    // Update tracking info if provided
+    if (tracking) {
+      if (!order.tracking) {
+        order.tracking = { history: [] };
+      }
+      
+      if (tracking.trackingNumber) {
+        order.tracking.trackingNumber = tracking.trackingNumber;
+      }
+      if (tracking.carrier) {
+        order.tracking.carrier = tracking.carrier;
+      }
+      if (tracking.estimatedDelivery) {
+        order.tracking.estimatedDelivery = new Date(tracking.estimatedDelivery);
+      }
+      if (tracking.currentLocation) {
+        order.tracking.currentLocation = tracking.currentLocation;
+      }
+      order.tracking.lastUpdate = new Date();
+    }
+
     await order.save();
 
-    res.json({ message: "Order status updated", order });
+    res.json({ message: "Order updated successfully", order });
   } catch (error) {
     console.error("updateOrderStatus error:", error);
-    res.status(500).json({ message: "Failed to update order status" });
+    res.status(500).json({ message: "Failed to update order" });
+  }
+};
+
+// ── Admin: Update Order Tracking ────────────────────────
+
+export const updateOrderTracking = async (req, res) => {
+  try {
+    const { trackingNumber, carrier, estimatedDelivery, currentLocation, addHistoryEntry } = req.body;
+
+    const order = await Order.findById(req.params.id);
+    if (!order) {
+      return res.status(404).json({ message: "Order not found" });
+    }
+
+    // Initialize tracking if not exists
+    if (!order.tracking) {
+      order.tracking = { history: [] };
+    }
+
+    // Update tracking fields
+    if (trackingNumber) {
+      order.tracking.trackingNumber = trackingNumber;
+    }
+    if (carrier) {
+      const validCarriers = ["fedex", "ups", "usps", "dhl", "other"];
+      if (!validCarriers.includes(carrier)) {
+        return res.status(400).json({ 
+          message: `Invalid carrier. Must be: ${validCarriers.join(", ")}` 
+        });
+      }
+      order.tracking.carrier = carrier;
+    }
+    if (estimatedDelivery) {
+      order.tracking.estimatedDelivery = new Date(estimatedDelivery);
+    }
+    if (currentLocation) {
+      order.tracking.currentLocation = currentLocation;
+    }
+
+    // Add history entry if provided
+    if (addHistoryEntry) {
+      order.tracking.history.push({
+        status: addHistoryEntry.status || order.status,
+        location: addHistoryEntry.location || currentLocation || "",
+        description: addHistoryEntry.description || "",
+        timestamp: new Date(),
+      });
+    }
+
+    order.tracking.lastUpdate = new Date();
+    await order.save();
+
+    res.json({ message: "Tracking information updated", order });
+  } catch (error) {
+    console.error("updateOrderTracking error:", error);
+    res.status(500).json({ message: "Failed to update tracking information" });
   }
 };
 

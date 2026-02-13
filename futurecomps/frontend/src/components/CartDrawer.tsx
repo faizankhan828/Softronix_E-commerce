@@ -22,7 +22,6 @@ export function CartDrawer() {
   } = useStore();
 
   const { user } = useAuth();
-  const [loading, setLoading] = useState(false);
   const [couponCode, setCouponCode] = useState("");
   const [couponError, setCouponError] = useState("");
 
@@ -50,36 +49,20 @@ export function CartDrawer() {
 
   const handleCheckout = async () => {
     if (!user) {
-      // You might want to redirect to login or show a toast
+      console.log("❌ User not logged in, redirecting to login");
       window.location.href = "/login"; 
       return;
     }
 
-    try {
-      setLoading(true);
-      const token = localStorage.getItem("token"); // Assuming token is stored here
-      const response = await fetch(`${import.meta.env.VITE_API_URL || "http://localhost:5000/api"}/payment/create-checkout-session`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      const data = await response.json();
-
-      if (response.ok && data.url) {
-        window.location.href = data.url;
-      } else {
-        console.error("Checkout failed:", data.message);
-        alert("Failed to initiate checkout");
-      }
-    } catch (error) {
-      console.error("Error creating checkout session:", error);
-      alert("Failed to initiate checkout");
-    } finally {
-      setLoading(false);
+    if (!cart || cart.items.length === 0) {
+      console.log("❌ Cart is empty");
+      alert("Your cart is empty. Please add items before checkout.");
+      return;
     }
+
+    // Navigate to checkout page instead of directly creating Stripe session
+    console.log("✅ Navigating to checkout page");
+    window.location.href = "/checkout";
   };
 
   return (
@@ -261,9 +244,8 @@ export function CartDrawer() {
                     className="w-full" 
                     size="lg"
                     onClick={handleCheckout}
-                    disabled={loading}
                   >
-                    {loading ? "Processing..." : "Proceed to Checkout"}
+                    Proceed to Checkout
                   </Button>
                   <Button
                     variant="ghost"

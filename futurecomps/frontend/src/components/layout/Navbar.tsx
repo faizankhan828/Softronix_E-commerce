@@ -1,13 +1,14 @@
 import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Menu, X, ShoppingBag, User, Search } from "lucide-react";
+import { Menu, X, ShoppingBag, User, Search, Truck } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Logo } from "@/components/ui/Logo";
 import { useStore } from "@/context/StoreContext";
 import { useAuth } from "@/context/AuthContext";
 import { useTheme } from "@/context/ThemeContext";
+import { PackageTracker } from "@/components/PackageTracker";
 import { cn } from "@/lib/utils";
 
 const categories = [
@@ -23,6 +24,7 @@ export function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [isTrackingOpen, setTrackingOpen] = useState(false);
   const location = useLocation();
 
   const { cart, setCartOpen, setFilters } = useStore();
@@ -57,7 +59,7 @@ export function Navbar() {
   );
 
   return (
-    <header
+  <>  <header
       className={cn(
         "sticky top-0 z-40 w-full transition-all duration-300",
         isScrolled
@@ -124,6 +126,18 @@ export function Navbar() {
               aria-label="Search"
             >
               <Search className="w-5 h-5" />
+            </button>
+
+            {/* Track Package Button */}
+            <button
+              onClick={() => setTrackingOpen(true)}
+              className="p-2.5 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl transition-colors relative group"
+              aria-label="Track Package"
+            >
+              <Truck className="w-5 h-5" />
+              <span className="absolute -bottom-8 left-1/2 -translate-x-1/2 px-2 py-1 bg-gray-900 dark:bg-gray-700 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
+                Track Package
+              </span>
             </button>
 
             {/* User Menu */}
@@ -212,6 +226,17 @@ export function Navbar() {
                 </Link>
               ))}
               <div className="pt-4 border-t mt-4">
+                {/* Track Package - Mobile */}
+                <button
+                  onClick={() => {
+                    setMobileMenuOpen(false);
+                    setTrackingOpen(true);
+                  }}
+                  className="flex items-center gap-3 w-full px-4 py-3 rounded-xl text-sm font-medium hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                >
+                  <Truck className="w-5 h-5 text-blue-600" />
+                  Track My Package
+                </button>
                 {user ? (
                   <Link
                     to="/profile"
@@ -236,6 +261,14 @@ export function Navbar() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Package Tracker Drawer */}
+      <PackageTracker 
+        isOpen={isTrackingOpen} 
+        onClose={() => setTrackingOpen(false)} 
+      />
     </header>
+    <div className="h-[0.05vh]"></div>
+  </>
   );
 }

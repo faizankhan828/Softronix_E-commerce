@@ -8,6 +8,7 @@ import {
   getOrderById,
   getOrderTracking,
   trackByNumber,
+  createCodOrder,
 } from "../controllers/checkoutController.js";
 
 const router = express.Router();
@@ -32,6 +33,7 @@ router.post(
   protect,
   createSingleProductCheckout,
 );
+router.post("/orders/create", express.json(), protect, createCodOrder);
 router.get("/orders", protect, getMyOrders);
 router.get("/orders/:id", protect, getOrderById);
 router.get("/orders/:id/tracking", protect, getOrderTracking);

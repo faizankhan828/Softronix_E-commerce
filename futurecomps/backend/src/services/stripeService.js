@@ -82,6 +82,12 @@ export async function createCheckoutSession({
   cancelUrl,
   metadata = {},
 }) {
+  console.log("👳 Stripe Service - Creating session...");
+  console.log("   User ID:", userId);
+  console.log("   Line items count:", lineItems?.length || 0);
+  console.log("   Coupon code:", couponCode || "None");
+  console.log("   Promotion code ID:", stripePromotionCodeId || "None");
+  
   const sessionParams = {
     payment_method_types: ["card"],
     line_items: lineItems,
@@ -99,14 +105,18 @@ export async function createCheckoutSession({
   // Apply promotion code if available
   if (stripePromotionCodeId) {
     sessionParams.discounts = [{ promotion_code: stripePromotionCodeId }];
+    console.log("✅ Applying promotion code to session");
   }
 
   // Allow user-entered promo codes if no code pre-applied
   if (!stripePromotionCodeId) {
     sessionParams.allow_promotion_codes = true;
+    console.log("🎫 Allowing manual promo code entry");
   }
 
+  console.log("📤 Sending request to Stripe API...");
   const session = await stripe.checkout.sessions.create(sessionParams);
+  console.log("✅ Stripe session created:", session.id);
   return session;
 }
 

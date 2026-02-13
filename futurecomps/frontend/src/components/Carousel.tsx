@@ -400,7 +400,7 @@ export default function BoundaryCarousel() {
         {/* Main carousel */}
         <div className="flex-1 flex flex-col lg:flex-row">
           {/* Left side - Images */}
-          <div className="w-full lg:w-2/3 relative overflow-hidden min-h-[400px] sm:min-h-[500px] lg:min-h-[600px]">
+          <div className="w-full lg:w-2/3 relative overflow-hidden h-[500px] sm:h-[600px] lg:h-[650px]">
             <AnimatePresence mode="wait">
               <motion.div
                 key={`images-${activeIndex}`}
@@ -509,15 +509,15 @@ export default function BoundaryCarousel() {
           </div>
 
           {/* Right side - Text content */}
-          <div className="w-full lg:w-1/3 flex flex-col justify-center px-4 sm:px-8 lg:px-16 py-8 sm:py-12 relative z-30">
-            <AnimatePresence mode="wait">
+          <div className="w-full lg:w-1/3 flex flex-col justify-center px-4 sm:px-8 lg:px-16 py-8 sm:py-12 relative z-30 h-[500px] sm:h-[600px] lg:h-[650px]">
+            <AnimatePresence mode="wait" initial={false}>
               <motion.div
                 key={`content-${activeIndex}`}
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.5, ease: "easeOut" }}
-                className="space-y-6 sm:space-y-8 lg:space-y-12"
+                className="space-y-4 sm:space-y-6 lg:space-y-8 absolute inset-0 flex flex-col justify-center px-4 sm:px-8 lg:px-16"
               >
                 {/* Model number with animated stroke */}
                 <div
@@ -537,9 +537,9 @@ export default function BoundaryCarousel() {
                 {/* Collection title with scramble effect */}
                 <div className="space-y-2">
                   <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 0.7, y: 0 }}
-                    exit={{ opacity: 0, y: -20 }}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 0.7 }}
+                    exit={{ opacity: 0 }}
                     transition={{ duration: 0.4 }}
                     className="text-sm tracking-[0.3em] text-gray-600 dark:text-gray-400"
                   >
@@ -550,9 +550,9 @@ export default function BoundaryCarousel() {
                   </motion.div>
 
                   <motion.h1
-                    initial={{ opacity: 0, y: 40 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -40 }}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
                     transition={{ duration: 0.5, delay: 0.1 }}
                     className="text-3xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-black tracking-tighter relative z-10 glitch-container text-gray-900 dark:text-white"
                     data-text={currentCollection?.title || "Product"}
@@ -579,11 +579,11 @@ export default function BoundaryCarousel() {
 
                 {/* Description with text */}
                 <motion.p
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 0.8, y: 0 }}
-                  exit={{ opacity: 0, y: -20 }}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 0.8 }}
+                  exit={{ opacity: 0 }}
                   transition={{ duration: 0.5, delay: 0.2 }}
-                  className="text-lg max-w-md text-gray-700 dark:text-gray-300"
+                  className="text-lg max-w-md text-gray-700 dark:text-gray-300 line-clamp-3"
                 >
                   {currentCollection?.description ||
                     "No description available."}
@@ -591,11 +591,11 @@ export default function BoundaryCarousel() {
 
                 {/* CTA buttons */}
                 <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -20 }}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
                   transition={{ duration: 0.5, delay: 0.3 }}
-                  className="flex flex-col space-y-4"
+                  className="flex flex-col space-y-4 mt-auto"
                 >
                   <Link to={`/product/${currentCollection?.productId || ""}`}>
                     <motion.button
