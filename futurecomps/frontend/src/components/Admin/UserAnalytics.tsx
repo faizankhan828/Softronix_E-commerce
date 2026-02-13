@@ -5,10 +5,10 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-} from "../../components/ui/card";
+} from "../../components/ui/Card";
 // Tabs removed
 import { useToast } from "../../components/ui/use-toast";
-import { Button } from "../../components/ui/button";
+import { Button } from "../../components/ui/Button";
 import {
   RefreshCw,
   BarChart2,
@@ -45,8 +45,8 @@ const AnalyticsChart = ({
     data && data.length > 0
       ? Math.max(
           ...data.map((item) =>
-            typeof item.value === "number" ? item.value : 0
-          )
+            typeof item.value === "number" ? item.value : 0,
+          ),
         )
       : 0;
 
@@ -171,11 +171,9 @@ export default function UserAnalytics() {
   const fetchAnalyticsData = async () => {
     setLoading(true);
     try {
-
       // Use the dashboard service instead of the stats API
-      const dashboardService = await import(
-        "../../api/services/dashboardService"
-      );
+      const dashboardService =
+        await import("../../api/services/dashboardService");
       const dashboardData = await dashboardService.default.getDashboardStats();
 
       // If we don't have dashboard data, fetch products and orders directly
@@ -250,7 +248,7 @@ export default function UserAnalytics() {
         // Realistic conversion rate between 1% and 10%
         const rate = Math.min(
           10,
-          Math.max(1, (item.value / (monthUsers * 100)) * 5)
+          Math.max(1, (item.value / (monthUsers * 100)) * 5),
         );
         return {
           label: item.label,
@@ -288,7 +286,7 @@ export default function UserAnalytics() {
           ...sampleCategories.map((cat) => ({
             label: cat,
             value: Math.floor(Math.random() * 20) + 5,
-          }))
+          })),
         );
       }
 
@@ -307,7 +305,6 @@ export default function UserAnalytics() {
           const status = order.status || "Pending";
           orderStatusCounts[status] = (orderStatusCounts[status] || 0) + 1;
         });
-
       } catch (err) {
         console.error("Error fetching orders for status counts:", err);
         // Fallback to dashboard data
@@ -340,7 +337,6 @@ export default function UserAnalytics() {
         categoryDistribution,
         userActivity,
       });
-
 
       toast({
         title: "Analytics Updated",
@@ -425,7 +421,6 @@ export default function UserAnalytics() {
 
   // Fetch data on component mount
   useEffect(() => {
-
     // Fetch analytics data
     fetchAnalyticsData();
   }, []);

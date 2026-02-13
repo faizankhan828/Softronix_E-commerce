@@ -25,7 +25,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "../../components/ui/dropdown-menu";
+} from "../../components/ui/DropdownMenu";
 import {
   PlusCircle,
   Pencil,
@@ -88,7 +88,7 @@ export default function ProductsTable({
 
   // Get unique categories for filter
   const uniqueCategories = Array.from(
-    new Set(products.map((product) => product.category))
+    new Set(products.map((product) => product.category)),
   );
 
   // Filter products based on search and filters
@@ -256,8 +256,8 @@ export default function ProductsTable({
                           product.inventory > 10
                             ? "text-green-500"
                             : product.inventory > 0
-                            ? "text-amber-500"
-                            : "text-red-500"
+                              ? "text-amber-500"
+                              : "text-red-500"
                         }
                       >
                         {product.inventory}

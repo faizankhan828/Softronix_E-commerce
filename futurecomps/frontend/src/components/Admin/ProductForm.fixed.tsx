@@ -1,12 +1,12 @@
 import { useState, useEffect } from "react";
-import { Button } from "../../components/ui/button";
-import { Input } from "../../components/ui/input";
-import { Label } from "../../components/ui/label";
-import { Textarea } from "../../components/ui/textarea";
-import { Switch } from "../../components/ui/switch";
+import { Button } from "../../components/ui/Button";
+import { Input } from "../../components/ui/Input";
+import { Label } from "../../components/ui/Label";
+import { Textarea } from "../../components/ui/Textarea";
+import { Switch } from "../../components/ui/Switch";
 // import { Separator } from "../../components/ui/separator";
-import { Badge } from "../../components/ui/badge";
-import { Card, CardContent } from "../../components/ui/card";
+import { Badge } from "../../components/ui/Badge";
+import { Card, CardContent } from "../../components/ui/Card";
 import {
   X,
   Plus,
@@ -26,7 +26,7 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "../../components/ui/select";
+} from "../../components/ui/Select";
 
 interface Product {
   id?: string;
@@ -77,13 +77,13 @@ export default function ProductForm({
   const [imageUrls, setImageUrls] = useState<string[]>(
     initialData.images && initialData.images.length > 0
       ? initialData.images
-      : [""]
+      : [""],
   );
   const [colors, setColors] = useState<string[]>(
-    initialData.colors || ["Black", "White"]
+    initialData.colors || ["Black", "White"],
   );
   const [sizes, setSizes] = useState<string[]>(
-    initialData.sizes || ["S", "M", "L"]
+    initialData.sizes || ["S", "M", "L"],
   );
   const [tags, setTags] = useState<string[]>(initialData.tags || []);
   const [tagInput, setTagInput] = useState("");
@@ -94,7 +94,7 @@ export default function ProductForm({
     setImageUrls(
       initialData.images && initialData.images.length > 0
         ? initialData.images
-        : [""]
+        : [""],
     );
     setColors(initialData.colors || ["Black", "White"]);
     setSizes(initialData.sizes || ["S", "M", "L"]);
@@ -104,7 +104,7 @@ export default function ProductForm({
 
   // Handle basic form inputs
   const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
   ) => {
     const { name, value, type } = e.target;
 

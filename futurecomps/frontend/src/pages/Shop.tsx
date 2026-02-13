@@ -1,8 +1,6 @@
-
 import { useState, useEffect } from "react";
 import axios from "axios";
 import { useAuth } from "../context/AuthContext";
-import { loadStripe } from "@stripe/stripe-js";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 
@@ -39,10 +37,13 @@ const Shop = () => {
     }
 
     try {
-      const { data } = await axios.post(`${API_URL}/payment/create-checkout-session`, {
-        productId,
-        userId: user.id, // Ensure user object has id
-      });
+      const { data } = await axios.post(
+        `${API_URL}/payment/create-checkout-session`,
+        {
+          productId,
+          userId: user.id, // Ensure user object has id
+        },
+      );
 
       if (data.url) {
         window.location.href = data.url;
@@ -55,16 +56,19 @@ const Shop = () => {
       alert("Failed to initiate checkout");
     }
   };
-  
+
   // Correction: I cannot use window.Stripe without the script tag or package.
   // I will update this file in a moment after installing payload.
-  
+
   return (
     <div className="container mx-auto p-6">
       <h1 className="text-3xl font-bold mb-6">Shop</h1>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {products.map((product) => (
-          <div key={product._id} className="bg-white rounded-lg shadow-md overflow-hidden flex flex-col">
+          <div
+            key={product._id}
+            className="bg-white rounded-lg shadow-md overflow-hidden flex flex-col"
+          >
             {product.imageUrl && (
               <img
                 src={product.imageUrl}

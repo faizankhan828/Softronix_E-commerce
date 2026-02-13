@@ -13,8 +13,8 @@ import {
 import {
   Tabs,
   TabsContent,
-//   TabsList,
-//   TabsTrigger,
+  //   TabsList,
+  //   TabsTrigger,
 } from "@/components/ui/Tabs";
 
 // API services
@@ -22,7 +22,6 @@ import productService from "../api/services/productService";
 import dashboardService from "../api/services/dashboardService";
 import couponService, { Coupon } from "../api/services/couponService";
 import type { Product } from "../api/services/productService";
-
 
 import userService from "../api/services/userService";
 import api from "../api/services/api";
@@ -40,8 +39,8 @@ import SettingsPanel from "../components/Admin/SettingsPanel";
 import RecentActivityComponent from "../components/Admin/RecentActivity";
 import SalesChart, { SalesData } from "../components/Admin/SalesChart";
 import TopProducts, { TopProduct } from "../components/Admin/TopProducts";
+import UserAnalytics from "../components/Admin/UserAnalytics";
 import { RecentActivity as RecentActivityType } from "../api/services/dashboardService";
-
 
 interface RecentActivityData extends RecentActivityType {}
 
@@ -116,7 +115,6 @@ export default function AdminDashboard() {
     origin: "",
   });
 
-
   const tabFromUrl = searchParams.get("tab") || "dashboard";
   const [activeTab, setActiveTab] = useState(tabFromUrl);
 
@@ -137,61 +135,63 @@ export default function AdminDashboard() {
     setActiveTab(currentTab);
   }, [searchParams]);
 
-// Fetch initial data
+  // Fetch initial data
   const fetchInitialData = async () => {
     setLoading(true);
     try {
-        // In a real app, verify admin auth here
-        
-        try {
-            // Fetch everything in parallel
-            const [dashboardData, productsData, ordersData, usersData] = await Promise.all([
-                dashboardService.getDashboardStats(),
-                productService.getAdminProducts(),
-                // orderService.getOrders(), // Uncomment when ready
-                // userService.getUsers() // Uncomment when ready
-                Promise.resolve([]), // Placeholder for orders
-                Promise.resolve([])  // Placeholder for users
-            ]);
+      // In a real app, verify admin auth here
 
-            // If fetch was successful (or placeholders returned)
-            setDashboardStats(dashboardData.stats);
-            setSalesData(dashboardData.salesData);
-            setTopProducts(dashboardData.topProducts);
-            setRecentActivity(dashboardData.recentActivity);
-            setTrends(dashboardData.trends);
-            
-            setProducts(productsData);
-            // setOrders(ordersData);
-            // setUsers(usersData);
-            
-            // To actually uncomment, I will do it here:
-             const realOrders = await import("../api/services/orderService").then(m => m.getOrders().catch(() => []));
-             setOrders(realOrders);
-             
-             const realUsers = await userService.getUsers().catch(() => []);
-             setUsers(realUsers);
+      try {
+        // Fetch everything in parallel
+        const [dashboardData, productsData, ordersData, usersData] =
+          await Promise.all([
+            dashboardService.getDashboardStats(),
+            productService.getAdminProducts(),
+            // orderService.getOrders(), // Uncomment when ready
+            // userService.getUsers() // Uncomment when ready
+            Promise.resolve([]), // Placeholder for orders
+            Promise.resolve([]), // Placeholder for users
+          ]);
 
-        } catch (error) {
-             console.error("Error fetching dashboard data:", error);
-             toast({
-                title: "Error",
-                description: "Failed to load dashboard data",
-                variant: "destructive",
-             });
-        }
+        // If fetch was successful (or placeholders returned)
+        setDashboardStats(dashboardData.stats);
+        setSalesData(dashboardData.salesData);
+        setTopProducts(dashboardData.topProducts);
+        setRecentActivity(dashboardData.recentActivity);
+        setTrends(dashboardData.trends);
+
+        setProducts(productsData);
+        // setOrders(ordersData);
+        // setUsers(usersData);
+
+        // To actually uncomment, I will do it here:
+        const realOrders = await import("../api/services/orderService").then(
+          (m) => m.getOrders().catch(() => []),
+        );
+        setOrders(realOrders);
+
+        const realUsers = await userService.getUsers().catch(() => []);
+        setUsers(realUsers);
+      } catch (error) {
+        console.error("Error fetching dashboard data:", error);
+        toast({
+          title: "Error",
+          description: "Failed to load dashboard data",
+          variant: "destructive",
+        });
+      }
     } catch (error) {
-        console.error("Error in fetchInitialData:", error);
+      console.error("Error in fetchInitialData:", error);
     } finally {
-        setLoading(false);
-        setProductsLoading(false);
+      setLoading(false);
+      setProductsLoading(false);
     }
   };
 
   useEffect(() => {
     fetchInitialData();
     return () => {
-        document.body.style.pointerEvents = "";
+      document.body.style.pointerEvents = "";
     };
   }, []);
 
@@ -233,7 +233,7 @@ export default function AdminDashboard() {
     try {
       const response = await api.get("/orders/admin/all");
       let ordersData = [];
-       if (response.data && response.data.orders) {
+      if (response.data && response.data.orders) {
         ordersData = response.data.orders;
       } else if (Array.isArray(response.data)) {
         ordersData = response.data;
@@ -249,7 +249,7 @@ export default function AdminDashboard() {
     }
   };
 
-    const fetchUsersData = async () => {
+  const fetchUsersData = async () => {
     setUsersLoading(true);
     try {
       const response = await api.get("/users?all=true");
@@ -270,7 +270,6 @@ export default function AdminDashboard() {
     }
   };
 
-
   useEffect(() => {
     if (activeTab === "orders") fetchOrdersData();
     else if (activeTab === "users") fetchUsersData();
@@ -279,189 +278,226 @@ export default function AdminDashboard() {
   }, [activeTab]);
 
   const handleApplyUIFix = () => {
-      setTimeout(() => {
-          fixUI();
-          document.body.style.pointerEvents = "";
-      }, 100);
+    setTimeout(() => {
+      fixUI();
+      document.body.style.pointerEvents = "";
+    }, 100);
   };
 
   // Handlers (Simplified for now, assume props passed correctly)
-  const handleAddProduct = async (data) => {
-      try {
-          const response = await productService.createProduct(data);
-          setProducts([...products, response]);
-          setIsAddProductOpen(false);
-          toast({ title: "Success", description: "Product created successfully" });
-      } catch (err) {
-          toast({ title: "Error", description: "Failed to create product", variant: "destructive" });
-      }
+  const handleAddProduct = async (data: any) => {
+    try {
+      const response = await productService.createProduct(data);
+      setProducts([...products, response]);
+      setIsAddProductOpen(false);
+      toast({ title: "Success", description: "Product created successfully" });
+    } catch (err) {
+      toast({
+        title: "Error",
+        description: "Failed to create product",
+        variant: "destructive",
+      });
+    }
   };
 
-  const handleSaveEdit = async (id, data) => {
-      try {
-          const response = await productService.updateProduct(id, data);
-          setProducts(products.map(p => p.id === id || p._id === id ? response : p));
-          setIsEditProductOpen(false);
-           toast({ title: "Success", description: "Product updated successfully" });
-      } catch (err) {
-           toast({ title: "Error", description: "Failed to update product", variant: "destructive" });
-      }
+  const handleSaveEdit = async (id: string, data: any) => {
+    try {
+      const response = await productService.updateProduct(id, data);
+      setProducts(
+        products.map((p) => (p.id === id || p._id === id ? response : p)),
+      );
+      setIsEditProductOpen(false);
+      toast({ title: "Success", description: "Product updated successfully" });
+    } catch (err) {
+      toast({
+        title: "Error",
+        description: "Failed to update product",
+        variant: "destructive",
+      });
+    }
   };
 
-  const handleDeleteProduct = async (id) => {
-      if(!confirm("Are you sure?")) return;
-       try {
-          await productService.deleteProduct(id);
-          setProducts(products.filter(p => p.id !== id && p._id !== id));
-          toast({ title: "Success", description: "Product deleted" });
-      } catch (err) {
-           toast({ title: "Error", description: "Failed to delete product", variant: "destructive" });
-      }
+  const handleDeleteProduct = async (id: string) => {
+    if (!confirm("Are you sure?")) return;
+    try {
+      await productService.deleteProduct(id);
+      setProducts(products.filter((p) => p.id !== id && p._id !== id));
+      toast({ title: "Success", description: "Product deleted" });
+    } catch (err) {
+      toast({
+        title: "Error",
+        description: "Failed to delete product",
+        variant: "destructive",
+      });
+    }
   };
 
-  const handleEditProduct = (product) => {
-      setSelectedProduct(product);
-      setIsEditProductOpen(true);
+  const handleEditProduct = (product: Product) => {
+    setSelectedProduct(product);
+    setIsEditProductOpen(true);
   };
 
-  const handleUpdateOrderStatus = async (orderId, status) => {
-      // Implement logic
-       toast({ title: "Info", description: "Order status update logic needs to be implemented fully." });
-       // Logic from mamo:
-       // const response = await api.put(`/orders/${mongoId}/status`, { status });
-       // update local state
+  const handleUpdateOrderStatus = async (orderId: string, status: string) => {
+    // Implement logic
+    toast({
+      title: "Info",
+      description: "Order status update logic needs to be implemented fully.",
+    });
+    // Logic from mamo:
+    // const response = await api.put(`/orders/${mongoId}/status`, { status });
+    // update local state
   };
 
   // Coupon handlers
-  const handleAddCoupon = async (data) => {
-      try {
-          await couponService.createCoupon(data);
-          fetchCouponsData();
-          setIsAddCouponOpen(false);
-          toast({ title: "Success", description: "Coupon created" });
-      } catch (err) {
-          toast({ title: "Error", description: "Failed to create coupon", variant: "destructive" });
-      }
-  };
-  
-   const handleEditCoupon = (coupon) => {
-      setSelectedCoupon(coupon);
-      setIsEditCouponOpen(true);
-  };
-
-  const handleSaveEditCoupon = async (id, data) => {
-      try {
-           await couponService.updateCoupon(id, data);
-           fetchCouponsData();
-           setIsEditCouponOpen(false);
-            toast({ title: "Success", description: "Coupon updated" });
-      } catch (err) {
-          toast({ title: "Error", description: "Failed to update coupon", variant: "destructive" });
-      }
+  const handleAddCoupon = async (data: any) => {
+    try {
+      await couponService.createCoupon(data);
+      fetchCouponsData();
+      setIsAddCouponOpen(false);
+      toast({ title: "Success", description: "Coupon created" });
+    } catch (err) {
+      toast({
+        title: "Error",
+        description: "Failed to create coupon",
+        variant: "destructive",
+      });
+    }
   };
 
-  const handleDeleteCoupon = async (id) => {
-       if(!confirm("Are you sure?")) return;
-        try {
-           await couponService.deleteCoupon(id);
-           fetchCouponsData();
-            toast({ title: "Success", description: "Coupon deleted" });
-      } catch (err) {
-          toast({ title: "Error", description: "Failed to delete coupon", variant: "destructive" });
-      }
+  const handleEditCoupon = (coupon: Coupon) => {
+    setSelectedCoupon(coupon);
+    setIsEditCouponOpen(true);
   };
-  
+
+  const handleSaveEditCoupon = async (id: string, data: any) => {
+    try {
+      await couponService.updateCoupon(id, data);
+      fetchCouponsData();
+      setIsEditCouponOpen(false);
+      toast({ title: "Success", description: "Coupon updated" });
+    } catch (err) {
+      toast({
+        title: "Error",
+        description: "Failed to update coupon",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleDeleteCoupon = async (id: string) => {
+    if (!confirm("Are you sure?")) return;
+    try {
+      await couponService.deleteCoupon(id);
+      fetchCouponsData();
+      toast({ title: "Success", description: "Coupon deleted" });
+    } catch (err) {
+      toast({
+        title: "Error",
+        description: "Failed to delete coupon",
+        variant: "destructive",
+      });
+    }
+  };
+
   // User handlers (placeholder)
-  const handleInspectUser = (user) => {};
-  const handleDeleteUser = (id) => {};
-  const handleToggleUserStatus = (id, status) => {};
-  const handleChangeUserRole = (id, role) => {};
-
+  const handleInspectUser = (user: User) => {
+    console.log("Inspect user:", user);
+  };
+  const handleDeleteUser = (id: string) => {
+    console.log("Delete user:", id);
+  };
+  const handleToggleUserStatus = (id: string, status: string) => {
+    console.log("Toggle user status:", id, status);
+  };
+  const handleChangeUserRole = (id: string, role: string) => {
+    console.log("Change user role:", id, role);
+  };
 
   return (
     <AdminLayout>
       <div className="space-y-8">
-        <DashboardHeader 
-          stats={dashboardStats} 
-          trends={trends} 
+        <DashboardHeader
+          stats={dashboardStats}
+          trends={trends}
           isLoading={loading}
           onRefresh={fetchInitialData}
         />
-        
+
         {/* Dashboard Home View - Charts */}
-        {(activeTab === 'dashboard' || !activeTab) && (
-            <div className="space-y-6 animate-fade-in">
-                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <SalesChart salesData={salesData} isLoading={loading} />
-                    <TopProducts products={topProducts} isLoading={loading} />
-                 </div>
-                 <RecentActivityComponent
-              recentActivity={recentActivity}
-            />        recentUsers={recentActivity.users}
-                    recentProducts={recentActivity.products}
-                    isLoading={loading}
-                 />
+        {(activeTab === "dashboard" || !activeTab) && (
+          <div className="space-y-6 animate-fade-in">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <SalesChart salesData={salesData} isLoading={loading} />
+              <TopProducts products={topProducts} isLoading={loading} />
             </div>
+            <RecentActivityComponent
+              recentOrders={recentActivity.orders}
+              recentUsers={recentActivity.users}
+              recentProducts={recentActivity.products}
+              isLoading={loading}
+            />
+          </div>
         )}
-        
+
         {/* Other Tabs */}
         <div>
           {/* Products Tab */}
-          {activeTab === 'products' && (
-             <ProductsTable 
-                products={products} 
-                loading={productsLoading} 
-                onEdit={handleEditProduct} 
-                onDelete={handleDeleteProduct} 
-                onAddNew={() => setIsAddProductOpen(true)} 
-             />
+          {activeTab === "products" && (
+            <ProductsTable
+              products={products}
+              loading={productsLoading}
+              onEdit={handleEditProduct}
+              onDelete={handleDeleteProduct}
+              onAddNew={() => setIsAddProductOpen(true)}
+            />
           )}
 
           {/* Orders Tab */}
-          {activeTab === 'orders' && (
-            <OrdersTable 
-                orders={orders} 
-                loading={ordersLoading} 
-                onViewDetails={() => {}} 
-                onUpdateStatus={handleUpdateOrderStatus} 
+          {activeTab === "orders" && (
+            <OrdersTable
+              orders={orders}
+              loading={ordersLoading}
+              onViewDetails={() => {}}
+              onUpdateStatus={handleUpdateOrderStatus}
             />
           )}
 
           {/* Users Tab */}
-          {activeTab === 'users' && (
-            <UsersTable 
-                users={users} 
-                loading={usersLoading} 
-                onInspectUser={handleInspectUser}
-                onDeleteUser={handleDeleteUser}
-                onToggleUserStatus={handleToggleUserStatus}
-                onChangeUserRole={handleChangeUserRole}
-                onViewDetails={() => {}} 
+          {activeTab === "users" && (
+            <UsersTable
+              users={users}
+              loading={usersLoading}
+              onInspectUser={handleInspectUser}
+              onDeleteUser={handleDeleteUser}
+              onToggleUserStatus={handleToggleUserStatus}
+              onChangeUserRole={handleChangeUserRole}
             />
           )}
 
           {/* Activity Tab (if separate) or Analytics */}
-          {activeTab === 'analytics' && <UserAnalytics users={users} orders={orders} />}
+          {activeTab === "analytics" && (
+            <UserAnalytics users={users} orders={orders} />
+          )}
 
           {/* Coupons Tab */}
-          {activeTab === 'coupons' && (
-              <CouponsTable
-                coupons={coupons}
-                loading={couponsLoading}
-                onEdit={handleEditCoupon}
-                onDelete={handleDeleteCoupon}
-                onAddNew={() => setIsAddCouponOpen(true)}
-                onRefresh={fetchCouponsData}
-              />
+          {activeTab === "coupons" && (
+            <CouponsTable
+              coupons={coupons}
+              loading={couponsLoading}
+              onEdit={handleEditCoupon}
+              onDelete={handleDeleteCoupon}
+              onAddNew={() => setIsAddCouponOpen(true)}
+              onRefresh={fetchCouponsData}
+            />
           )}
 
           {/* Settings Tab */}
-          {activeTab === 'settings' && <SettingsPanel />}
+          {activeTab === "settings" && <SettingsPanel />}
         </div>
       </div>
 
-       {/* Add Product Dialog */}
-       <Dialog
+      {/* Add Product Dialog */}
+      <Dialog
         open={isAddProductOpen}
         onOpenChange={(open) => {
           setIsAddProductOpen(open);
@@ -470,8 +506,14 @@ export default function AdminDashboard() {
       >
         <DialogContent
           className="max-w-3xl max-h-[90vh] overflow-hidden"
-          onEscapeKeyDown={() => { setIsAddProductOpen(false); handleApplyUIFix(); }}
-          onPointerDownOutside={() => { setIsAddProductOpen(false); handleApplyUIFix(); }}
+          onEscapeKeyDown={() => {
+            setIsAddProductOpen(false);
+            handleApplyUIFix();
+          }}
+          onPointerDownOutside={() => {
+            setIsAddProductOpen(false);
+            handleApplyUIFix();
+          }}
         >
           <DialogHeader>
             <DialogTitle>Add New Product</DialogTitle>
@@ -502,8 +544,14 @@ export default function AdminDashboard() {
       >
         <DialogContent
           className="max-w-3xl max-h-[90vh] overflow-hidden"
-          onEscapeKeyDown={() => { setIsEditProductOpen(false); handleApplyUIFix(); }}
-          onPointerDownOutside={() => { setIsEditProductOpen(false); handleApplyUIFix(); }}
+          onEscapeKeyDown={() => {
+            setIsEditProductOpen(false);
+            handleApplyUIFix();
+          }}
+          onPointerDownOutside={() => {
+            setIsEditProductOpen(false);
+            handleApplyUIFix();
+          }}
         >
           <DialogHeader>
             <DialogTitle>Edit Product</DialogTitle>
@@ -513,7 +561,12 @@ export default function AdminDashboard() {
             <div className="overflow-y-auto pr-2 max-h-[calc(90vh-120px)]">
               <ProductForm
                 initialData={selectedProduct}
-                onSubmit={(data) => handleSaveEdit(selectedProduct.id || selectedProduct._id, data)}
+                onSubmit={(data) =>
+                  handleSaveEdit(
+                    selectedProduct.id || selectedProduct._id,
+                    data,
+                  )
+                }
                 onCancel={() => setIsEditProductOpen(false)}
               />
             </div>
@@ -526,7 +579,7 @@ export default function AdminDashboard() {
         open={isAddCouponOpen}
         onOpenChange={(open) => {
           setIsAddCouponOpen(open);
-          if(!open) handleApplyUIFix();
+          if (!open) handleApplyUIFix();
         }}
       >
         <DialogContent className="max-w-3xl max-h-[90vh] overflow-hidden">
@@ -542,15 +595,15 @@ export default function AdminDashboard() {
           </div>
         </DialogContent>
       </Dialog>
-     
+
       {/* Edit Coupon Dialog */}
       <Dialog
         open={isEditCouponOpen}
         onOpenChange={(open) => {
           setIsEditCouponOpen(open);
-          if(!open) {
-              if (selectedCoupon) setSelectedCoupon(null);
-              handleApplyUIFix();
+          if (!open) {
+            if (selectedCoupon) setSelectedCoupon(null);
+            handleApplyUIFix();
           }
         }}
       >
@@ -563,14 +616,18 @@ export default function AdminDashboard() {
             <div className="overflow-y-auto pr-2 max-h-[calc(90vh-120px)]">
               <CouponForm
                 initialData={selectedCoupon}
-                onSubmit={(data) => handleSaveEditCoupon(selectedCoupon._id || selectedCoupon.id, data)}
+                onSubmit={(data) =>
+                  handleSaveEditCoupon(
+                    selectedCoupon._id || selectedCoupon.id,
+                    data,
+                  )
+                }
                 onCancel={() => setIsEditCouponOpen(false)}
               />
             </div>
           )}
         </DialogContent>
       </Dialog>
-
     </AdminLayout>
   );
 }

@@ -36,7 +36,7 @@ import {
 } from "lucide-react";
 
 export interface OrderItem {
-  productId: string;
+  productId?: string;
   quantity: number;
   price: number;
   product: {
