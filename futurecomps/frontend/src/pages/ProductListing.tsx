@@ -114,7 +114,12 @@ export function ProductListing() {
 
         <div className="container mx-auto px-4 py-6">
           {/* Filters Bar */}
-          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm p-4 mb-6">
+          <motion.div 
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3 }}
+            className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-4 mb-6"
+          >
             <div className="flex flex-col lg:flex-row lg:items-center gap-4">
               {/* Search */}
               <form onSubmit={handleSearch} className="flex-1 max-w-md">
@@ -123,35 +128,41 @@ export function ProductListing() {
                   onChange={(e) => setLocalSearch(e.target.value)}
                   placeholder="Search products..."
                   icon={<Search className="w-4 h-4" />}
+                  className="bg-gray-50 dark:bg-gray-700 border-gray-200 dark:border-gray-600"
                 />
               </form>
 
               {/* Category Pills */}
-              <div className="flex gap-2 overflow-x-auto no-scrollbar">
-                {categories.map((category) => (
-                  <button
-                    key={category}
-                    onClick={() => handleCategoryClick(category)}
-                    className={cn(
-                      "px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors",
-                      (!filters.category && category === "All") ||
-                        filters.category?.toLowerCase() === category.toLowerCase()
-                        ? "bg-primary text-white"
-                        : "bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600"
-                    )}
-                  >
-                    {category}
-                  </button>
-                ))}
+              <div className="flex gap-2 overflow-x-auto no-scrollbar py-1">
+                {categories.map((category) => {
+                  const isActive = (!filters.category && category === "All") ||
+                    filters.category?.toLowerCase() === category.toLowerCase();
+                  return (
+                    <motion.button
+                      key={category}
+                      onClick={() => handleCategoryClick(category)}
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      className={cn(
+                        "px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all duration-200",
+                        isActive
+                          ? "bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-md shadow-blue-500/25"
+                          : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
+                      )}
+                    >
+                      {category}
+                    </motion.button>
+                  );
+                })}
               </div>
 
               {/* Sort & View */}
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-3">
                 <div className="relative">
                   <select
                     value={filters.sortBy}
                     onChange={(e) => handleSortChange(e.target.value as SortOption)}
-                    className="appearance-none pl-4 pr-10 py-2 bg-gray-100 dark:bg-gray-700 rounded-xl text-sm font-medium cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary"
+                    className="appearance-none pl-4 pr-10 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl text-sm font-medium cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                   >
                     {sortOptions.map((option) => (
                       <option key={option.value} value={option.value}>
@@ -159,32 +170,34 @@ export function ProductListing() {
                       </option>
                     ))}
                   </select>
-                  <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none" />
+                  <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
                 </div>
 
-                <div className="hidden sm:flex rounded-xl bg-gray-100 dark:bg-gray-700 p-1">
-                  <button
+                <div className="hidden sm:flex rounded-xl bg-gray-100 dark:bg-gray-700 p-1 gap-0.5">
+                  <motion.button
                     onClick={() => setViewMode("grid")}
+                    whileTap={{ scale: 0.95 }}
                     className={cn(
-                      "p-2 rounded-lg transition-colors",
+                      "p-2 rounded-lg transition-all duration-200",
                       viewMode === "grid"
-                        ? "bg-white dark:bg-gray-600 shadow"
-                        : "hover:bg-gray-200 dark:hover:bg-gray-600"
+                        ? "bg-white dark:bg-gray-600 shadow-sm text-blue-600 dark:text-blue-400"
+                        : "text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
                     )}
                   >
                     <Grid3X3 className="w-4 h-4" />
-                  </button>
-                  <button
+                  </motion.button>
+                  <motion.button
                     onClick={() => setViewMode("list")}
+                    whileTap={{ scale: 0.95 }}
                     className={cn(
-                      "p-2 rounded-lg transition-colors",
+                      "p-2 rounded-lg transition-all duration-200",
                       viewMode === "list"
-                        ? "bg-white dark:bg-gray-600 shadow"
-                        : "hover:bg-gray-200 dark:hover:bg-gray-600"
+                        ? "bg-white dark:bg-gray-600 shadow-sm text-blue-600 dark:text-blue-400"
+                        : "text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
                     )}
                   >
                     <LayoutList className="w-4 h-4" />
-                  </button>
+                  </motion.button>
                 </div>
               </div>
             </div>
@@ -194,9 +207,10 @@ export function ProductListing() {
               <motion.div
                 initial={{ opacity: 0, height: 0 }}
                 animate={{ opacity: 1, height: "auto" }}
-                className="flex items-center gap-2 mt-4 pt-4 border-t"
+                exit={{ opacity: 0, height: 0 }}
+                className="flex items-center gap-2 mt-4 pt-4 border-t border-gray-100 dark:border-gray-700"
               >
-                <span className="text-sm text-muted-foreground">Active filters:</span>
+                <span className="text-sm text-gray-500 dark:text-gray-400">Active filters:</span>
                 {filters.category && (
                   <Badge variant="secondary" className="capitalize">
                     {filters.category}
@@ -226,13 +240,13 @@ export function ProductListing() {
                 )}
                 <button
                   onClick={handleClearFilters}
-                  className="text-sm text-primary hover:underline ml-2"
+                  className="text-sm text-blue-600 dark:text-blue-400 hover:underline ml-2 font-medium"
                 >
                   Clear all
                 </button>
               </motion.div>
             )}
-          </div>
+          </motion.div>
 
           {/* Results Count */}
           <div className="flex items-center justify-between mb-6">

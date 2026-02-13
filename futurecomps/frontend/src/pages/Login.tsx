@@ -13,6 +13,7 @@ import {
   AlertCircle
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
+import { Logo } from "@/components/ui/Logo";
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -100,8 +101,8 @@ export default function Login() {
 
             <h1 className="text-4xl xl:text-5xl font-bold mb-4">
               Welcome Back to
-              <span className="block bg-gradient-to-r from-cyan-300 to-white bg-clip-text text-transparent">
-                Softronix
+              <span className="block mt-2">
+                <Logo size="xl" variant="light" className="justify-center" />
               </span>
             </h1>
             
@@ -150,11 +151,8 @@ export default function Login() {
           className="w-full max-w-md"
         >
           {/* Mobile Logo */}
-          <div className="lg:hidden text-center mb-8">
-            <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl mb-4 shadow-lg shadow-blue-500/30">
-              <ShoppingBag className="w-8 h-8 text-white" />
-            </div>
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Softronix</h1>
+          <div className="lg:hidden flex justify-center mb-8">
+            <Logo size="md" animated={true} />
           </div>
 
           {/* Header */}
