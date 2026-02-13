@@ -1,0 +1,105 @@
+<!-- 
+  Email.js Template Example for Password Reset
+  
+  This is a sample template for Email.js. You'll need to create a similar template
+  in your Email.js account dashboard.
+  
+  Variables used in this template:
+  - {{to_name}} - Recipient's name
+  - {{to_email}} - Recipient's email
+  - {{subject}} - Email subject
+  - {{message}} - Custom message
+  - {{reset_link}} - Password reset link
+-->
+
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Password Reset</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      line-height: 1.6;
+      color: #333;
+      margin: 0;
+      padding: 0;
+    }
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    .header {
+      background-color: #f8f9fa;
+      padding: 20px;
+      text-align: center;
+      border-bottom: 1px solid #ddd;
+    }
+    .content {
+      padding: 20px;
+    }
+    .footer {
+      background-color: #f8f9fa;
+      padding: 20px;
+      text-align: center;
+      font-size: 12px;
+      color: #777;
+      border-top: 1px solid #ddd;
+    }
+    .button {
+      display: inline-block;
+      background-color: #3b82f6;
+      color: white;
+      text-decoration: none;
+      padding: 12px 24px;
+      border-radius: 4px;
+      margin: 20px 0;
+      font-weight: bold;
+    }
+    .link-fallback {
+      word-break: break-all;
+      color: #3b82f6;
+      margin-top: 10px;
+    }
+    .expiry-note {
+      font-size: 12px;
+      color: #777;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>Password Reset</h1>
+    </div>
+    <div class="content">
+      <p>Hello {{to_name}},</p>
+      
+      <p>{{message}}</p>
+      
+      <p>Click the button below to reset your password:</p>
+      
+      <div style="text-align: center;">
+        <a href="{{reset_link}}" class="button">Reset Password</a>
+      </div>
+      
+      <p class="expiry-note">This link will expire in 30 minutes for security reasons.</p>
+      
+      <p>If the button doesn't work, copy and paste the following link into your browser:</p>
+      
+      <p class="link-fallback">{{reset_link}}</p>
+      
+      <p>If you didn't request a password reset, you can safely ignore this email.</p>
+      
+      <p>Thank you,<br>Your Store Team</p>
+    </div>
+    <div class="footer">
+      <p>This email was sent to {{to_email}}.</p>
+      <p>&copy; 2023 Your Store. All rights reserved.</p>
+    </div>
+  </div>
+</body>
+</html>
