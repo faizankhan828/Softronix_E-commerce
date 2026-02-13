@@ -568,28 +568,61 @@ Tags: ${product.tags?.join(", ") || "N/A"}
       try {
         switch (type) {
           case "SHOW_PRODUCTS": {
-            const ids = payload.productIds || payload.ProductIDs || [];
+            const ids =
+              payload.productIds ||
+              payload.ProductIDs ||
+              payload.product_ids ||
+              [];
             if (ids.length > 0) {
               handleClerkAction({ type: "show_products", payload: {} });
-              return { extraProducts: findProductsByIds(ids) };
+              const foundProducts = findProductsByIds(ids);
+              if (foundProducts.length > 0) {
+                setLastShownProducts(foundProducts);
+              }
+              return { extraProducts: foundProducts };
             }
             handleClerkAction({ type: "show_products", payload: {} });
             return {};
           }
 
           case "ADD_TO_CART": {
-            const productId = payload.productId || payload.ProductID;
+            const productId =
+              payload.productId || payload.ProductID || payload.product_id;
             const quantity = payload.quantity || payload.Quantity || 1;
-            const product = findProductById(productId);
+            let product = findProductById(productId);
+            // If AI couldn't find the exact ID, try matching from lastShownProducts
+            if (!product && lastShownProducts.length > 0) {
+              // Check if the AI used a product name instead of ID
+              if (typeof productId === "string" && productId.length < 20) {
+                product = lastShownProducts.find((p) =>
+                  p.name.toLowerCase().includes(productId.toLowerCase()),
+                );
+              }
+              // Default to first shown product if no match
+              if (!product) product = lastShownProducts[0];
+            }
+            // Also check the product page context
+            if (!product) {
+              const pageProductMatch =
+                location.pathname.match(/\/product\/(.+)/);
+              if (pageProductMatch) {
+                product = findProductById(pageProductMatch[1]);
+              }
+            }
             if (product) {
               addToCart(product, quantity, payload.size, payload.color);
+              // Track as recently discussed
+              setLastShownProducts((prev) => {
+                const filtered = prev.filter((p) => p._id !== product!._id);
+                return [product!, ...filtered].slice(0, 10);
+              });
               return {
                 extraMessage: `✅ Added "${product.name}" (x${quantity}) to your cart!`,
               };
             }
             return {
               extraMessage:
-                "⚠️ Couldn't find that product to add. Could you try again?",
+                "⚠️ Couldn't find that product to add. Could you tell me which one you mean?",
             };
           }
 
@@ -603,7 +636,16 @@ Tags: ${product.tags?.join(", ") || "N/A"}
           }
 
           case "CHECK_INVENTORY": {
-            const productId = payload.productId || payload.ProductID;
+            let productId =
+              payload.productId || payload.ProductID || payload.product_id;
+            // Resolve from context if not provided
+            if (!productId && lastShownProducts.length > 0) {
+              productId = lastShownProducts[0]._id;
+            }
+            if (!productId) {
+              const pageMatch = location.pathname.match(/\/product\/(.+)/);
+              if (pageMatch) productId = pageMatch[1];
+            }
             if (productId && isAuthenticated) {
               try {
                 const { data } = await clerkAPI.inventoryCheck({ productId });
@@ -666,13 +708,29 @@ Tags: ${product.tags?.join(", ") || "N/A"}
           }
 
           case "APPLY_COUPON": {
-            const productId = payload.productId || payload.ProductID;
+            let productId =
+              payload.productId || payload.ProductID || payload.product_id;
             const discountPercent =
               payload.discountPercent ||
               payload.DiscountPercent ||
+              payload.discount_percent ||
               payload.percentage ||
               10;
-            const reason = payload.reason || payload.CouponCode || "negotiated";
+            const reason =
+              payload.reason ||
+              payload.CouponCode ||
+              payload.coupon_code ||
+              "negotiated";
+
+            // Try to resolve productId from context if not provided
+            if (!productId) {
+              if (lastShownProducts.length > 0) {
+                productId = lastShownProducts[0]._id;
+              } else {
+                const pageMatch = location.pathname.match(/\/product\/(.+)/);
+                if (pageMatch) productId = pageMatch[1];
+              }
+            }
 
             if (!productId) {
               // Apply as a general discount
@@ -794,11 +852,25 @@ Tags: ${product.tags?.join(", ") || "N/A"}
     setIsLoading(true);
 
     try {
-      // Build conversation history (last 8 messages)
-      const conversationHistory = messages.slice(-8).map((m) => ({
-        role: m.role === "assistant" ? "model" : "user",
-        parts: [{ text: m.content }],
-      }));
+      // Build conversation history (last 12 messages for richer context)
+      const conversationHistory = messages.slice(-12).map((m) => {
+        let text = m.content;
+        // Include product IDs that were shown in this message so AI remembers
+        if (m.products && m.products.length > 0) {
+          const productSummary = m.products
+            .map((p, i) => `${i + 1}. "${p.name}" (ID: ${p._id}) - $${p.price}`)
+            .join(", ");
+          text += `\n[Products shown: ${productSummary}]`;
+        }
+        // Include action that was taken
+        if (m.action) {
+          text += `\n[Action executed: ${m.action.type}]`;
+        }
+        return {
+          role: m.role === "assistant" ? "model" : "user",
+          parts: [{ text }],
+        };
+      });
 
       // Build context
       const productCtx = buildProductContext();
