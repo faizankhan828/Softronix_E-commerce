@@ -14,6 +14,10 @@ import {
   Plus,
   ExternalLink,
   CreditCard,
+  Maximize2,
+  Minimize2,
+  Camera,
+  Image as ImageIcon,
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
@@ -235,9 +239,16 @@ ALWAYS: Valid JSON. Be conversational. Have personality. BE THE SHOPKEEPER.`;
 interface ProductCardInChatProps {
   product: Product;
   onAddToCart: (product: Product) => void;
+  onTryOn?: (product: Product) => void;
+  tryOnAvailable?: boolean;
 }
 
-function ProductCardInChat({ product, onAddToCart }: ProductCardInChatProps) {
+function ProductCardInChat({
+  product,
+  onAddToCart,
+  onTryOn,
+  tryOnAvailable,
+}: ProductCardInChatProps) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 10 }}
@@ -298,6 +309,19 @@ function ProductCardInChat({ product, onAddToCart }: ProductCardInChatProps) {
             >
               <Plus className="h-3.5 w-3.5" />
             </Button>
+            {onTryOn && (
+              <Button
+                size="sm"
+                variant="ghost"
+                className="h-7 px-2 text-purple-600 hover:text-purple-700 hover:bg-purple-50"
+                onClick={() => onTryOn(product)}
+                title={
+                  tryOnAvailable ? "Virtual Try-On" : "Upload photo first (📸)"
+                }
+              >
+                <Camera className="h-3.5 w-3.5" />
+              </Button>
+            )}
           </div>
         </div>
         {product.tags && product.tags.length > 0 && (
@@ -364,10 +388,38 @@ function parseAIResponse(raw: string): {
   };
 }
 
+// Strip any raw JSON from displayed message content
+function cleanMessageContent(content: string): string {
+  if (!content) return content;
+  // Remove JSON code blocks
+  let cleaned = content.replace(/```(?:json)?\s*\n?[\s\S]*?\n?```/g, "").trim();
+  // If the entire content looks like JSON, try to extract just the message field
+  if (cleaned.startsWith("{") && cleaned.includes('"message"')) {
+    try {
+      const parsed = JSON.parse(cleaned);
+      if (parsed.message) return parsed.message;
+    } catch {
+      // Try to extract message field with regex
+      const msgMatch = cleaned.match(/"message"\s*:\s*"((?:[^"\\]|\\.)*)"/);
+      if (msgMatch)
+        return msgMatch[1].replace(/\\n/g, "\n").replace(/\\"/g, '"');
+    }
+  }
+  // Remove any trailing JSON objects that leaked into the message
+  const jsonTailMatch = cleaned.match(
+    /^([\s\S]+?)\s*\{[\s\S]*"(?:type|products|action|payload)"[\s\S]*\}\s*$/,
+  );
+  if (jsonTailMatch && jsonTailMatch[1].trim().length > 10) {
+    cleaned = jsonTailMatch[1].trim();
+  }
+  return cleaned;
+}
+
 // ── Main AiClerk Component ──────────────────────────────
 export function AiClerk() {
   const [isOpen, setIsOpen] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
+  const [isMaximized, setIsMaximized] = useState(false);
   const [messages, setMessages] = useState<ClerkMessage[]>([
     {
       id: generateId(),
@@ -381,6 +433,11 @@ export function AiClerk() {
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Try-on state
+  const [tryOnImage, setTryOnImage] = useState<string | null>(null); // base64 of user's photo
+  const [tryOnLoading, setTryOnLoading] = useState(false);
 
   // Track user context fetched from backend
   const [userContext, setUserContext] = useState<any>(null);
@@ -864,6 +921,28 @@ Tags: ${product.tags?.join(", ") || "N/A"}
     setMessages((prev) => [...prev, userMessage]);
     const currentInput = input;
     setInput("");
+
+    // ── Quick Try-On Detection ──────────────────────
+    const tryOnMatch = currentInput
+      .toLowerCase()
+      .match(
+        /try\s*(?:on|it|this)(?:\s+(?:the\s+)?(?:(\d+)(?:st|nd|rd|th)?|first|second|third|last)(?:\s+one)?)?/,
+      );
+    if (tryOnMatch && lastShownProducts.length > 0) {
+      let idx = 0; // default to first
+      const numStr = tryOnMatch[1];
+      if (numStr) idx = parseInt(numStr) - 1;
+      else if (currentInput.toLowerCase().includes("second")) idx = 1;
+      else if (currentInput.toLowerCase().includes("third")) idx = 2;
+      else if (currentInput.toLowerCase().includes("last"))
+        idx = lastShownProducts.length - 1;
+
+      if (idx >= 0 && idx < lastShownProducts.length) {
+        handleVirtualTryOn(lastShownProducts[idx]);
+        return;
+      }
+    }
+
     setIsLoading(true);
 
     try {
@@ -1058,8 +1137,8 @@ Tags: ${product.tags?.join(", ") || "N/A"}
         });
       }
 
-      // Build final message
-      let finalMessage = parsed.message;
+      // Build final message — clean any raw JSON that leaked
+      let finalMessage = cleanMessageContent(parsed.message);
       if (actionResult.extraMessage) {
         finalMessage += `\n\n${actionResult.extraMessage}`;
       }
@@ -1220,6 +1299,266 @@ Tags: ${product.tags?.join(", ") || "N/A"}
     setMessages((prev) => [...prev, addMessage]);
   };
 
+  // ── Image Upload for Virtual Try-On ──────────────────
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith("image/")) {
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: generateId(),
+          role: "assistant",
+          content:
+            "Boss, that doesn't look like an image! Please upload a photo (JPG, PNG). 📸",
+          timestamp: new Date(),
+        },
+      ]);
+      return;
+    }
+
+    // Max 4MB
+    if (file.size > 4 * 1024 * 1024) {
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: generateId(),
+          role: "assistant",
+          content:
+            "That image is too large, boss! Please use a photo under 4MB. 📏",
+          timestamp: new Date(),
+        },
+      ]);
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const base64 = reader.result as string;
+      setTryOnImage(base64);
+
+      // Show the uploaded image in chat
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: generateId(),
+          role: "user",
+          content: "Here's my photo for virtual try-on! 📸",
+          timestamp: new Date(),
+          userImage: base64,
+        },
+      ]);
+
+      // Prompt user to pick a product
+      const tryOnMsg: ClerkMessage = {
+        id: generateId(),
+        role: "assistant",
+        content:
+          lastShownProducts.length > 0
+            ? `Nice photo, boss! 📸 Now tell me which product you want to try on, or say "try on the first one" and I'll generate a virtual try-on image for you! 🎨`
+            : `Looking good, boss! 📸 Now browse some products or tell me what you'd like to try on, and I'll create a virtual try-on image for you! Search for something like "show me jackets" first. 🎨`,
+        timestamp: new Date(),
+      };
+      setMessages((prev) => [...prev, tryOnMsg]);
+    };
+    reader.readAsDataURL(file);
+
+    // Reset file input
+    if (e.target) e.target.value = "";
+  };
+
+  const handleVirtualTryOn = async (product: Product) => {
+    if (!tryOnImage) {
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: generateId(),
+          role: "assistant",
+          content:
+            "Upload your photo first, boss! Click the 📸 camera button to upload your picture, then I'll show you how you'd look wearing this! 🎨",
+          timestamp: new Date(),
+        },
+      ]);
+      return;
+    }
+
+    setTryOnLoading(true);
+    setMessages((prev) => [
+      ...prev,
+      {
+        id: generateId(),
+        role: "assistant",
+        content: `Creating a virtual try-on of "${product.name}" for you... This may take a moment! 🎨✨`,
+        timestamp: new Date(),
+      },
+    ]);
+
+    try {
+      // Extract base64 data (remove data:image/...;base64, prefix)
+      const base64Data = tryOnImage.split(",")[1];
+      const mimeType = tryOnImage.match(/data:(.*?);/)?.[1] || "image/jpeg";
+
+      // Use gemini-2.5-flash-preview-native-image (image generation capable model)
+      const tryOnUrl = `${GEMINI_BASE_URL}/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`;
+
+      const tryOnPrompt = `You are a virtual fashion try-on assistant. I'm providing a photo of a person and a product description. Create a realistic visualization showing this person wearing/using this product.
+
+PRODUCT DETAILS:
+- Name: ${product.name}
+- Category: ${product.category || "Fashion"}
+- Description: ${product.description || ""}
+- Colors: ${product.colors?.join(", ") || "as shown"}
+- Price: $${product.price}
+
+INSTRUCTIONS:
+1. Keep the person's face, body shape, skin tone, and background as close to the original as possible
+2. Realistically overlay/place the product on the person
+3. Match the product's color, style, and proportions accurately
+4. Make it look natural - proper lighting, shadows, and fit
+5. If the product is clothing, show it being WORN properly
+6. If it's an accessory (watch, bag, shoes), show it being USED/WORN appropriately
+
+Generate a single photorealistic image of this person trying on the product.`;
+
+      const response = await fetch(tryOnUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          contents: [
+            {
+              role: "user",
+              parts: [
+                { text: tryOnPrompt },
+                {
+                  inlineData: {
+                    mimeType,
+                    data: base64Data,
+                  },
+                },
+              ],
+            },
+          ],
+          generationConfig: {
+            temperature: 0.4,
+            maxOutputTokens: 2048,
+            responseModalities: ["TEXT", "IMAGE"],
+          },
+        }),
+      });
+
+      if (!response.ok) {
+        const err = await response.json().catch(() => ({}));
+        console.error("Try-on API error:", err);
+
+        // Provide descriptive fallback instead
+        const descriptionResponse = await fetch(tryOnUrl, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            contents: [
+              {
+                role: "user",
+                parts: [
+                  {
+                    text: `I uploaded my photo and want to try on "${product.name}" (${product.category || "fashion"}, ${product.colors?.join("/") || "various colors"}, $${product.price}). Since you can't generate an image right now, give me a vivid, fun description of how I'd look wearing this product. Be specific and enthusiastic like a desi shopkeeper complimenting a customer!`,
+                  },
+                  {
+                    inlineData: {
+                      mimeType,
+                      data: base64Data,
+                    },
+                  },
+                ],
+              },
+            ],
+            generationConfig: {
+              temperature: 0.9,
+              maxOutputTokens: 512,
+            },
+          }),
+        });
+
+        if (descriptionResponse.ok) {
+          const descData = await descriptionResponse.json();
+          const descText =
+            descData.candidates?.[0]?.content?.parts?.[0]?.text || "";
+          setMessages((prev) => [
+            ...prev,
+            {
+              id: generateId(),
+              role: "assistant",
+              content:
+                cleanMessageContent(descText) ||
+                `Boss, you would look AMAZING in "${product.name}"! 🔥 The image generation is taking a break, but trust me — this product was made for you. Want me to add it to your cart? 🛒`,
+              timestamp: new Date(),
+            },
+          ]);
+        } else {
+          throw new Error("Both try-on methods failed");
+        }
+        return;
+      }
+
+      const data = await response.json();
+      const parts = data.candidates?.[0]?.content?.parts || [];
+
+      // Look for generated image in response
+      let generatedImage: string | null = null;
+      let responseMessage = "";
+
+      for (const part of parts) {
+        if (part.inlineData?.data) {
+          generatedImage = `data:${part.inlineData.mimeType || "image/png"};base64,${part.inlineData.data}`;
+        }
+        if (part.text) {
+          responseMessage += part.text;
+        }
+      }
+
+      if (generatedImage) {
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: generateId(),
+            role: "assistant",
+            content:
+              cleanMessageContent(responseMessage) ||
+              `Here's how you'd look in "${product.name}", boss! 🎨🔥 Looking sharp! Want me to add it to your cart?`,
+            timestamp: new Date(),
+            image: generatedImage,
+          },
+        ]);
+      } else {
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: generateId(),
+            role: "assistant",
+            content:
+              cleanMessageContent(responseMessage) ||
+              `Boss, the AI couldn't generate the try-on image right now, but "${product.name}" would look fantastic on you! Want me to add it to your cart? 🛒`,
+            timestamp: new Date(),
+          },
+        ]);
+      }
+    } catch (err) {
+      console.error("Virtual try-on error:", err);
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: generateId(),
+          role: "assistant",
+          content: `Oops, the virtual try-on hit a snag! 😅 But trust me boss, "${product.name}" would look amazing on you. Want me to add it to your cart instead? 🛒`,
+          timestamp: new Date(),
+        },
+      ]);
+    } finally {
+      setTryOnLoading(false);
+    }
+  };
+
   return (
     <>
       {/* Floating Button */}
@@ -1252,10 +1591,12 @@ Tags: ${product.tags?.join(", ") || "N/A"}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
             className={cn(
-              "fixed z-50 bg-white dark:bg-gray-900 rounded-2xl shadow-2xl border overflow-hidden flex flex-col",
+              "fixed z-50 bg-white dark:bg-gray-900 shadow-2xl border overflow-hidden flex flex-col transition-all duration-300",
               isMinimized
-                ? "bottom-6 right-6 w-80 h-16"
-                : "bottom-6 right-6 w-[95vw] sm:w-[420px] h-[80vh] sm:h-[600px] max-h-[calc(100vh-48px)]",
+                ? "bottom-6 right-6 w-80 h-16 rounded-2xl"
+                : isMaximized
+                  ? "inset-0 w-full h-full rounded-none"
+                  : "bottom-6 right-6 w-[95vw] sm:w-[420px] h-[80vh] sm:h-[600px] max-h-[calc(100vh-48px)] rounded-2xl",
             )}
           >
             {/* Header */}
@@ -1278,14 +1619,37 @@ Tags: ${product.tags?.join(", ") || "N/A"}
               </div>
               <div className="flex items-center gap-1">
                 <button
-                  onClick={() => setIsMinimized(!isMinimized)}
+                  onClick={() => {
+                    if (isMinimized) setIsMinimized(false);
+                    else setIsMinimized(true);
+                    setIsMaximized(false);
+                  }}
                   className="p-2 hover:bg-white/20 rounded-lg transition-colors"
+                  title={isMinimized ? "Restore" : "Minimize"}
                 >
                   <Minus className="w-4 h-4" />
                 </button>
                 <button
-                  onClick={() => setIsOpen(false)}
+                  onClick={() => {
+                    setIsMaximized(!isMaximized);
+                    setIsMinimized(false);
+                  }}
                   className="p-2 hover:bg-white/20 rounded-lg transition-colors"
+                  title={isMaximized ? "Restore" : "Maximize"}
+                >
+                  {isMaximized ? (
+                    <Minimize2 className="w-4 h-4" />
+                  ) : (
+                    <Maximize2 className="w-4 h-4" />
+                  )}
+                </button>
+                <button
+                  onClick={() => {
+                    setIsOpen(false);
+                    setIsMaximized(false);
+                  }}
+                  className="p-2 hover:bg-white/20 rounded-lg transition-colors"
+                  title="Close"
                 >
                   <X className="w-4 h-4" />
                 </button>
@@ -1317,6 +1681,17 @@ Tags: ${product.tags?.join(", ") || "N/A"}
                           message.role === "user" ? "items-end" : "items-start",
                         )}
                       >
+                        {/* User uploaded image */}
+                        {message.userImage && (
+                          <div className="rounded-xl overflow-hidden border shadow-sm max-w-[200px]">
+                            <img
+                              src={message.userImage}
+                              alt="Your photo"
+                              className="w-full h-auto object-cover"
+                            />
+                          </div>
+                        )}
+
                         <div
                           className={cn(
                             "px-4 py-3 rounded-2xl text-sm whitespace-pre-line",
@@ -1325,8 +1700,22 @@ Tags: ${product.tags?.join(", ") || "N/A"}
                               : "bg-white dark:bg-gray-800 shadow-sm rounded-bl-md",
                           )}
                         >
-                          {message.content}
+                          {cleanMessageContent(message.content)}
                         </div>
+
+                        {/* AI-generated image (try-on result) */}
+                        {message.image && (
+                          <div className="rounded-xl overflow-hidden border-2 border-indigo-200 shadow-lg">
+                            <img
+                              src={message.image}
+                              alt="Virtual try-on result"
+                              className="w-full h-auto object-cover"
+                            />
+                            <div className="bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-gray-800 dark:to-gray-700 px-3 py-2 text-xs text-center text-muted-foreground">
+                              ✨ AI Virtual Try-On — For visualization only
+                            </div>
+                          </div>
+                        )}
 
                         {/* Product Cards — Rich Results */}
                         {message.products && message.products.length > 0 && (
@@ -1336,6 +1725,8 @@ Tags: ${product.tags?.join(", ") || "N/A"}
                                 key={product._id}
                                 product={product}
                                 onAddToCart={handleAddToCartFromChat}
+                                onTryOn={handleVirtualTryOn}
+                                tryOnAvailable={!!tryOnImage}
                               />
                             ))}
                           </div>
@@ -1407,8 +1798,46 @@ Tags: ${product.tags?.join(", ") || "N/A"}
                   </div>
                 </div>
 
+                {/* Try-on photo indicator */}
+                {tryOnImage && (
+                  <div className="px-4 py-1.5 border-t bg-purple-50 dark:bg-purple-900/20 flex items-center justify-between">
+                    <div className="flex items-center gap-2 text-xs text-purple-700 dark:text-purple-300">
+                      <Camera className="w-3 h-3" />
+                      <span>Try-on photo uploaded</span>
+                      <img
+                        src={tryOnImage}
+                        alt=""
+                        className="w-5 h-5 rounded-full object-cover border"
+                      />
+                    </div>
+                    <button
+                      onClick={() => setTryOnImage(null)}
+                      className="text-xs text-purple-500 hover:text-purple-700"
+                    >
+                      Remove
+                    </button>
+                  </div>
+                )}
+
+                {tryOnLoading && (
+                  <div className="px-4 py-2 border-t bg-gradient-to-r from-purple-50 to-indigo-50 dark:from-purple-900/20 dark:to-indigo-900/20">
+                    <div className="flex items-center gap-2 text-xs text-purple-700 dark:text-purple-300">
+                      <Loader2 className="w-3 h-3 animate-spin" />
+                      <span>Generating virtual try-on...</span>
+                    </div>
+                  </div>
+                )}
+
                 {/* Input */}
                 <div className="p-4 border-t bg-white dark:bg-gray-900">
+                  {/* Hidden file input for image upload */}
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageUpload}
+                    className="hidden"
+                  />
                   <form
                     data-clerk-form
                     onSubmit={(e) => {
@@ -1417,18 +1846,36 @@ Tags: ${product.tags?.join(", ") || "N/A"}
                     }}
                     className="flex items-center gap-2"
                   >
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      className={cn(
+                        "shrink-0 p-2 rounded-lg transition-colors",
+                        tryOnImage
+                          ? "text-purple-600 bg-purple-100 hover:bg-purple-200 dark:bg-purple-900/30"
+                          : "text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800",
+                      )}
+                      title="Upload photo for virtual try-on"
+                      disabled={isLoading || tryOnLoading}
+                    >
+                      <Camera className="w-4 h-4" />
+                    </button>
                     <Input
                       ref={inputRef}
                       value={input}
                       onChange={(e) => setInput(e.target.value)}
-                      placeholder="Ask me anything — find products, haggle, checkout..."
+                      placeholder={
+                        tryOnImage
+                          ? "Say 'try on the first one'..."
+                          : "Ask me anything — find, haggle, try-on..."
+                      }
                       className="flex-1"
-                      disabled={isLoading}
+                      disabled={isLoading || tryOnLoading}
                     />
                     <Button
                       type="submit"
                       size="icon"
-                      disabled={!input.trim() || isLoading}
+                      disabled={!input.trim() || isLoading || tryOnLoading}
                       className="shrink-0"
                     >
                       <Send className="w-4 h-4" />

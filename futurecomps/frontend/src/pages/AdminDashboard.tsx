@@ -139,7 +139,7 @@ export default function AdminDashboard() {
       id: string;
       name: string;
       price: number;
-      inventory: number;
+      stock: number;
       date: string;
     }[];
   }>({ orders: [], users: [], products: [] });
@@ -169,7 +169,7 @@ export default function AdminDashboard() {
     description: "",
     category: "",
     images: [""],
-    inventory: 0,
+    stock: 0,
     colors: ["Black", "White"],
     sizes: ["S", "M", "L"],
     inStock: true,
@@ -527,7 +527,7 @@ export default function AdminDashboard() {
 
     // Calculate low stock products (inventory less than 10)
     const lowStockProducts = productsArray.filter(
-      (product) => product.inventory !== undefined && product.inventory < 10,
+      (product) => product.stock !== undefined && product.stock < 10,
     ).length;
 
     // Set dashboard stats
@@ -634,7 +634,7 @@ export default function AdminDashboard() {
         id: product.id,
         name: product.name,
         price: product.price,
-        inventory: product.inventory || 0,
+        stock: product.stock || 0,
         date: product.createdAt
           ? new Date(product.createdAt).toLocaleDateString()
           : "Recently",
@@ -754,7 +754,7 @@ export default function AdminDashboard() {
         description: "",
         category: "",
         images: [""],
-        inventory: 0,
+        stock: 0,
         colors: ["Black", "White"],
         sizes: ["S", "M", "L"],
         inStock: true,
@@ -1191,6 +1191,7 @@ export default function AdminDashboard() {
               description: "",
               category: "",
               images: [""],
+              stock: 0,
               colors: ["Black", "White"],
               sizes: ["S", "M", "L"],
               inStock: true,

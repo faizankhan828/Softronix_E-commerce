@@ -234,17 +234,17 @@ export default function ProductsTable({
                     )}
                   </TableCell>
                   <TableCell className="text-center">
-                    {product.inventory !== undefined ? (
+                    {product.stock !== undefined ? (
                       <span
                         className={
-                          product.inventory > 10
+                          product.stock > 10
                             ? "text-green-500"
-                            : product.inventory > 0
+                            : product.stock > 0
                               ? "text-amber-500"
                               : "text-red-500"
                         }
                       >
-                        {product.inventory}
+                        {product.stock}
                       </span>
                     ) : (
                       <span

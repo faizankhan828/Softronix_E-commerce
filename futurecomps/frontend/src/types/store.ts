@@ -60,6 +60,8 @@ export interface ClerkMessage {
   timestamp: Date;
   products?: Product[];
   action?: ClerkAction;
+  image?: string; // base64 data URL for AI-generated images (try-on etc.)
+  userImage?: string; // user-uploaded image preview
 }
 
 export type SortOption =

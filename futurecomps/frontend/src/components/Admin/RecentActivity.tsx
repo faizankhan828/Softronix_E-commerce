@@ -38,7 +38,7 @@ interface Product {
   id: string;
   name: string;
   price: number;
-  inventory: number;
+  stock: number;
   date: string;
 }
 
@@ -103,8 +103,8 @@ const getStatusBadge = (status: string) => {
 };
 
 // Helper function to get inventory status
-const getInventoryStatus = (inventory: number) => {
-  if (inventory <= 0) {
+const getInventoryStatus = (stock: number) => {
+  if (stock <= 0) {
     return (
       <Badge
         variant="outline"
@@ -113,7 +113,7 @@ const getInventoryStatus = (inventory: number) => {
         Out of Stock
       </Badge>
     );
-  } else if (inventory < 10) {
+  } else if (stock < 10) {
     return (
       <Badge
         variant="outline"
@@ -337,10 +337,10 @@ export default function RecentActivity({
                           ${product.price.toFixed(2)}
                         </p>
                         <p className="text-xs text-muted-foreground">
-                          Stock: {product.inventory}
+                          Stock: {product.stock}
                         </p>
                       </div>
-                      {getInventoryStatus(product.inventory)}
+                      {getInventoryStatus(product.stock)}
                     </div>
                   </div>
                 ))}

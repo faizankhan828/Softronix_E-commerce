@@ -19,7 +19,7 @@ const calculateDashboardData = (
 
   // Calculate low stock products
   const lowStockProducts = products.filter(
-    (product: any) => product.inventory !== undefined && product.inventory < 10,
+    (product: any) => product.stock !== undefined && product.stock < 10,
   ).length;
 
   // Calculate sales data for the last 7 days
@@ -129,7 +129,7 @@ const calculateDashboardData = (
       id: product.id || product._id,
       name: product.name,
       price: product.price,
-      inventory: product.inventory || 0,
+      stock: product.stock || 0,
       date: product.createdAt
         ? new Date(product.createdAt).toLocaleDateString()
         : "Recently",
@@ -202,7 +202,7 @@ export interface RecentActivity {
     id: string;
     name: string;
     price: number;
-    inventory: number;
+    stock: number;
     date: string;
   }[];
 }
@@ -295,7 +295,7 @@ const dashboardService = {
         (o: any) => o.status === "pending" || o.status === "processing",
       ).length;
       const lowStockProducts = products.filter(
-        (p: any) => p.inventory !== undefined && p.inventory < 10,
+        (p: any) => p.stock !== undefined && p.stock < 10,
       ).length;
 
       stats = {

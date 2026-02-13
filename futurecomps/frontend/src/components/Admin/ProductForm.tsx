@@ -38,7 +38,7 @@ interface Product {
   description: string;
   category: string;
   images: string[];
-  inventory?: number;
+  stock?: number;
   colors: string[];
   sizes: string[];
   inStock: boolean;
@@ -369,15 +369,15 @@ export default function ProductForm({
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="inventory" className="flex items-center gap-1">
-                  <Package className="h-4 w-4" /> Inventory
+                <Label htmlFor="stock" className="flex items-center gap-1">
+                  <Package className="h-4 w-4" /> Stock
                 </Label>
                 <Input
-                  id="inventory"
-                  name="inventory"
+                  id="stock"
+                  name="stock"
                   type="number"
                   min="0"
-                  value={formData.inventory || ""}
+                  value={formData.stock || ""}
                   onChange={handleInputChange}
                   className="focus-visible:ring-primary bg-background text-foreground border-input"
                 />
