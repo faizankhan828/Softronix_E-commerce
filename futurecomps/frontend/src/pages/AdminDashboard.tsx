@@ -24,6 +24,7 @@ import couponService, { Coupon } from "../api/services/couponService";
 import type { Product } from "../api/services/productService";
 
 
+import userService from "../api/services/userService";
 import api from "../api/services/api";
 
 // Custom components
@@ -36,16 +37,13 @@ import ProductForm from "../components/Admin/ProductForm";
 import CouponsTable from "../components/Admin/CouponsTable";
 import CouponForm from "../components/Admin/CouponForm";
 import SettingsPanel from "../components/Admin/SettingsPanel";
-import RecentActivity from "../components/Admin/RecentActivity";
+import RecentActivityComponent from "../components/Admin/RecentActivity";
 import SalesChart, { SalesData } from "../components/Admin/SalesChart";
 import TopProducts, { TopProduct } from "../components/Admin/TopProducts";
+import { RecentActivity as RecentActivityType } from "../api/services/dashboardService";
 
 
-interface RecentActivityData {
-  orders: Order[];
-  users: User[];
-  products: any[]; // Product in recent activity might be different structure or same
-}
+interface RecentActivityData extends RecentActivityType {}
 
 // Helper function to replace fixUI
 const fixUI = () => {
@@ -139,46 +137,54 @@ export default function AdminDashboard() {
     setActiveTab(currentTab);
   }, [searchParams]);
 
-  // Fetch initial data
+// Fetch initial data
   const fetchInitialData = async () => {
     setLoading(true);
     try {
         // In a real app, verify admin auth here
         
         try {
-            const dashboardData = await dashboardService.getDashboardStats();
+            // Fetch everything in parallel
+            const [dashboardData, productsData, ordersData, usersData] = await Promise.all([
+                dashboardService.getDashboardStats(),
+                productService.getAdminProducts(),
+                // orderService.getOrders(), // Uncomment when ready
+                // userService.getUsers() // Uncomment when ready
+                Promise.resolve([]), // Placeholder for orders
+                Promise.resolve([])  // Placeholder for users
+            ]);
+
+            // If fetch was successful (or placeholders returned)
             setDashboardStats(dashboardData.stats);
             setSalesData(dashboardData.salesData);
             setTopProducts(dashboardData.topProducts);
             setRecentActivity(dashboardData.recentActivity);
             setTrends(dashboardData.trends);
-
-             // Also update the products, orders, and users state if needed
-             // For simplicity, we can fetch them separately or rely on dashboardService returning everything?
-             // mamo dashboardService returns specific stats.
+            
+            setProducts(productsData);
+            // setOrders(ordersData);
+            // setUsers(usersData);
+            
+            // To actually uncomment, I will do it here:
+             const realOrders = await import("../api/services/orderService").then(m => m.getOrders().catch(() => []));
+             setOrders(realOrders);
              
-             // Fetch products if needed for dashboard recent activity logic or just to have them
-             await fetchProducts();
-             await fetchOrdersData();
-             await fetchUsersData();
+             const realUsers = await userService.getUsers().catch(() => []);
+             setUsers(realUsers);
 
-        } catch (dashboardError) {
-             console.warn("Dashboard service failed, using fallback/mock or manual calc", dashboardError);
-             // Fallback: Fetch individual data
-             const productsData = await fetchProducts();
-             const ordersData = await fetchOrdersData();
-             const usersData = await fetchUsersData();
-             // Manually calculate stats if needed (omitted for brevity)
+        } catch (error) {
+             console.error("Error fetching dashboard data:", error);
+             toast({
+                title: "Error",
+                description: "Failed to load dashboard data",
+                variant: "destructive",
+             });
         }
     } catch (error) {
-        console.error("Error loading dashboard data:", error);
-        toast({
-            title: "Error",
-            description: "Failed to load dashboard data",
-            variant: "destructive",
-        });
+        console.error("Error in fetchInitialData:", error);
     } finally {
         setLoading(false);
+        setProductsLoading(false);
     }
   };
 
@@ -389,9 +395,9 @@ export default function AdminDashboard() {
                     <SalesChart salesData={salesData} isLoading={loading} />
                     <TopProducts products={topProducts} isLoading={loading} />
                  </div>
-                 <RecentActivity 
-                    recentOrders={recentActivity.orders}
-                    recentUsers={recentActivity.users}
+                 <RecentActivityComponent
+              recentActivity={recentActivity}
+            />        recentUsers={recentActivity.users}
                     recentProducts={recentActivity.products}
                     isLoading={loading}
                  />
