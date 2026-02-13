@@ -18,6 +18,8 @@ import cartRoutes from "./routes/cartRoutes.js";
 import couponRoutes from "./routes/couponRoutes.js";
 import clerkRoutes from "./routes/clerkRoutes.js";
 import settingsRoutes from "./routes/settingsRoutes.js";
+import wishlistRoutes from "./routes/wishlistRoutes.js";
+import homepageRoutes from "./routes/homepageRoutes.js";
 
 // Load environment variables
 dotenv.config();
@@ -94,6 +96,8 @@ app.use("/api/cart", cartRoutes);
 app.use("/api/coupons", couponRoutes);
 app.use("/api/clerk", clerkRoutes);
 app.use("/api/settings", settingsRoutes);
+app.use("/api/wishlist", wishlistRoutes);
+app.use("/api/homepage", homepageRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {

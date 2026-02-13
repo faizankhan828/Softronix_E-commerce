@@ -33,29 +33,9 @@ import SettingsPanel from "../components/Admin/SettingsPanel";
 import RecentActivity from "../components/Admin/RecentActivity";
 import SalesChart from "../components/Admin/SalesChart";
 import TopProducts from "../components/Admin/TopProducts";
+import type { Product } from "../api/services/productService";
 
 // Types
-interface Product {
-  id?: string;
-  _id?: string;
-  name: string;
-  price: number;
-  description: string;
-  category: string;
-  images: string[];
-  inventory?: number;
-  colors: string[];
-  sizes: string[];
-  inStock: boolean;
-  discountedPrice?: number;
-  tags?: string[];
-  material?: string;
-  fit?: string;
-  care?: string;
-  origin?: string;
-  isNew: boolean;
-  isFeatured: boolean;
-}
 
 interface OrderItem {
   productId: string;

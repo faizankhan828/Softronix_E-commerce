@@ -406,6 +406,7 @@ export default function HomepageSettingsPanel() {
                   }
                   min={1000}
                   step={500}
+                  className="bg-white dark:bg-black text-black dark:text-white border-gray-200 dark:border-gray-800"
                 />
                 <p className="text-sm text-muted-foreground">
                   Time in milliseconds between slides (minimum 1000ms)
@@ -496,6 +497,7 @@ export default function HomepageSettingsPanel() {
                                 })
                               }
                               placeholder="Product title (optional)"
+                              className="bg-white dark:bg-black text-black dark:text-white border-gray-200 dark:border-gray-800"
                             />
                           </div>
                           <div className="space-y-2">
@@ -510,6 +512,7 @@ export default function HomepageSettingsPanel() {
                                 })
                               }
                               placeholder="Subtitle (optional)"
+                              className="bg-white dark:bg-black text-black dark:text-white border-gray-200 dark:border-gray-800"
                             />
                           </div>
                         </div>
@@ -526,6 +529,7 @@ export default function HomepageSettingsPanel() {
                               })
                             }
                             placeholder="Short description (optional)"
+                            className="bg-white dark:bg-black text-black dark:text-white border-gray-200 dark:border-gray-800"
                           />
                         </div>
 
@@ -586,7 +590,7 @@ export default function HomepageSettingsPanel() {
                                     accentColor: e.target.value,
                                   })
                                 }
-                                className="flex-1"
+                                className="flex-1 bg-white dark:bg-black text-black dark:text-white border-gray-200 dark:border-gray-800"
                               />
                             </div>
                           </div>
@@ -615,7 +619,7 @@ export default function HomepageSettingsPanel() {
                                     darkAccentColor: e.target.value,
                                   })
                                 }
-                                className="flex-1"
+                                className="flex-1 bg-white dark:bg-black text-black dark:text-white border-gray-200 dark:border-gray-800"
                               />
                             </div>
                           </div>
@@ -634,6 +638,7 @@ export default function HomepageSettingsPanel() {
                                 })
                               }
                               placeholder="Collection name"
+                              className="bg-white dark:bg-black text-black dark:text-white border-gray-200 dark:border-gray-800"
                             />
                           </div>
                           <div className="space-y-2">
@@ -648,6 +653,7 @@ export default function HomepageSettingsPanel() {
                                 })
                               }
                               placeholder="Model number"
+                              className="bg-white dark:bg-black text-black dark:text-white border-gray-200 dark:border-gray-800"
                             />
                           </div>
                           <div className="space-y-2">
@@ -662,6 +668,7 @@ export default function HomepageSettingsPanel() {
                                 })
                               }
                               placeholder="Material type"
+                              className="bg-white dark:bg-black text-black dark:text-white border-gray-200 dark:border-gray-800"
                             />
                           </div>
                         </div>
@@ -783,6 +790,7 @@ export default function HomepageSettingsPanel() {
                   onChange={handleNewArrivalsCountChange}
                   min={1}
                   max={12}
+                  className="bg-white dark:bg-black text-black dark:text-white border-gray-200 dark:border-gray-800"
                 />
                 <p className="text-sm text-muted-foreground">
                   How many new products to show in the New Arrivals section
@@ -856,6 +864,7 @@ export default function HomepageSettingsPanel() {
                       title: e.target.value,
                     })
                   }
+                  className="bg-white dark:bg-black text-black dark:text-white border-gray-200 dark:border-gray-800"
                 />
               </div>
               <div className="space-y-2">
@@ -869,6 +878,7 @@ export default function HomepageSettingsPanel() {
                       subTitle: e.target.value,
                     })
                   }
+                  className="bg-white dark:bg-black text-black dark:text-white border-gray-200 dark:border-gray-800"
                 />
               </div>
               <div className="space-y-2">
@@ -883,6 +893,7 @@ export default function HomepageSettingsPanel() {
                     })
                   }
                   rows={3}
+                  className="bg-white dark:bg-black text-black dark:text-white border-gray-200 dark:border-gray-800"
                 />
               </div>
 
@@ -898,6 +909,7 @@ export default function HomepageSettingsPanel() {
                         mainImage: e.target.value,
                       })
                     }
+                  className="bg-white dark:bg-black text-black dark:text-white border-gray-200 dark:border-gray-800"
                   />
                 </div>
                 <div className="space-y-2">
@@ -911,6 +923,7 @@ export default function HomepageSettingsPanel() {
                         detailImage: e.target.value,
                       })
                     }
+                  className="bg-white dark:bg-black text-black dark:text-white border-gray-200 dark:border-gray-800"
                   />
                 </div>
               </div>
@@ -928,6 +941,7 @@ export default function HomepageSettingsPanel() {
                           lightBackground: e.target.value,
                         })
                       }
+                      className="bg-white dark:bg-black text-black dark:text-white border-gray-200 dark:border-gray-800"
                     />
                     <div
                       className="w-8 h-8 rounded-md border"
@@ -949,6 +963,7 @@ export default function HomepageSettingsPanel() {
                           darkBackground: e.target.value,
                         })
                       }
+                      className="bg-white dark:bg-black text-black dark:text-white border-gray-200 dark:border-gray-800"
                     />
                     <div
                       className="w-8 h-8 rounded-md border"
@@ -973,6 +988,7 @@ export default function HomepageSettingsPanel() {
                           accentColor: e.target.value,
                         })
                       }
+                      className="bg-white dark:bg-black text-black dark:text-white border-gray-200 dark:border-gray-800"
                     />
                     <div
                       className="w-8 h-8 rounded-md border"
@@ -996,6 +1012,7 @@ export default function HomepageSettingsPanel() {
                           darkAccentColor: e.target.value,
                         })
                       }
+                      className="bg-white dark:bg-black text-black dark:text-white border-gray-200 dark:border-gray-800"
                     />
                     <div
                       className="w-8 h-8 rounded-md border"
@@ -1019,6 +1036,7 @@ export default function HomepageSettingsPanel() {
                         model: e.target.value,
                       })
                     }
+                  className="bg-white dark:bg-black text-black dark:text-white border-gray-200 dark:border-gray-800"
                   />
                 </div>
                 <div className="space-y-2">
@@ -1032,6 +1050,7 @@ export default function HomepageSettingsPanel() {
                         collection: e.target.value,
                       })
                     }
+                  className="bg-white dark:bg-black text-black dark:text-white border-gray-200 dark:border-gray-800"
                   />
                 </div>
               </div>
@@ -1047,6 +1066,7 @@ export default function HomepageSettingsPanel() {
                       material: e.target.value,
                     })
                   }
+                  className="bg-white dark:bg-black text-black dark:text-white border-gray-200 dark:border-gray-800"
                 />
               </div>
             </div>
