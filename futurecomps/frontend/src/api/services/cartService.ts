@@ -45,7 +45,7 @@ const localCart = {
       (i) =>
         i.productId === item.productId &&
         i.size === item.size &&
-        i.color === item.color
+        i.color === item.color,
     );
 
     if (existingItemIndex > -1) {
@@ -61,7 +61,7 @@ const localCart = {
     itemId: string,
     quantity: number,
     size?: string,
-    color?: string
+    color?: string,
   ): void => {
     const items = localCart.getItems();
     const itemIndex = items.findIndex((i) => i._id === itemId);
@@ -157,7 +157,7 @@ const checkInventory = async (
   productId: string,
   size: string,
   color: string,
-  quantity: number
+  quantity: number,
 ): Promise<{ available: boolean; availableQuantity?: number }> => {
   try {
     // First try to get the product details to check if it exists
@@ -234,7 +234,7 @@ const saveForLater = async (itemId: string): Promise<void> => {
 // Move item from saved to cart
 const moveToCartFromSaved = async (
   itemId: string,
-  quantity: number
+  quantity: number,
 ): Promise<void> => {
   const token = localStorage.getItem("token");
 
@@ -256,7 +256,7 @@ const addToCart = async (
   productId: string,
   quantity: number,
   size: string,
-  color: string
+  color: string,
 ): Promise<void> => {
   try {
     // Always try to add to server first
@@ -323,7 +323,7 @@ const updateCartItem = async (
   itemId: string,
   quantity: number,
   size?: string,
-  color?: string
+  color?: string,
 ): Promise<void> => {
   try {
     // Always try to update on server first
@@ -376,16 +376,21 @@ const syncCartAfterLogin = async (): Promise<CartItem[]> => {
     if (localItems.length > 0) {
       // Send local items to server
       await api.post("/cart/sync", { items: localItems });
-
-      // Clear local cart after sync
-      localCart.clearCart();
     }
 
     // Get updated cart from server
     const response = await api.get("/cart");
-    return response.data;
+    const serverItems = response.data;
+
+    // Only clear local cart AFTER confirming server has items
+    if (Array.isArray(serverItems) && serverItems.length > 0) {
+      localCart.clearCart();
+    }
+
+    return serverItems;
   } catch (error) {
-    return [];
+    // Don't clear local cart on error — keep it as fallback
+    return localCart.getItems();
   }
 };
 

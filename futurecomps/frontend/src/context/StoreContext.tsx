@@ -542,10 +542,9 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
           // This is a no-op on store side
           break;
         case "trigger_checkout":
-          // Navigate to checkout page
-          if (cart.items.length > 0) {
-            window.location.href = "/checkout";
-          } else {
+          // Navigation is handled by the calling component (AiClerk/CartDrawer)
+          // StoreContext just opens cart if empty so user can see it
+          if (cart.items.length === 0) {
             setIsCartOpen(true);
           }
           break;

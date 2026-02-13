@@ -1,6 +1,6 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Minus, Plus, Trash2, ShoppingBag, Tag } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Badge } from "@/components/ui/Badge";
@@ -8,7 +8,6 @@ import { useStore } from "@/context/StoreContext";
 import { formatCurrency } from "@/lib/utils";
 import { useState } from "react";
 import { useAuth } from "@/context/AuthContext";
-
 
 export function CartDrawer() {
   const {
@@ -22,20 +21,21 @@ export function CartDrawer() {
   } = useStore();
 
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [couponCode, setCouponCode] = useState("");
   const [couponError, setCouponError] = useState("");
 
   const handleApplyCoupon = () => {
     setCouponError("");
     const code = couponCode.trim().toUpperCase();
-    
+
     // Simple coupon validation
     const validCoupons: Record<string, number> = {
-      "WELCOME10": 10,
-      "SAVE15": 15,
-      "VIP20": 20,
-      "FRIENDLY10": 10,
-      "FREESHIP": 5,
+      WELCOME10: 10,
+      SAVE15: 15,
+      VIP20: 20,
+      FRIENDLY10: 10,
+      FREESHIP: 5,
     };
 
     if (validCoupons[code]) {
@@ -46,11 +46,11 @@ export function CartDrawer() {
     }
   };
 
-
   const handleCheckout = async () => {
     if (!user) {
       console.log("❌ User not logged in, redirecting to login");
-      window.location.href = "/login"; 
+      setCartOpen(false);
+      navigate("/login");
       return;
     }
 
@@ -60,9 +60,10 @@ export function CartDrawer() {
       return;
     }
 
-    // Navigate to checkout page instead of directly creating Stripe session
+    // Navigate to checkout page (client-side to preserve cart state)
     console.log("✅ Navigating to checkout page");
-    window.location.href = "/checkout";
+    setCartOpen(false);
+    navigate("/checkout");
   };
 
   return (
@@ -108,9 +109,12 @@ export function CartDrawer() {
                   <div className="w-20 h-20 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center mb-4">
                     <ShoppingBag className="w-10 h-10 text-gray-400" />
                   </div>
-                  <h3 className="text-lg font-medium mb-2">Your cart is empty</h3>
+                  <h3 className="text-lg font-medium mb-2">
+                    Your cart is empty
+                  </h3>
                   <p className="text-muted-foreground mb-4">
-                    Start shopping or chat with our AI Clerk for recommendations!
+                    Start shopping or chat with our AI Clerk for
+                    recommendations!
                   </p>
                   <Button onClick={() => setCartOpen(false)} asChild>
                     <Link to="/shop">Browse Products</Link>
@@ -150,7 +154,12 @@ export function CartDrawer() {
                         <div className="flex items-center justify-between mt-2">
                           <div className="flex items-center gap-1">
                             <button
-                              onClick={() => updateCartQuantity(item.productId, item.quantity - 1)}
+                              onClick={() =>
+                                updateCartQuantity(
+                                  item.productId,
+                                  item.quantity - 1,
+                                )
+                              }
                               className="w-7 h-7 rounded-md bg-gray-200 dark:bg-gray-700 flex items-center justify-center hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
                             >
                               <Minus className="w-3 h-3" />
@@ -159,7 +168,12 @@ export function CartDrawer() {
                               {item.quantity}
                             </span>
                             <button
-                              onClick={() => updateCartQuantity(item.productId, item.quantity + 1)}
+                              onClick={() =>
+                                updateCartQuantity(
+                                  item.productId,
+                                  item.quantity + 1,
+                                )
+                              }
                               className="w-7 h-7 rounded-md bg-gray-200 dark:bg-gray-700 flex items-center justify-center hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
                             >
                               <Plus className="w-3 h-3" />
@@ -167,7 +181,10 @@ export function CartDrawer() {
                           </div>
                           <div className="flex items-center gap-2">
                             <span className="font-semibold">
-                              {formatCurrency(item.product.price * item.quantity, item.product.currency)}
+                              {formatCurrency(
+                                item.product.price * item.quantity,
+                                item.product.currency,
+                              )}
                             </span>
                             <button
                               onClick={() => removeFromCart(item.productId)}
@@ -240,11 +257,7 @@ export function CartDrawer() {
 
                 {/* Actions */}
                 <div className="space-y-2">
-                  <Button 
-                    className="w-full" 
-                    size="lg"
-                    onClick={handleCheckout}
-                  >
+                  <Button className="w-full" size="lg" onClick={handleCheckout}>
                     Proceed to Checkout
                   </Button>
                   <Button

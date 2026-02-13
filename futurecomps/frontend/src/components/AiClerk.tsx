@@ -24,7 +24,7 @@ import { clerkAPI } from "@/services/api";
 import { formatCurrency, generateId } from "@/lib/utils";
 import { cn } from "@/lib/utils";
 import type { Product, ClerkMessage, ClerkAction } from "@/types/store";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 
 const GEMINI_API_KEY =
   import.meta.env.VITE_GEMINI_API_KEY ||
@@ -389,6 +389,7 @@ export function AiClerk() {
   } = useStore();
   const { isAuthenticated, user } = useAuth();
   const location = useLocation();
+  const navigate = useNavigate();
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -812,7 +813,8 @@ Tags: ${product.tags?.join(", ") || "N/A"}
                   "🛒 Your cart is empty! Add some items first, then I'll take you to checkout.",
               };
             }
-            handleClerkAction({ type: "trigger_checkout", payload: {} });
+            // Use client-side navigation to preserve cart state
+            navigate("/checkout");
             return { extraMessage: "🛍️ Redirecting you to checkout now..." };
           }
 

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useStore } from "@/context/StoreContext";
 import { useAuth } from "@/context/AuthContext";
@@ -17,7 +17,17 @@ export default function Checkout() {
   const { cart, cartLoading } = useStore();
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
-  const [paymentMethod, setPaymentMethod] = useState<"online" | "cod">("online");
+  const [paymentMethod, setPaymentMethod] = useState<"online" | "cod">(
+    "online",
+  );
+  const hadItemsOnMount = useRef(false);
+
+  // Track if cart had items when user first arrived
+  useEffect(() => {
+    if (!cartLoading && cart && cart.items && cart.items.length > 0) {
+      hadItemsOnMount.current = true;
+    }
+  }, [cart, cartLoading]);
 
   // Address form state
   const [address, setAddress] = useState({
@@ -35,13 +45,16 @@ export default function Checkout() {
   useEffect(() => {
     // Wait for cart to finish loading before checking if it's empty
     if (!cartLoading) {
+      // Only redirect if cart was NEVER filled during this checkout session
+      // This prevents redirect when cart briefly appears empty during re-fetches
       if (!cart || !cart.items || cart.items.length === 0) {
-        console.log("Cart is empty, redirecting to shop");
-        // Optional: show a toast or message before redirecting
-        const timer = setTimeout(() => {
-          navigate("/shop");
-        }, 1000); // Give user a second to see "Cart empty" state
-        return () => clearTimeout(timer);
+        if (!hadItemsOnMount.current) {
+          console.log("Cart is empty on checkout mount, redirecting to shop");
+          const timer = setTimeout(() => {
+            navigate("/shop");
+          }, 1500);
+          return () => clearTimeout(timer);
+        }
       }
     }
   }, [cart, cartLoading, navigate]);
@@ -100,7 +113,7 @@ export default function Checkout() {
               paymentMethod: "cod",
               couponCode: cart.discountCode || null,
             }),
-          }
+          },
         );
 
         const data = await response.json();
@@ -128,7 +141,7 @@ export default function Checkout() {
               shippingAddress: address,
               couponCode: cart.discountCode || null,
             }),
-          }
+          },
         );
 
         const data = await response.json();
@@ -138,7 +151,9 @@ export default function Checkout() {
           window.location.href = data.url;
         } else {
           console.error("❌ Checkout failed:", data.message);
-          alert(`Failed to initiate checkout: ${data.message || "Unknown error"}`);
+          alert(
+            `Failed to initiate checkout: ${data.message || "Unknown error"}`,
+          );
         }
       }
     } catch (error) {
@@ -323,12 +338,16 @@ export default function Checkout() {
               <CardContent>
                 <RadioGroup
                   value={paymentMethod}
-                  onValueChange={(value) => setPaymentMethod(value as "online" | "cod")}
+                  onValueChange={(value) =>
+                    setPaymentMethod(value as "online" | "cod")
+                  }
                 >
                   <div className="flex items-center space-x-2 border rounded-lg p-4 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800">
                     <RadioGroupItem value="online" id="online" />
                     <Label htmlFor="online" className="flex-1 cursor-pointer">
-                      <div className="font-semibold">Online Payment (Stripe)</div>
+                      <div className="font-semibold">
+                        Online Payment (Stripe)
+                      </div>
                       <div className="text-sm text-gray-500">
                         Pay securely with credit/debit card
                       </div>
@@ -381,7 +400,9 @@ export default function Checkout() {
                           Qty: {item.quantity}
                         </p>
                         {item.size && (
-                          <p className="text-xs text-gray-500">Size: {item.size}</p>
+                          <p className="text-xs text-gray-500">
+                            Size: {item.size}
+                          </p>
                         )}
                       </div>
                       <div className="text-sm font-medium">
