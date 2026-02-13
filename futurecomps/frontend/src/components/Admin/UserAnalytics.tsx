@@ -6,18 +6,29 @@ import {
   CardHeader,
   CardTitle,
 } from "../../components/ui/Card";
-// Tabs removed
 import { useToast } from "../../components/ui/use-toast";
 import { Button } from "../../components/ui/Button";
 import {
   RefreshCw,
-  BarChart2,
-  LineChart,
-  PieChart,
   TrendingUp,
   TrendingDown,
 } from "lucide-react";
 import api from "../../api/services/api";
+import {
+  BarChart,
+  Bar,
+  LineChart,
+  Line,
+  PieChart,
+  Pie,
+  Cell,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  Legend,
+} from "recharts";
 
 // Define chart item interface
 interface ChartItem {
@@ -33,6 +44,9 @@ interface AnalyticsChartProps {
   type?: "line" | "bar" | "pie";
 }
 
+// Colors for pie chart
+const PIE_COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#8884d8", "#82ca9d"];
+
 // Analytics chart component with real data visualization
 const AnalyticsChart = ({
   title,
@@ -40,104 +54,147 @@ const AnalyticsChart = ({
   data,
   type = "line",
 }: AnalyticsChartProps) => {
-  // Calculate max value for scaling
-  const maxValue =
-    data && data.length > 0
-      ? Math.max(
-          ...data.map((item) =>
-            typeof item.value === "number" ? item.value : 0,
-          ),
-        )
-      : 0;
 
-  // Function to get height percentage based on value
-  const getBarHeight = (value: number): number => {
-    if (maxValue === 0) return 0;
-    return (value / maxValue) * 100;
+  const CustomTooltip = ({ active, payload, label }: any) => {
+    if (active && payload && payload.length) {
+      return (
+        <div className="bg-white dark:bg-gray-800 p-2 border border-gray-200 dark:border-gray-700 rounded shadow-sm">
+          <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{label}</p>
+          <p className="text-sm text-primary">
+            {type === "pie" ? payload[0].name : "Value"}: {payload[0].value.toLocaleString()}
+          </p>
+        </div>
+      );
+    }
+    return null;
+  };
+
+  const renderChart = () => {
+    if (!data || data.length === 0) {
+      return (
+        <div className="h-full flex items-center justify-center">
+          <p className="text-gray-500 dark:text-gray-400">No data available</p>
+        </div>
+      );
+    }
+
+    if (type === "bar") {
+      return (
+        <ResponsiveContainer width="100%" height="100%">
+          <BarChart
+            data={data}
+            margin={{ top: 5, right: 10, left: 0, bottom: 5 }}
+            layout="horizontal"
+          >
+            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#374151" opacity={0.2} />
+            <XAxis 
+              dataKey="label" 
+              tick={{ fill: "#6B7280", fontSize: 11 }} 
+              tickLine={false}
+              axisLine={false}
+              interval={0}
+              angle={-45}
+              textAnchor="end"
+              height={60}
+            />
+            <YAxis 
+              tick={{ fill: "#6B7280", fontSize: 12 }} 
+              tickLine={false}
+              axisLine={false}
+            />
+            <Tooltip content={<CustomTooltip />} cursor={{ fill: "transparent" }} />
+            <Bar dataKey="value" fill="currentColor" radius={[4, 4, 0, 0]} className="fill-primary" />
+          </BarChart>
+        </ResponsiveContainer>
+      );
+    } else if (type === "line") {
+      return (
+        <ResponsiveContainer width="100%" height="100%">
+          <LineChart
+            data={data}
+            margin={{ top: 5, right: 10, left: 0, bottom: 5 }}
+          >
+            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#374151" opacity={0.2} />
+            <XAxis 
+              dataKey="label" 
+              tick={{ fill: "#6B7280", fontSize: 12 }} 
+              tickLine={false}
+              axisLine={false}
+            />
+            <YAxis 
+              tick={{ fill: "#6B7280", fontSize: 12 }} 
+              tickLine={false}
+              axisLine={false}
+            />
+            <Tooltip content={<CustomTooltip />} />
+            <Line 
+              type="monotone" 
+              dataKey="value" 
+              stroke="currentColor" 
+              strokeWidth={2} 
+              dot={{ r: 4, fill: "currentColor" }} 
+              activeDot={{ r: 6 }} 
+              className="stroke-primary text-primary"
+            />
+          </LineChart>
+        </ResponsiveContainer>
+      );
+    } else if (type === "pie") {
+      return (
+        <ResponsiveContainer width="100%" height="100%">
+          <PieChart>
+            <Pie
+              data={data}
+              cx="50%"
+              cy="50%"
+              labelLine={false}
+              outerRadius={80}
+              fill="#8884d8"
+              dataKey="value"
+              nameKey="label"
+            >
+              {data.map((entry, index) => (
+                <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} />
+              ))}
+            </Pie>
+            <Tooltip />
+            <Legend wrapperStyle={{ fontSize: "12px" }} />
+          </PieChart>
+        </ResponsiveContainer>
+      );
+    }
   };
 
   return (
-    <Card className="bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-800 shadow-lg">
-      <CardHeader className="border-b border-gray-200 dark:border-gray-800 pb-6">
-        <CardTitle className="text-xl text-gray-900 dark:text-white">
+    <Card className="bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-800 shadow-lg flex flex-col h-full">
+      <CardHeader className="border-b border-gray-200 dark:border-gray-800 pb-4">
+        <CardTitle className="text-xl text-gray-900 dark:text-white flex justify-between items-center">
           {title}
         </CardTitle>
         <CardDescription className="text-gray-500 dark:text-gray-400">
           {description}
         </CardDescription>
       </CardHeader>
-      <CardContent className="h-96 p-8">
-        {data && data.length > 0 ? (
-          <div className="h-full flex flex-col">
-            <div className="flex-1 flex items-end gap-4">
-              {data.map((item: ChartItem, index: number) => (
-                <div
-                  key={index}
-                  className="flex flex-col items-center flex-1 h-full"
-                >
-                  <div className="w-full flex justify-center h-full items-end">
-                    <div
-                      className="w-full max-w-[60px] bg-primary/20 dark:bg-primary/30 hover:bg-primary/40 dark:hover:bg-primary/50 rounded-t-sm relative group"
-                      style={{ height: `${getBarHeight(item.value)}%` }}
-                    >
-                      <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-xs py-1 px-2 rounded shadow opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
-                        {typeof item.value === "number"
-                          ? item.value.toLocaleString()
-                          : item.value}
-                      </div>
-                    </div>
-                  </div>
-                  <div className="text-sm text-gray-500 dark:text-gray-400 mt-3 truncate max-w-[80px] text-center font-medium">
-                    {item.label}
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-800 flex justify-between items-center">
-              <div className="text-sm font-medium text-gray-900 dark:text-white">
-                {type === "line" ? "Trend" : "Distribution"}
-              </div>
-              <div className="flex items-center text-sm text-gray-500 dark:text-gray-400">
-                {type === "line" && data.length > 1 && (
-                  <div className="flex items-center">
-                    {data[data.length - 1].value > data[0].value ? (
-                      <>
-                        <TrendingUp className="h-5 w-5 text-green-500 mr-2" />
-                        <span className="text-green-500 font-medium">
-                          Increasing
-                        </span>
-                      </>
-                    ) : data[data.length - 1].value < data[0].value ? (
-                      <>
-                        <TrendingDown className="h-5 w-5 text-red-500 mr-2" />
-                        <span className="text-red-500 font-medium">
-                          Decreasing
-                        </span>
-                      </>
-                    ) : (
-                      <span className="font-medium">Stable</span>
-                    )}
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        ) : (
-          <div className="h-full flex items-center justify-center">
-            <div className="text-center">
-              <div className="mb-6 text-gray-400 dark:text-gray-600">
-                {type === "line" ? (
-                  <LineChart className="h-20 w-20 mx-auto" />
-                ) : type === "bar" ? (
-                  <BarChart2 className="h-20 w-20 mx-auto" />
-                ) : (
-                  <PieChart className="h-20 w-20 mx-auto" />
-                )}
-              </div>
-              <p className="text-base text-gray-500 dark:text-gray-400">
-                No data available
-              </p>
+      <CardContent className="flex-1 p-4 min-h-[300px]">
+        {renderChart()}
+        
+        {type === "line" && data && data.length > 1 && (
+          <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-800 flex justify-between items-center">
+            <div className="text-sm font-medium text-gray-900 dark:text-white">Trend</div>
+            <div className="flex items-center text-sm">
+              {data[data.length - 1].value > data[0].value ? (
+                <>
+                  <TrendingUp className="h-4 w-4 text-green-500 mr-2" />
+                  <span className="text-green-500 font-medium">Increasing</span>
+                </>
+              ) : data[data.length - 1].value < data[0].value ? (
+                <>
+                  <TrendingDown className="h-4 w-4 text-red-500 mr-2" />
+                  <span className="text-red-500 font-medium">Decreasing</span>
+                </>
+              ) : (
+                <span className="font-medium text-gray-500">Stable</span>
+              )}
             </div>
           </div>
         )}
@@ -206,24 +263,8 @@ export default function UserAnalytics() {
         value: product.sales,
       }));
 
-      // Get user data from recent activity
-      // const users = dashboardData.recentActivity?.users || [];
-
       // Create user growth data (monthly)
-      const months = [
-        "Jan",
-        "Feb",
-        "Mar",
-        "Apr",
-        "May",
-        "Jun",
-        "Jul",
-        "Aug",
-        "Sep",
-        "Oct",
-        "Nov",
-        "Dec",
-      ];
+      const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
       // Create user growth based on total customers and trend
       const totalCustomers = dashboardData.stats?.totalCustomers || 0;
@@ -424,7 +465,6 @@ export default function UserAnalytics() {
 
   // Fetch data on component mount
   useEffect(() => {
-    // Fetch analytics data
     fetchAnalyticsData();
   }, []);
 
@@ -474,7 +514,7 @@ export default function UserAnalytics() {
             title="Category Distribution"
             description="Products by category"
             data={analyticsData.categoryDistribution}
-            type="bar"
+            type="pie"
           />
         </div>
 
@@ -483,13 +523,28 @@ export default function UserAnalytics() {
             title="Sales Overview"
             description="Monthly sales performance"
             data={analyticsData.salesData}
-            type="bar"
+            type="line"
           />
           <AnalyticsChart
             title="Order Status"
             description="Orders by current status"
             data={analyticsData.userActivity}
             type="bar"
+          />
+        </div>
+
+         <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-2">
+          <AnalyticsChart
+            title="User Growth"
+            description="Monthly user acquisition"
+            data={analyticsData.userGrowth}
+            type="line"
+          />
+          <AnalyticsChart
+            title="Conversion Rate"
+            description="Sales conversion trend"
+            data={analyticsData.conversionRate}
+            type="line"
           />
         </div>
       </div>

@@ -14,6 +14,15 @@ import {
   SelectValue,
 } from "@/components/ui/Select";
 import { Skeleton } from "@/components/ui/Skeleton";
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+} from "recharts";
 
 export interface SalesData {
   date: string;
@@ -31,13 +40,18 @@ export default function SalesChart({
 }: SalesChartProps) {
   const [timeRange, setTimeRange] = useState("7days");
 
-  // Find the maximum value to scale the chart
-  const maxAmount = Math.max(...salesData.map((item) => item.amount), 0);
-
-  // Function to get height percentage based on amount
-  const getBarHeight = (amount: number) => {
-    if (maxAmount === 0) return 0;
-    return (amount / maxAmount) * 100;
+  const CustomTooltip = ({ active, payload, label }: any) => {
+    if (active && payload && payload.length) {
+      return (
+        <div className="bg-white dark:bg-gray-800 p-2 border border-gray-200 dark:border-gray-700 rounded shadow-sm">
+          <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{label}</p>
+          <p className="text-sm text-primary">
+            Sales: ${payload[0].value.toFixed(2)}
+          </p>
+        </div>
+      );
+    }
+    return null;
   };
 
   return (
@@ -69,41 +83,45 @@ export default function SalesChart({
       </CardHeader>
       <CardContent>
         {isLoading ? (
-          <div className="space-y-3">
-            <Skeleton className="h-[200px] w-full" />
-            <div className="flex justify-between">
-              <Skeleton className="h-4 w-12" />
-              <Skeleton className="h-4 w-12" />
-              <Skeleton className="h-4 w-12" />
-              <Skeleton className="h-4 w-12" />
-              <Skeleton className="h-4 w-12" />
-              <Skeleton className="h-4 w-12" />
-              <Skeleton className="h-4 w-12" />
-            </div>
+          <div className="space-y-3 pt-4">
+            <Skeleton className="h-[250px] w-full" />
           </div>
         ) : salesData.length > 0 ? (
-          <div className="pt-2">
-            <div className="flex items-end justify-between h-[200px] gap-2">
-              {salesData.map((item, index) => (
-                <div key={index} className="flex flex-col items-center flex-1">
-                  <div className="w-full flex justify-center">
-                    <div
-                      className="w-full max-w-[40px] bg-primary/20 dark:bg-primary/30 hover:bg-primary/40 dark:hover:bg-primary/50 rounded-t-sm relative group"
-                      style={{ height: `${getBarHeight(item.amount)}%` }}
-                    >
-                      <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-xs py-1 px-2 rounded shadow opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
-                        ${item.amount.toFixed(2)}
-                      </div>
-                    </div>
-                  </div>
-                  <div className="text-xs text-gray-500 dark:text-gray-400 mt-2">
-                    {item.date}
-                  </div>
-                </div>
-              ))}
-            </div>
+          <div className="h-[300px] w-full pt-4">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart
+                data={salesData}
+                margin={{
+                  top: 5,
+                  right: 10,
+                  left: 0,
+                  bottom: 5,
+                }}
+              >
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#374151" opacity={0.2} />
+                <XAxis
+                  dataKey="date"
+                  tick={{ fill: "#6B7280", fontSize: 12 }}
+                  tickLine={false}
+                  axisLine={false}
+                />
+                <YAxis
+                  tick={{ fill: "#6B7280", fontSize: 12 }}
+                  tickLine={false}
+                  axisLine={false}
+                  tickFormatter={(value) => `$${value}`}
+                />
+                <Tooltip content={<CustomTooltip />} cursor={{ fill: "transparent" }} />
+                <Bar
+                  dataKey="amount"
+                  fill="currentColor"
+                  radius={[4, 4, 0, 0]}
+                  className="fill-primary"
+                />
+              </BarChart>
+            </ResponsiveContainer>
 
-            <div className="flex justify-between items-center mt-6 text-sm font-medium text-gray-900 dark:text-white">
+            <div className="flex justify-between items-center mt-4 text-sm font-medium text-gray-900 dark:text-white px-2">
               <div>
                 Total: $
                 {salesData

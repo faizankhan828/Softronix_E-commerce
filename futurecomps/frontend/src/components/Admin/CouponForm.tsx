@@ -142,7 +142,7 @@ export default function CouponForm({
             placeholder="SUMMER2023"
             required
             disabled={loading || (initialData?._id ? true : false)} // Disable editing code for existing coupons
-            className="uppercase bg-white dark:bg-black text-black dark:text-white border-gray-200 dark:border-gray-800"
+            className="uppercase bg-background text-foreground border-input"
           />
           <p className="text-xs text-muted-foreground">
             Unique code for the coupon (uppercase)
@@ -160,7 +160,7 @@ export default function CouponForm({
             placeholder="Summer Sale 2023"
             required
             disabled={loading}
-            className="bg-white dark:bg-black text-black dark:text-white border-gray-200 dark:border-gray-800"
+            className="bg-background text-foreground border-input"
           />
           <p className="text-xs text-muted-foreground">
             Brief description of the coupon
@@ -180,7 +180,7 @@ export default function CouponForm({
             }
             disabled={loading}
           >
-            <SelectTrigger id="type" className="bg-white dark:bg-black text-black dark:text-white border-gray-200 dark:border-gray-800">
+            <SelectTrigger id="type" className="bg-background text-foreground border-input">
               <SelectValue placeholder="Select discount type" />
             </SelectTrigger>
             <SelectContent>
@@ -215,7 +215,7 @@ export default function CouponForm({
             step={formData.type === "percentage" ? 1 : 0.01}
             required
             disabled={loading}
-            className="bg-white dark:bg-black text-black dark:text-white border-gray-200 dark:border-gray-800"
+            className="bg-background text-foreground border-input"
           />
           <p className="text-xs text-muted-foreground">
             {formData.type === "percentage"
@@ -238,7 +238,7 @@ export default function CouponForm({
             min={0}
             step={0.01}
             disabled={loading}
-            className="bg-white dark:bg-black text-black dark:text-white border-gray-200 dark:border-gray-800"
+            className="bg-background text-foreground border-input"
           />
           <p className="text-xs text-muted-foreground">
             Minimum cart value required (0 = no minimum)
@@ -259,7 +259,7 @@ export default function CouponForm({
               step={0.01}
               disabled={loading}
               placeholder="No limit"
-              className="bg-white dark:bg-black text-black dark:text-white border-gray-200 dark:border-gray-800"
+              className="bg-background text-foreground border-input"
             />
             <p className="text-xs text-muted-foreground">
               Maximum discount amount (empty = no limit)
@@ -282,7 +282,7 @@ export default function CouponForm({
             onChange={handleInputChange}
             required
             disabled={loading}
-            className="bg-white dark:bg-black text-black dark:text-white border-gray-200 dark:border-gray-800"
+            className="bg-background text-foreground border-input"
           />
           <p className="text-xs text-muted-foreground">
             When the coupon becomes active
@@ -304,7 +304,7 @@ export default function CouponForm({
             onChange={handleInputChange}
             required
             disabled={loading}
-            className="bg-white dark:bg-black text-black dark:text-white border-gray-200 dark:border-gray-800"
+            className="bg-background text-foreground border-input"
           />
           <p className="text-xs text-muted-foreground">
             When the coupon expires
@@ -324,7 +324,7 @@ export default function CouponForm({
             step={1}
             disabled={loading}
             placeholder="Unlimited"
-            className="bg-white dark:bg-black text-black dark:text-white border-gray-200 dark:border-gray-800"
+            className="bg-background text-foreground border-input"
           />
           <p className="text-xs text-muted-foreground">
             Maximum number of times this coupon can be used (empty = unlimited)

@@ -236,7 +236,7 @@ export default function ProductForm({
                   value={formData.name || ""}
                   onChange={handleInputChange}
                   required
-                  className="focus-visible:ring-primary bg-white dark:bg-black text-black dark:text-white border-gray-200 dark:border-gray-800"
+                  className="focus-visible:ring-primary bg-background text-foreground border-input"
                 />
               </div>
 
@@ -250,7 +250,7 @@ export default function ProductForm({
                     setFormData({ ...formData, category: value })
                   }
                 >
-                  <SelectTrigger className="focus-visible:ring-primary bg-white dark:bg-black text-black dark:text-white border-gray-200 dark:border-gray-800">
+                  <SelectTrigger className="focus-visible:ring-primary bg-background text-foreground border-input">
                     <SelectValue placeholder="Select category" />
                   </SelectTrigger>
                   <SelectContent>
@@ -277,7 +277,7 @@ export default function ProductForm({
                     value={formData.price || ""}
                     onChange={handleInputChange}
                     required
-                    className="focus-visible:ring-primary text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-800"
+                    className="focus-visible:ring-primary bg-background text-foreground border-input"
                   />
                 </div>
 
@@ -296,7 +296,7 @@ export default function ProductForm({
                     min="0"
                     value={formData.discountedPrice || ""}
                     onChange={handleInputChange}
-                    className="focus-visible:ring-primary bg-white dark:bg-black text-black dark:text-white border-gray-200 dark:border-gray-800"
+                    className="focus-visible:ring-primary bg-background text-foreground border-input"
                   />
                 </div>
               </div>
@@ -315,7 +315,7 @@ export default function ProductForm({
                     max="100"
                     value={formData.taxRate || ""}
                     onChange={handleInputChange}
-                    className="focus-visible:ring-primary bg-white dark:bg-black text-black dark:text-white border-gray-200 dark:border-gray-800"
+                    className="focus-visible:ring-primary bg-background text-foreground border-input"
                     placeholder="e.g. 8.5 for 8.5%"
                   />
                 </div>
@@ -363,7 +363,7 @@ export default function ProductForm({
                   name="sku"
                   value={formData.sku || ""}
                   onChange={handleInputChange}
-                  className="focus-visible:ring-primary bg-white dark:bg-black text-black dark:text-white border-gray-200 dark:border-gray-800"
+                  className="focus-visible:ring-primary bg-background text-foreground border-input"
                   placeholder="Product SKU or ID"
                 />
               </div>
@@ -379,7 +379,7 @@ export default function ProductForm({
                   min="0"
                   value={formData.inventory || ""}
                   onChange={handleInputChange}
-                  className="focus-visible:ring-primary bg-white dark:bg-black text-black dark:text-white border-gray-200 dark:border-gray-800"
+                  className="focus-visible:ring-primary bg-background text-foreground border-input"
                 />
               </div>
             </div>
@@ -399,7 +399,7 @@ export default function ProductForm({
                   value={formData.description || ""}
                   onChange={handleInputChange}
                   required
-                  className="resize-none focus-visible:ring-primary min-h-[120px] bg-white dark:bg-black text-black dark:text-white border-gray-200 dark:border-gray-800"
+                  className="resize-none focus-visible:ring-primary min-h-[120px] bg-background text-foreground border-input"
                   placeholder="Enter detailed product description here..."
                 />
               </div>
@@ -482,7 +482,7 @@ export default function ProductForm({
                   rows={2}
                   value={formData.material || ""}
                   onChange={handleInputChange}
-                  className="resize-none focus-visible:ring-primary bg-white dark:bg-black text-black dark:text-white border-gray-200 dark:border-gray-800"
+                  className="resize-none focus-visible:ring-primary bg-background text-foreground border-input"
                   placeholder="e.g. 100% Premium Cotton"
                 />
               </div>
@@ -497,7 +497,7 @@ export default function ProductForm({
                   rows={2}
                   value={formData.fit || ""}
                   onChange={handleInputChange}
-                  className="resize-none focus-visible:ring-primary bg-white dark:bg-black text-black dark:text-white border-gray-200 dark:border-gray-800"
+                  className="resize-none focus-visible:ring-primary bg-background text-foreground border-input"
                   placeholder="e.g. Regular fit"
                 />
               </div>
@@ -514,7 +514,7 @@ export default function ProductForm({
                   rows={2}
                   value={formData.care || ""}
                   onChange={handleInputChange}
-                  className="resize-none focus-visible:ring-primary bg-white dark:bg-black text-black dark:text-white border-gray-200 dark:border-gray-800"
+                  className="resize-none focus-visible:ring-primary bg-background text-foreground border-input"
                   placeholder="e.g. Machine wash cold, tumble dry low"
                 />
               </div>
@@ -529,7 +529,7 @@ export default function ProductForm({
                   rows={2}
                   value={formData.origin || ""}
                   onChange={handleInputChange}
-                  className="resize-none focus-visible:ring-primary bg-white dark:bg-black text-black dark:text-white border-gray-200 dark:border-gray-800"
+                  className="resize-none focus-visible:ring-primary bg-background text-foreground border-input"
                   placeholder="e.g. Imported"
                 />
               </div>
@@ -558,7 +558,7 @@ export default function ProductForm({
                     value={color}
                     onChange={(e) => handleColorChange(index, e.target.value)}
                     placeholder="Color name"
-                    className="flex-1 focus-visible:ring-primary bg-white dark:bg-black text-black dark:text-white border-gray-200 dark:border-gray-800"
+                    className="flex-1 focus-visible:ring-primary bg-background text-foreground border-input"
                   />
                   <Button
                     type="button"
@@ -603,7 +603,7 @@ export default function ProductForm({
                     value={size}
                     onChange={(e) => handleSizeChange(index, e.target.value)}
                     placeholder="Size"
-                    className="flex-1 focus-visible:ring-primary bg-white dark:bg-black text-black dark:text-white border-gray-200 dark:border-gray-800"
+                    className="flex-1 focus-visible:ring-primary bg-background text-foreground border-input"
                   />
                   <Button
                     type="button"
@@ -671,7 +671,7 @@ export default function ProductForm({
                 onChange={handleTagInputChange}
                 onKeyDown={handleTagKeyDown}
                 placeholder="Add tags (press Enter)"
-                className="flex-1 focus-visible:ring-primary bg-white dark:bg-black text-black dark:text-white border-gray-200 dark:border-gray-800"
+                className="flex-1 focus-visible:ring-primary bg-background text-foreground border-input"
               />
               <Button
                 type="button"
