@@ -46,15 +46,40 @@ const orderSchema = new mongoose.Schema(
       type: Number,
       required: true,
     },
+    // Alias for total (used by COD orders)
+    totalAmount: {
+      type: Number,
+      get: function() { return this.total; },
+      set: function(v) { this.total = v; },
+    },
     currency: {
       type: String,
       default: "usd",
       lowercase: true,
     },
+    // Payment method
+    paymentMethod: {
+      type: String,
+      enum: ["card", "cod", "online"],
+      default: "card",
+    },
+    // Payment status
+    paymentStatus: {
+      type: String,
+      enum: ["pending", "paid", "failed", "refunded"],
+      default: "pending",
+    },
+    // Unique order ID for tracking
+    orderId: {
+      type: String,
+      unique: true,
+      sparse: true,
+    },
     stripeSessionId: {
       type: String,
-      required: true,
       unique: true,
+      sparse: true, // Allows null values, unique when present
+      default: null,
     },
     stripePaymentIntentId: {
       type: String,
@@ -74,13 +99,17 @@ const orderSchema = new mongoose.Schema(
       default: "pending",
     },
     shippingAddress: {
-      name: { type: String, default: "" },
-      line1: { type: String, default: "" },
-      line2: { type: String, default: "" },
+      fullName: { type: String, default: "" },
+      name: { type: String, default: "" }, // Legacy field
+      addressLine1: { type: String, default: "" },
+      addressLine2: { type: String, default: "" },
+      line1: { type: String, default: "" }, // Legacy field
+      line2: { type: String, default: "" }, // Legacy field
       city: { type: String, default: "" },
       state: { type: String, default: "" },
       postalCode: { type: String, default: "" },
       country: { type: String, default: "" },
+      phone: { type: String, default: "" },
     },
     // Package tracking fields
     tracking: {

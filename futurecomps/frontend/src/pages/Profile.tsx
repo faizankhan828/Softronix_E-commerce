@@ -116,70 +116,32 @@ export default function Profile() {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/50 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950">
-      {/* Decorative Background Elements */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-40 -right-40 w-80 h-80 bg-gradient-to-br from-blue-400/20 to-indigo-400/20 rounded-full blur-3xl" />
-        <div className="absolute top-1/2 -left-40 w-80 h-80 bg-gradient-to-br from-purple-400/10 to-pink-400/10 rounded-full blur-3xl" />
-        <div className="absolute -bottom-40 right-1/3 w-80 h-80 bg-gradient-to-br from-cyan-400/10 to-blue-400/10 rounded-full blur-3xl" />
-      </div>
-
-      {/* Header */}
-      <header className="relative">
-        <div className="absolute inset-0 bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600" />
-        <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmZmZmYiIGZpbGwtb3BhY2l0eT0iMC4wNCI+PHBhdGggZD0iTTM2IDM0djItSDI0di0yaDEyek0zNiAyNHYySDI0di0yaDF6Ii8+PC9nPjwvZz48L3N2Zz4=')] opacity-50" />
-        
-        <div className="relative pt-6 pb-36 sm:pb-40 lg:pb-44">
-          <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-            <nav className="flex items-center justify-between">
-              <motion.div
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.5 }}
-              >
-                <Link 
-                  to="/"
-                  className="group flex items-center gap-2 text-white/80 hover:text-white transition-all duration-300"
-                >
-                  <span className="p-2 rounded-xl bg-white/10 group-hover:bg-white/20 backdrop-blur-sm transition-colors">
-                    <ArrowLeft className="w-5 h-5" />
-                  </span>
-                  <span className="font-medium hidden sm:block">Back to Home</span>
-                </Link>
-              </motion.div>
-
-              <motion.button
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.5 }}
-                onClick={handleLogout}
-                className="group flex items-center gap-2.5 px-4 py-2.5 bg-white/10 hover:bg-white/20 backdrop-blur-md rounded-xl text-white border border-white/10 transition-all duration-300 hover:border-white/20"
-              >
-                <LogOut className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
-                <span className="font-medium hidden sm:block">Sign Out</span>
-              </motion.button>
-            </nav>
-
-            {/* Header Title */}
-            <motion.div 
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.2 }}
-              className="mt-8 sm:mt-12 text-center"
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
+      {/* Simpler Header */}
+      <header className="bg-white dark:bg-gray-900 shadow-sm border-b border-gray-200 dark:border-gray-800">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+          <div className="flex items-center justify-between">
+            <Link 
+              to="/"
+              className="flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 transition-colors"
             >
-              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white">
-                My Account
-              </h1>
-              <p className="mt-2 text-blue-100/80 text-sm sm:text-base">
-                Manage your profile and preferences
-              </p>
-            </motion.div>
+              <ArrowLeft className="w-5 h-5" />
+              <span className="font-medium">Back to Home</span>
+            </Link>
+
+            <button
+              onClick={handleLogout}
+              className="flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg text-gray-700 dark:text-gray-300 transition-colors"
+            >
+              <LogOut className="w-4 h-4" />
+              <span className="font-medium">Sign Out</span>
+            </button>
           </div>
         </div>
       </header>
 
       {/* Main Content */}
-      <main className="relative max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 -mt-28 sm:-mt-32 pb-12">
+      <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <motion.div
           variants={containerVariants}
           initial="hidden"
@@ -188,99 +150,75 @@ export default function Profile() {
         >
           {/* Left Sidebar - Profile Card */}
           <motion.div variants={itemVariants} className="lg:col-span-4">
-            <div className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl rounded-3xl shadow-xl shadow-gray-900/5 dark:shadow-none border border-white/50 dark:border-gray-800/50 overflow-hidden sticky top-6">
-              {/* Profile Header with Gradient */}
-              <div className="relative h-24 bg-gradient-to-br from-blue-500 via-indigo-500 to-violet-500">
-                <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmZmZmYiIGZpbGwtb3BhY2l0eT0iMC4xIj48cGF0aCBkPSJNMjAgMjBjMC01LjUyMyA0LjQ3Ny0xMCAxMC0xMHMxMCA0LjQ3NyAxMCAxMC00LjQ3NyAxMC0xMCAxMC0xMC00LjQ3Ny0xMC0xMHoiLz48L2c+PC9nPjwvc3ZnPg==')] opacity-30" />
-              </div>
-              
-              {/* Avatar */}
-              <div className="relative px-6 -mt-14">
-                <div className="relative inline-block group">
-                  {user.avatar ? (
-                    <img
-                      src={user.avatar}
-                      alt={user.name}
-                      className="w-28 h-28 rounded-2xl object-cover border-4 border-white dark:border-gray-900 shadow-xl ring-4 ring-blue-500/20"
-                    />
-                  ) : (
-                    <div className="w-28 h-28 rounded-2xl bg-gradient-to-br from-blue-500 via-indigo-500 to-violet-600 flex items-center justify-center text-4xl font-bold text-white border-4 border-white dark:border-gray-900 shadow-xl ring-4 ring-blue-500/20">
-                      {user.name?.charAt(0).toUpperCase()}
-                    </div>
-                  )}
-                  {editing && (
-                    <motion.button 
-                      initial={{ scale: 0 }}
-                      animate={{ scale: 1 }}
-                      className="absolute -bottom-2 -right-2 w-10 h-10 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 rounded-xl flex items-center justify-center text-white shadow-lg shadow-blue-500/30 transition-all duration-300 hover:shadow-xl hover:shadow-blue-500/40"
+            <div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-200 dark:border-gray-800 overflow-hidden">
+              {/* Simple Profile Header */}
+              <div className="p-6 border-b border-gray-200 dark:border-gray-800">
+                <div className="flex flex-col items-center">
+                  <div className="relative">
+                    {user.avatar ? (
+                      <img
+                        src={user.avatar}
+                        alt={user.name}
+                        className="w-24 h-24 rounded-full object-cover border-2 border-gray-200 dark:border-gray-700"
+                      />
+                    ) : (
+                      <div className="w-24 h-24 rounded-full bg-blue-500 flex items-center justify-center text-2xl font-bold text-white">
+                        {user.name?.charAt(0).toUpperCase()}
+                      </div>
+                    )}
+                    {editing && (
+                      <button className="absolute -bottom-2 -right-2 w-8 h-8 bg-blue-600 hover:bg-blue-700 rounded-full flex items-center justify-center text-white">
+                        <Camera className="w-4 h-4" />
+                      </button>
+                    )}
+                  </div>
+                  
+                  <h2 className="mt-4 text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                    {user.name}
+                    {user.isVerified && (
+                      <CheckCircle2 className="w-5 h-5 text-blue-500" />
+                    )}
+                  </h2>
+                  <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">{user.email}</p>
+
+                  {/* Simple Badges */}
+                  <div className="mt-4 flex flex-wrap gap-2 justify-center">
+                    <span
+                      className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-medium ${
+                        user.isVerified
+                          ? "bg-green-50 text-green-700 dark:bg-green-900/20 dark:text-green-400"
+                          : "bg-yellow-50 text-yellow-700 dark:bg-yellow-900/20 dark:text-yellow-400"
+                      }`}
                     >
-                      <Camera className="w-5 h-5" />
-                    </motion.button>
-                  )}
-                  {/* Online Indicator */}
-                  <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-emerald-500 rounded-full border-3 border-white dark:border-gray-900 shadow-lg">
-                    <div className="absolute inset-0 bg-emerald-400 rounded-full animate-ping opacity-75" />
-                  </div>
-                </div>
-              </div>
-
-              {/* User Info */}
-              <div className="px-6 pt-4 pb-6">
-                <div className="flex items-start justify-between">
-                  <div>
-                    <h2 className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
-                      {user.name}
-                      {user.isVerified && (
-                        <CheckCircle2 className="w-5 h-5 text-blue-500" />
-                      )}
-                    </h2>
-                    <p className="text-gray-500 dark:text-gray-400 text-sm mt-0.5">{user.email}</p>
-                  </div>
-                </div>
-
-                {/* Badges */}
-                <div className="mt-4 flex flex-wrap gap-2">
-                  <span
-                    className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all ${
-                      user.isVerified
-                        ? "bg-gradient-to-r from-emerald-50 to-teal-50 text-emerald-700 dark:from-emerald-900/30 dark:to-teal-900/30 dark:text-emerald-400 border border-emerald-200/50 dark:border-emerald-800/50"
-                        : "bg-gradient-to-r from-amber-50 to-orange-50 text-amber-700 dark:from-amber-900/30 dark:to-orange-900/30 dark:text-amber-400 border border-amber-200/50 dark:border-amber-800/50"
-                    }`}
-                  >
-                    {user.isVerified ? <CheckCircle2 className="w-3.5 h-3.5" /> : <AlertCircle className="w-3.5 h-3.5" />}
-                    {user.isVerified ? "Verified" : "Not Verified"}
-                  </span>
-                  {user.role === "admin" && (
-                    <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-gradient-to-r from-violet-50 to-purple-50 text-violet-700 dark:from-violet-900/30 dark:to-purple-900/30 dark:text-violet-400 border border-violet-200/50 dark:border-violet-800/50">
-                      <Shield className="w-3.5 h-3.5" />
-                      Admin
+                      {user.isVerified ? <CheckCircle2 className="w-3.5 h-3.5" /> : <AlertCircle className="w-3.5 h-3.5" />}
+                      {user.isVerified ? "Verified" : "Not Verified"}
                     </span>
-                  )}
+                    {user.role === "admin" && (
+                      <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-medium bg-purple-50 text-purple-700 dark:bg-purple-900/20 dark:text-purple-400">
+                        <Shield className="w-3.5 h-3.5" />
+                        Admin
+                      </span>
+                    )}
+                  </div>
                 </div>
+              </div>
 
-                {/* Quick Stats */}
-                <div className="mt-6 grid grid-cols-3 gap-3">
-                  {quickStats.map((stat) => (
-                    <div 
-                      key={stat.label}
-                      className="text-center p-3 rounded-2xl bg-gradient-to-br from-gray-50 to-gray-100/50 dark:from-gray-800/50 dark:to-gray-800/30 border border-gray-100 dark:border-gray-700/50"
-                    >
-                      <stat.icon className={`w-5 h-5 mx-auto mb-1.5 ${
-                        stat.color === 'blue' ? 'text-blue-500' :
-                        stat.color === 'rose' ? 'text-rose-500' :
-                        'text-amber-500'
-                      }`} />
-                      <p className="text-lg font-bold text-gray-900 dark:text-white">{stat.value}</p>
-                      <p className="text-xs text-gray-500 dark:text-gray-400">{stat.label}</p>
-                    </div>
-                  ))}
-                </div>
-
-                {/* Member Since */}
-                <div className="mt-6 flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
-                  <Calendar className="w-4 h-4" />
-                  <span>Member since January 2024</span>
-                </div>
+              {/* Quick Stats */}
+              <div className="p-6 grid grid-cols-3 gap-4">
+                {quickStats.map((stat) => (
+                  <div 
+                    key={stat.label}
+                    className="text-center"
+                  >
+                    <stat.icon className={`w-5 h-5 mx-auto mb-1 ${
+                      stat.color === 'blue' ? 'text-blue-500' :
+                      stat.color === 'rose' ? 'text-rose-500' :
+                      'text-amber-500'
+                    }`} />
+                    <p className="text-lg font-bold text-gray-900 dark:text-white">{stat.value}</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">{stat.label}</p>
+                  </div>
+                ))}
               </div>
             </div>
           </motion.div>
