@@ -400,7 +400,7 @@ export default function BoundaryCarousel() {
         {/* Main carousel */}
         <div className="flex-1 flex flex-col lg:flex-row">
           {/* Left side - Images */}
-          <div className="w-full lg:w-2/3 relative overflow-hidden min-h-[400px] sm:min-h-[500px] lg:min-h-[600px]">
+          <div className="w-full lg:w-2/3 relative overflow-hidden h-[500px] sm:h-[600px] lg:h-[650px]">
             <AnimatePresence mode="wait">
               <motion.div
                 key={`images-${activeIndex}`}
@@ -509,15 +509,15 @@ export default function BoundaryCarousel() {
           </div>
 
           {/* Right side - Text content */}
-          <div className="w-full lg:w-1/3 flex flex-col justify-center px-4 sm:px-8 lg:px-16 py-8 sm:py-12 relative z-30">
-            <AnimatePresence mode="wait">
+          <div className="w-full lg:w-1/3 flex flex-col justify-center px-4 sm:px-8 lg:px-16 py-8 sm:py-12 relative z-30 h-[500px] sm:h-[600px] lg:h-[650px]">
+            <AnimatePresence mode="wait" initial={false}>
               <motion.div
                 key={`content-${activeIndex}`}
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.5, ease: "easeOut" }}
-                className="space-y-6 sm:space-y-8 lg:space-y-12"
+                className="space-y-4 sm:space-y-6 lg:space-y-8 absolute inset-0 flex flex-col justify-center px-4 sm:px-8 lg:px-16"
               >
                 {/* Model number with animated stroke */}
                 <div

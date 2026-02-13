@@ -50,33 +50,53 @@ export function CartDrawer() {
 
   const handleCheckout = async () => {
     if (!user) {
-      // You might want to redirect to login or show a toast
+      console.log("❌ User not logged in, redirecting to login");
       window.location.href = "/login"; 
+      return;
+    }
+
+    if (!cart || cart.items.length === 0) {
+      console.log("❌ Cart is empty");
+      alert("Your cart is empty. Please add items before checkout.");
       return;
     }
 
     try {
       setLoading(true);
-      const token = localStorage.getItem("token"); // Assuming token is stored here
+      console.log("🛒 Initiating Stripe checkout with cart:", cart);
+      const token = localStorage.getItem("token");
+      
+      if (!token) {
+        console.log("❌ No auth token found");
+        window.location.href = "/login";
+        return;
+      }
+      
       const response = await fetch(`${import.meta.env.VITE_API_URL || "http://localhost:5000/api"}/payment/create-checkout-session`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
+        body: JSON.stringify({
+          cartItems: cart.items,
+          couponCode: cart.appliedCoupon?.code || null
+        }),
       });
 
       const data = await response.json();
+      console.log("💳 Stripe response:", data);
 
       if (response.ok && data.url) {
+        console.log("✅ Redirecting to Stripe checkout:", data.url);
         window.location.href = data.url;
       } else {
-        console.error("Checkout failed:", data.message);
-        alert("Failed to initiate checkout");
+        console.error("❌ Checkout failed:", data.message);
+        alert(`Failed to initiate checkout: ${data.message || 'Unknown error'}`);
       }
     } catch (error) {
-      console.error("Error creating checkout session:", error);
-      alert("Failed to initiate checkout");
+      console.error("❌ Error creating checkout session:", error);
+      alert("Failed to initiate checkout. Please try again.");
     } finally {
       setLoading(false);
     }

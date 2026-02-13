@@ -205,8 +205,9 @@ export default function AdminDashboard() {
 
   // Update URL when tab changes
   const handleTabChange = (value: string) => {
+    console.log("🔄 Tab changing to:", value);
     setActiveTab(value);
-    setSearchParams({ tab: value });
+    setSearchParams({ tab: value }, { replace: true });
   };
 
   // Reset loading states when component mounts

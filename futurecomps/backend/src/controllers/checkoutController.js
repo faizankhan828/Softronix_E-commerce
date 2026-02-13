@@ -12,19 +12,32 @@ import {
 
 export const createCheckoutFromCart = async (req, res) => {
   try {
+    console.log("\n📦 ===== CREATE CHECKOUT SESSION STARTED =====");
+    console.log("👤 User ID:", req.user._id);
+    console.log("📝 Request body:", JSON.stringify(req.body, null, 2));
+    
     const cart = await Cart.findOne({ userId: req.user._id }).populate(
       "items.productId",
       "name description imageUrl stock price discountedPrice currency isActive",
     );
 
+    console.log("🛒 Cart found:", cart ? `Yes (${cart.items.length} items)` : "No");
+
     if (!cart || cart.items.length === 0) {
+      console.log("❌ Cart is empty for user:", req.user._id);
       return res.status(400).json({ message: "Cart is empty" });
     }
+
+    console.log("📋 Cart items:");
+    cart.items.forEach((item, index) => {
+      console.log(`   ${index + 1}. ${item.productId?.name} - Qty: ${item.quantity} - Price: $${item.price}`);
+    });
 
     // Validate stock for all items
     for (const item of cart.items) {
       const prod = item.productId;
       if (!prod || !prod.isActive) {
+        console.log("❌ Product not available:", prod?.name || item.productId);
         return res
           .status(400)
           .json({
@@ -32,13 +45,17 @@ export const createCheckoutFromCart = async (req, res) => {
           });
       }
       if (item.quantity > prod.stock) {
+        console.log("❌ Insufficient stock for:", prod.name, `(Requested: ${item.quantity}, Available: ${prod.stock})`);
         return res
           .status(400)
           .json({ message: `"${prod.name}" only has ${prod.stock} in stock` });
       }
     }
 
+    console.log("✅ Stock validation passed");
+
     // Build Stripe line items
+    console.log("💛 Building Stripe line items...");
     const lineItems = cart.items.map((item) => {
       const prod = item.productId;
       const unitPrice = item.price; // cart snapshot price
@@ -56,10 +73,13 @@ export const createCheckoutFromCart = async (req, res) => {
       };
     });
 
+    console.log("📦 Line items created:", lineItems.length);
+
     // Resolve coupon for Stripe
     let stripePromotionCodeId = null;
     let couponCode = null;
     if (cart.appliedCoupon?.code) {
+      console.log("🎫 Checking for coupon:", cart.appliedCoupon.code);
       const coupon = await Coupon.findOne({
         code: cart.appliedCoupon.code,
         isActive: true,
@@ -67,6 +87,9 @@ export const createCheckoutFromCart = async (req, res) => {
       if (coupon) {
         stripePromotionCodeId = coupon.stripePromotionCodeId;
         couponCode = coupon.code;
+        console.log("✅ Coupon found and applied:", couponCode);
+      } else {
+        console.log("⚠️ Coupon not found or expired:", cart.appliedCoupon.code);
       }
     }
 
@@ -81,6 +104,7 @@ export const createCheckoutFromCart = async (req, res) => {
       imageUrl: i.productId.imageUrl || "",
     }));
 
+    console.log("🔑 Creating Stripe checkout session...");
     const session = await createCheckoutSession({
       lineItems,
       userId: req.user._id.toString(),
@@ -93,10 +117,18 @@ export const createCheckoutFromCart = async (req, res) => {
       },
     });
 
+    console.log("✅ Stripe session created successfully!");
+    console.log("🌐 Session ID:", session.id);
+    console.log("🔗 Checkout URL:", session.url);
+    console.log("📦 ===== CREATE CHECKOUT SESSION COMPLETED =====\n");
+
     res.json({ id: session.id, url: session.url });
   } catch (error) {
-    console.error("createCheckoutFromCart error:", error);
-    res.status(500).json({ message: "Failed to create checkout session" });
+    console.error("❌ ===== CREATE CHECKOUT SESSION FAILED =====");
+    console.error("🐛 Error details:", error.message);
+    console.error("📚 Stack trace:", error.stack);
+    console.error("📦 ===== END ERROR =====\n");
+    res.status(500).json({ message: "Failed to create checkout session", error: error.message });
   }
 };
 
@@ -164,28 +196,41 @@ export const createSingleProductCheckout = async (req, res) => {
 // ── POST /api/payment/webhook ───────────────────────────
 
 export const handleWebhook = async (req, res) => {
+  console.log("\n🪝 ===== STRIPE WEBHOOK RECEIVED =====");
   const sig = req.headers["stripe-signature"];
   let event;
 
   try {
+    console.log("🔐 Verifying webhook signature...");
     event = constructWebhookEvent(req.body, sig);
+    console.log("✅ Webhook signature verified");
+    console.log("📦 Event type:", event.type);
   } catch (err) {
-    console.error(`Webhook signature error: ${err.message}`);
+    console.error("❌ Webhook signature verification failed:", err.message);
     return res.status(400).send(`Webhook Error: ${err.message}`);
   }
 
   if (event.type === "checkout.session.completed") {
+    console.log("🎉 Processing checkout.session.completed event");
     const session = event.data.object;
+    console.log("📄 Session data:", {
+      sessionId: session.id,
+      amountTotal: session.amount_total,
+      userId: session.metadata?.userId,
+      cartId: session.metadata?.cartId,
+    });
 
     try {
       const userId = session.metadata.userId;
       const couponCode = session.metadata.couponCode || null;
       let items = [];
 
+      console.log("📦 Parsing items from metadata...");
       try {
         items = JSON.parse(session.metadata.itemsJson || "[]");
+        console.log("✅ Items parsed:", items.length, "items");
       } catch {
-        console.error("Failed to parse itemsJson from metadata");
+        console.error("❌ Failed to parse itemsJson from metadata");
       }
 
       // Calculate totals
