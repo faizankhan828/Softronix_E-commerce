@@ -3,7 +3,6 @@ import { X, Minus, Plus, Trash2, ShoppingBag, Tag } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
-import { Badge } from "@/components/ui/Badge";
 import { useStore } from "@/context/StoreContext";
 import { formatCurrency } from "@/lib/utils";
 import { useState } from "react";
@@ -20,7 +19,7 @@ export function CartDrawer() {
     removeDiscount,
   } = useStore();
 
-  const { user, isAuthenticated } = useAuth();
+  const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const [couponCode, setCouponCode] = useState("");
   const [couponError, setCouponError] = useState("");
@@ -41,7 +40,7 @@ export function CartDrawer() {
     };
 
     // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 500));
+    await new Promise((resolve) => setTimeout(resolve, 500));
 
     if (validCoupons[code]) {
       applyDiscount(code, validCoupons[code]);
@@ -56,7 +55,7 @@ export function CartDrawer() {
     if (!isAuthenticated) {
       console.log("❌ User not logged in, redirecting to login");
       setCartOpen(false);
-      navigate("/login", { state: { from: '/checkout' } });
+      navigate("/login", { state: { from: "/checkout" } });
       return;
     }
 
@@ -99,8 +98,13 @@ export function CartDrawer() {
                   <ShoppingBag className="w-5 h-5 text-primary" />
                 </div>
                 <div>
-                  <h2 className="text-lg font-bold text-gray-900 dark:text-white">Shopping Cart</h2>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">{cart.items.length} {cart.items.length === 1 ? 'item' : 'items'}</p>
+                  <h2 className="text-lg font-bold text-gray-900 dark:text-white">
+                    Shopping Cart
+                  </h2>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                    {cart.items.length}{" "}
+                    {cart.items.length === 1 ? "item" : "items"}
+                  </p>
                 </div>
               </div>
               <button
@@ -122,9 +126,14 @@ export function CartDrawer() {
                     Your cart is empty
                   </h3>
                   <p className="text-gray-500 dark:text-gray-400 mb-6 max-w-xs">
-                    Start shopping or chat with our AI Clerk for personalized recommendations!
+                    Start shopping or chat with our AI Clerk for personalized
+                    recommendations!
                   </p>
-                  <Button onClick={() => setCartOpen(false)} asChild className="w-full max-w-xs">
+                  <Button
+                    onClick={() => setCartOpen(false)}
+                    asChild
+                    className="w-full max-w-xs"
+                  >
                     <Link to="/shop">Start Shopping</Link>
                   </Button>
                 </div>
@@ -141,13 +150,17 @@ export function CartDrawer() {
                     >
                       <div className="relative shrink-0">
                         <img
-                          src={item.product.images?.[0] || item.product.imageUrl || '/placeholder.svg'}
+                          src={
+                            item.product.images?.[0] ||
+                            item.product.imageUrl ||
+                            "/placeholder.svg"
+                          }
                           alt={item.product.name}
                           className="w-16 h-16 object-cover rounded-md border border-gray-200 dark:border-gray-700"
                           loading="lazy"
                           onError={(e) => {
                             const target = e.target as HTMLImageElement;
-                            target.src = '/placeholder.svg';
+                            target.src = "/placeholder.svg";
                           }}
                         />
                         {item.product.stock < 5 && (
@@ -200,7 +213,12 @@ export function CartDrawer() {
                                   item.quantity + 1,
                                 )
                               }
-                              disabled={item.product.stock && item.quantity >= item.product.stock}
+                              disabled={
+                                !!(
+                                  item.product.stock &&
+                                  item.quantity >= item.product.stock
+                                )
+                              }
                               className="w-8 h-8 rounded-lg bg-gray-100 dark:bg-gray-800 flex items-center justify-center hover:bg-primary hover:text-white disabled:opacity-50 disabled:cursor-not-allowed transition-all"
                             >
                               <Plus className="w-3.5 h-3.5" />
@@ -208,7 +226,9 @@ export function CartDrawer() {
                           </div>
                           <div className="flex items-center gap-3">
                             <div className="text-right">
-                              <p className="text-xs text-gray-500 dark:text-gray-400">Subtotal</p>
+                              <p className="text-xs text-gray-500 dark:text-gray-400">
+                                Subtotal
+                              </p>
                               <p className="font-bold text-base text-gray-900 dark:text-white">
                                 {formatCurrency(
                                   item.product.price * item.quantity,
@@ -237,7 +257,9 @@ export function CartDrawer() {
               <div className="border-t border-gray-200 dark:border-gray-800 p-4 space-y-3 bg-white dark:bg-gray-900">
                 {/* Coupon */}
                 <div className="space-y-1.5">
-                  <label className="text-xs font-medium text-gray-700 dark:text-gray-300">Promo Code</label>
+                  <label className="text-xs font-medium text-gray-700 dark:text-gray-300">
+                    Promo Code
+                  </label>
                   {cart.discountCode ? (
                     <div className="flex items-center justify-between px-4 py-3 bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-lg border-2 border-green-200 dark:border-green-800">
                       <div className="flex items-center gap-2">
@@ -248,7 +270,9 @@ export function CartDrawer() {
                           <p className="text-sm font-bold text-green-700 dark:text-green-400">
                             {cart.discountCode}
                           </p>
-                          <p className="text-xs text-green-600 dark:text-green-500">Discount applied!</p>
+                          <p className="text-xs text-green-600 dark:text-green-500">
+                            Discount applied!
+                          </p>
                         </div>
                       </div>
                       <button
@@ -264,16 +288,18 @@ export function CartDrawer() {
                         <Input
                           value={couponCode}
                           onChange={(e) => setCouponCode(e.target.value)}
-                          onKeyDown={(e) => e.key === 'Enter' && handleApplyCoupon()}
+                          onKeyDown={(e) =>
+                            e.key === "Enter" && handleApplyCoupon()
+                          }
                           placeholder="Enter code"
                           className="flex-1"
                         />
-                        <Button 
-                          variant="outline" 
+                        <Button
+                          variant="outline"
                           onClick={handleApplyCoupon}
                           disabled={!couponCode.trim() || isApplyingCoupon}
                         >
-                          {isApplyingCoupon ? 'Applying...' : 'Apply'}
+                          {isApplyingCoupon ? "Applying..." : "Apply"}
                         </Button>
                       </div>
                       {couponError && (
@@ -289,22 +315,36 @@ export function CartDrawer() {
                 {/* Summary */}
                 <div className="space-y-2 p-3 bg-gray-50 dark:bg-gray-950 rounded-lg">
                   <div className="flex justify-between text-xs">
-                    <span className="text-gray-600 dark:text-gray-400">Subtotal</span>
-                    <span className="font-medium text-gray-900 dark:text-white">{formatCurrency(cart.subtotal)}</span>
+                    <span className="text-gray-600 dark:text-gray-400">
+                      Subtotal
+                    </span>
+                    <span className="font-medium text-gray-900 dark:text-white">
+                      {formatCurrency(cart.subtotal)}
+                    </span>
                   </div>
                   {cart.discount > 0 && (
                     <div className="flex justify-between text-xs">
-                      <span className="text-green-600 dark:text-green-400 font-medium">Discount</span>
-                      <span className="text-green-600 dark:text-green-400 font-semibold">-{formatCurrency(cart.discount)}</span>
+                      <span className="text-green-600 dark:text-green-400 font-medium">
+                        Discount
+                      </span>
+                      <span className="text-green-600 dark:text-green-400 font-semibold">
+                        -{formatCurrency(cart.discount)}
+                      </span>
                     </div>
                   )}
                   <div className="flex justify-between text-xs">
-                    <span className="text-gray-600 dark:text-gray-400">Shipping</span>
-                    <span className="text-green-600 dark:text-green-400 font-medium">FREE</span>
+                    <span className="text-gray-600 dark:text-gray-400">
+                      Shipping
+                    </span>
+                    <span className="text-green-600 dark:text-green-400 font-medium">
+                      FREE
+                    </span>
                   </div>
                   <div className="flex justify-between text-base font-bold pt-2 border-t-2 border-gray-200 dark:border-gray-800">
                     <span className="text-gray-900 dark:text-white">Total</span>
-                    <span className="text-primary">{formatCurrency(cart.total)}</span>
+                    <span className="text-primary">
+                      {formatCurrency(cart.total)}
+                    </span>
                   </div>
                 </div>
 
@@ -317,8 +357,14 @@ export function CartDrawer() {
                       </p>
                     </div>
                   )}
-                  <Button className="w-full text-base" size="lg" onClick={handleCheckout}>
-                    {isAuthenticated ? 'Proceed to Checkout' : 'Sign In & Checkout'}
+                  <Button
+                    className="w-full text-base"
+                    size="lg"
+                    onClick={handleCheckout}
+                  >
+                    {isAuthenticated
+                      ? "Proceed to Checkout"
+                      : "Sign In & Checkout"}
                   </Button>
                   <Button
                     variant="outline"

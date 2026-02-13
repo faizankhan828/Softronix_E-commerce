@@ -153,7 +153,7 @@ const AnalyticsChart = ({
               dataKey="value"
               nameKey="label"
             >
-              {data.map((entry, index) => (
+              {data.map((_, index) => (
                 <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} />
               ))}
             </Pie>

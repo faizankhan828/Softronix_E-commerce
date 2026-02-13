@@ -1,4 +1,4 @@
-import { User, ShoppingBag, Heart, Settings, LogOut } from 'lucide-react';
+import { User, ShoppingBag, Heart, Settings, LogOut, Shield } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 
@@ -42,6 +42,19 @@ export default function ProfileSidebar({ activeSection, setActiveSection }: Prof
         </div>
         <h2 className="text-lg font-semibold text-foreground">{user?.name}</h2>
         <p className="text-sm text-muted-foreground">{user?.email}</p>
+
+        {/* Admin Dashboard - Distinct & Persistent */}
+        {user?.role === 'admin' && (
+             <div className="w-full mt-4 pt-4 border-t border-white/10">
+                <button
+                    onClick={() => navigate('/admin')}
+                    className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-lg hover:shadow-lg hover:shadow-purple-500/25 transition-all duration-200 text-sm font-medium"
+                >
+                    <Shield className="w-4 h-4" />
+                    Admin Dashboard
+                </button>
+            </div>
+        )}
       </div>
 
       {/* Navigation */}
@@ -60,6 +73,8 @@ export default function ProfileSidebar({ activeSection, setActiveSection }: Prof
             <span className="font-medium">{item.label}</span>
           </button>
         ))}
+
+        {/* Admin link removed as per user request */}
 
         <button
             onClick={handleLogout}

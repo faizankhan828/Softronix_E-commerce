@@ -2,6 +2,8 @@ import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Menu, X, ShoppingBag, User, Search, Truck, Heart, ChevronRight } from "lucide-react";
+
+
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Logo } from "@/components/ui/Logo";
@@ -139,6 +141,9 @@ export function Navbar() {
 
             {/* Right: Actions */}
             <div className="flex items-center gap-0.5 sm:gap-1">
+              
+
+
               {/* Theme Toggle */}
               <motion.button
                 whileHover={{ scale: 1.05 }}
@@ -345,6 +350,8 @@ export function Navbar() {
 
                   <div className="pt-5 mt-4 border-t border-gray-100 dark:border-gray-800 space-y-1">
                     <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider px-4 mb-3">Quick Actions</p>
+
+
 
                     {/* Track Package - Mobile */}
                     <button
