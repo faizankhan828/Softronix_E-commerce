@@ -129,7 +129,7 @@ function CharacterIllustration({ mouseX, mouseY, focusedField }: CharacterIllust
   return (
     <svg 
       viewBox="0 0 400 350" 
-      className="w-full max-w-md"
+      className="w-full max-w-xl"
     >
       {/* Purple Rectangle Character */}
       <motion.g
@@ -221,15 +221,15 @@ function CharacterIllustration({ mouseX, mouseY, focusedField }: CharacterIllust
           </>
         ) : (
           <motion.g animate={{ x: lookAtFormX * 0.8, y: lookAtFormY * 0.8 }} transition={{ type: "spring", stiffness: 300, damping: 30 }}>
-            <circle cx="105" cy="260" r="5" fill="#1F2937" />
-            <circle cx="135" cy="260" r="5" fill="#1F2937" />
+            <circle cx="105" cy="260" r="7" fill="#1F2937" />
+            <circle cx="155" cy="260" r="7" fill="#1F2937" />
           </motion.g>
         )}
         {/* Mouth */}
-        <path d="M105 290 Q120 280 135 290" stroke="#1F2937" strokeWidth="3" fill="none" strokeLinecap="round" />
+        <path d="M110 295 Q130 310 150 295" stroke="#1F2937" strokeWidth="3" fill="none" strokeLinecap="round" />
       </motion.g>
 
-      {/* Black Rectangle Character */}
+      {/* Grey Rectangle Character */}
       <motion.g
         animate={{ 
           y: [0, -6, 0],
@@ -242,7 +242,7 @@ function CharacterIllustration({ mouseX, mouseY, focusedField }: CharacterIllust
           delay: 1
         }}
       >
-        <rect x="200" y="160" width="70" height="120" rx="10" fill="#1F2937" className="drop-shadow-lg" />
+        <rect x="200" y="160" width="70" height="120" rx="10" fill="#374151" className="drop-shadow-lg" />
         {/* Eyes */}
         {isPasswordFocused ? (
           // Closed eyes (lines)
@@ -268,11 +268,11 @@ function CharacterIllustration({ mouseX, mouseY, focusedField }: CharacterIllust
           </>
         ) : (
           <>
-            <circle cx="220" cy="200" r="5" fill="white" />
-            <circle cx="250" cy="200" r="5" fill="white" />
+            <circle cx="220" cy="200" r="6" fill="white" />
+            <circle cx="250" cy="200" r="6" fill="white" />
             <motion.g animate={{ x: lookAtFormX * 0.5, y: lookAtFormY * 0.5 }} transition={{ type: "spring", stiffness: 300, damping: 30 }}>
-              <circle cx="222" cy="200" r="2" fill="#1F2937" />
-              <circle cx="252" cy="200" r="2" fill="#1F2937" />
+              <circle cx="222" cy="200" r="3" fill="#374151" />
+              <circle cx="252" cy="200" r="3" fill="#374151" />
             </motion.g>
           </>
         )}
@@ -394,6 +394,21 @@ export default function Auth() {
       await login(values.email, values.password);
       navigate("/");
     } catch (error: any) {
+      // Check if email is not verified
+      if (error.response?.data?.isVerified === false) {
+        try {
+          // Resend OTP for verification
+          const { authAPI } = await import("../services/api");
+          await authAPI.resendOTP({ email: values.email });
+          // Redirect to OTP verification page
+          navigate("/verify-otp", { state: { email: values.email } });
+        } catch (resendError: any) {
+          loginForm.setError("root", {
+            message: resendError.response?.data?.message || "Failed to send verification code. Please try again.",
+          });
+        }
+        return;
+      }
       loginForm.setError("root", {
         message: error.response?.data?.message || "Invalid email or password. Please try again.",
       });
@@ -404,7 +419,8 @@ export default function Auth() {
   const handleRegister = async (values: RegisterFormValues) => {
     try {
       await register(values.name, values.email, values.password);
-      navigate("/");
+      // Redirect to OTP verification page after registration
+      navigate("/verify-otp", { state: { email: values.email } });
     } catch (error: any) {
       registerForm.setError("root", {
         message: error.response?.data?.message || "This email may already be registered. Please try again.",
@@ -413,7 +429,7 @@ export default function Auth() {
   };
 
   return (
-    <div className="min-h-screen flex bg-neutral-900">
+    <div className="min-h-screen flex bg-gray-100">
       {/* Left Side - Illustration */}
       <div 
         ref={containerRef}
@@ -427,7 +443,7 @@ export default function Auth() {
       </div>
 
       {/* Right Side - Form */}
-      <div className="w-full lg:w-1/2 flex items-center justify-center p-6 sm:p-8 lg:p-12 bg-neutral-900">
+      <div className="w-full lg:w-1/2 flex items-center justify-center p-6 sm:p-8 lg:p-12 bg-gray-100">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
