@@ -230,97 +230,91 @@ export interface DashboardData {
 const dashboardService = {
   // Get dashboard statistics
   getDashboardStats: async (): Promise<DashboardData> => {
-    // Check if user is logged in and has admin privileges
     const token = localStorage.getItem("token");
-    const userStr = localStorage.getItem("user");
-    let isAdmin = false;
-
-    if (userStr) {
-      try {
-        const userData = JSON.parse(userStr);
-        isAdmin = userData.role === "admin";
-      } catch (e) {
-        // Error parsing user data
-      }
-    }
-
-    // Check authentication but don't block access for development
     if (!token) {
-      // No authentication token found, but proceeding anyway for development
+      throw new Error("Authentication required. Please log in.");
     }
 
-    if (!isAdmin) {
-      // User is not an admin, but proceeding anyway for development
-    }
+    // Fetch /admin/stats (accurate DB counts) and raw data (for charts) in parallel
+    const [statsResult, productsResult, ordersResult, usersResult] =
+      await Promise.allSettled([
+        api.get("/admin/stats"),
+        api.get("/products", { params: { admin: true, limit: 100 } }),
+        api.get("/admin/orders"),
+        api.get("/admin/users"),
+      ]);
 
-    try {
-      // First try the dedicated dashboard endpoint
-      try {
-        // Try the stats endpoint first
-        try {
-          const response = await api.get("/admin/stats");
-          return response.data;
-        } catch (statsError) {
-          // Check if it's an authentication error
-          if (
-            statsError &&
-            typeof statsError === "object" &&
-            "response" in statsError &&
-            statsError.response &&
-            typeof statsError.response === "object" &&
-            "status" in statsError.response &&
-            statsError.response.status === 401
-          ) {
-            // Authentication failed for dashboard access, but proceeding anyway for development
-          }
-
-          // Stats API not available, trying manual calculation
-
-          // If stats endpoint fails, try to calculate manually from raw data
-          const productsResponse = await api.get("/products", {
-            params: { admin: true },
-          });
-          const ordersResponse = await api.get("/admin/orders");
-          const usersResponse = await api.get("/admin/users");
-
-          // If we got all the data, calculate stats manually
-          if (
-            productsResponse.data &&
-            ordersResponse.data &&
-            usersResponse.data
-          ) {
-            // Successfully fetched real data, calculating dashboard stats manually
-
-            // Extract data
-            const products = Array.isArray(productsResponse.data)
-              ? productsResponse.data
-              : productsResponse.data.products || [];
-
-            const orders = Array.isArray(ordersResponse.data)
-              ? ordersResponse.data
-              : ordersResponse.data.orders || [];
-
-            const users = Array.isArray(usersResponse.data)
-              ? usersResponse.data
-              : usersResponse.data.users || [];
-
-            // Calculate dashboard data manually
-            return calculateDashboardData(products, orders, users);
-          }
-
-          // If we couldn't get the raw data, throw an error
-          throw new Error("Could not fetch data for dashboard");
-        }
-      } catch (error) {
-        // Don't use mock data, throw the error to be handled by the UI
-        throw error;
+    // Check if all raw-data fetches failed (likely auth issue)
+    if (
+      productsResult.status === "rejected" &&
+      ordersResult.status === "rejected" &&
+      usersResult.status === "rejected"
+    ) {
+      const err = productsResult.reason;
+      if (err?.response?.status === 401) {
+        throw new Error("Authentication required. Please log in.");
       }
-
-      // This code should never be reached because we're either returning real data
-      // or falling back to mock data above
-    } catch (error) {
-      throw error;
+      throw new Error("Could not fetch data for dashboard");
     }
+
+    // Extract raw data arrays from paginated responses
+    const productsData =
+      productsResult.status === "fulfilled" ? productsResult.value.data : null;
+    const ordersData =
+      ordersResult.status === "fulfilled" ? ordersResult.value.data : null;
+    const usersData =
+      usersResult.status === "fulfilled" ? usersResult.value.data : null;
+
+    const products = Array.isArray(productsData)
+      ? productsData
+      : productsData?.products || [];
+    const orders = Array.isArray(ordersData)
+      ? ordersData
+      : ordersData?.orders || [];
+    const users = Array.isArray(usersData) ? usersData : usersData?.users || [];
+
+    // Build stats – prefer /admin/stats (accurate MongoDB counts & aggregated revenue)
+    let stats: DashboardStats;
+    if (statsResult.status === "fulfilled") {
+      const d = statsResult.value.data;
+      stats = {
+        totalRevenue: d.revenue?.total ?? 0,
+        totalOrders: d.orders?.total ?? 0,
+        totalCustomers: d.users?.total ?? 0,
+        totalProducts: d.products?.total ?? 0,
+        pendingOrders: d.orders?.pending ?? 0,
+        lowStockProducts: d.products?.outOfStock ?? 0,
+      };
+    } else {
+      // Fallback: derive from paginated raw data (may under-count)
+      const totalRevenue = orders.reduce(
+        (sum: number, o: any) => sum + (o.totalAmount || o.total || 0),
+        0,
+      );
+      const pendingOrders = orders.filter(
+        (o: any) => o.status === "pending" || o.status === "processing",
+      ).length;
+      const lowStockProducts = products.filter(
+        (p: any) => p.inventory !== undefined && p.inventory < 10,
+      ).length;
+
+      stats = {
+        totalRevenue,
+        totalOrders: ordersData?.total || orders.length,
+        totalCustomers: usersData?.pagination?.total || users.length,
+        totalProducts: productsData?.total || products.length,
+        pendingOrders,
+        lowStockProducts,
+      };
+    }
+
+    // Calculate salesData, topProducts, recentActivity from raw items
+    const computed = calculateDashboardData(products, orders, users);
+
+    return {
+      ...computed,
+      stats, // override with accurate counts when available
+    };
   },
 };
 

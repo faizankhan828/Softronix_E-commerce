@@ -1,5 +1,8 @@
 @import "tailwindcss";
 
+/* Force class-based dark mode (ignore browser prefers-color-scheme) */
+@custom-variant dark (&:where(.dark, .dark *));
+
 /* CSS Variables for Design System */
 :root {
   --background: 0 0% 100%;

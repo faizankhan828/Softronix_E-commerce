@@ -25,7 +25,7 @@ interface StatCardProps {
 }
 
 interface DashboardHeaderProps {
-  stats: {
+  stats?: {
     totalRevenue: number;
     totalOrders: number;
     totalCustomers: number;
@@ -137,28 +137,28 @@ export default function DashboardHeader({
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard
           title="Total Revenue"
-          value={isLoading ? 0 : `$${stats.totalRevenue.toLocaleString()}`}
+          value={isLoading ? 0 : `$${(stats?.totalRevenue ?? 0).toLocaleString()}`}
           description="Total revenue across all orders"
           icon={<CreditCard className="h-6 w-6 text-primary" />}
           trend={trends?.revenue}
         />
         <StatCard
           title="Orders"
-          value={isLoading ? 0 : stats.totalOrders}
+          value={isLoading ? 0 : stats?.totalOrders ?? 0}
           description="Total number of orders"
           icon={<ShoppingBag className="h-6 w-6 text-primary" />}
           trend={trends?.orders}
         />
         <StatCard
           title="Customers"
-          value={isLoading ? 0 : stats.totalCustomers}
+          value={isLoading ? 0 : stats?.totalCustomers ?? 0}
           description="Total registered customers"
           icon={<Users className="h-6 w-6 text-primary" />}
           trend={trends?.customers}
         />
         <StatCard
           title="Products"
-          value={isLoading ? 0 : stats.totalProducts}
+          value={isLoading ? 0 : stats?.totalProducts ?? 0}
           description="Products in your inventory"
           icon={<Package className="h-6 w-6 text-primary" />}
           trend={trends?.products}
@@ -168,20 +168,20 @@ export default function DashboardHeader({
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         <StatCard
           title="Pending Orders"
-          value={isLoading ? 0 : stats.pendingOrders || 0}
+          value={isLoading ? 0 : stats?.pendingOrders ?? 0}
           description="Orders awaiting processing"
           icon={<Clock className="h-6 w-6 text-amber-500" />}
         />
         <StatCard
           title="Low Stock Products"
-          value={isLoading ? 0 : stats.lowStockProducts || 0}
+          value={isLoading ? 0 : stats?.lowStockProducts ?? 0}
           description="Products with low inventory"
           icon={<AlertCircle className="h-6 w-6 text-red-500" />}
         />
         <StatCard
           title="Active Products"
           value={
-            isLoading ? 0 : stats.totalProducts - (stats.lowStockProducts || 0)
+            isLoading ? 0 : (stats?.totalProducts ?? 0) - (stats?.lowStockProducts ?? 0)
           }
           description="Products with sufficient inventory"
           icon={<CheckCircle2 className="h-6 w-6 text-green-500" />}

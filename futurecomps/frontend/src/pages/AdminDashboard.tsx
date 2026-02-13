@@ -103,6 +103,7 @@ interface User {
   role?: string;
   createdAt?: string;
   status?: string;
+  isActive?: boolean;
 }
 
 export default function AdminDashboard() {
@@ -483,7 +484,9 @@ export default function AdminDashboard() {
   const fetchUsersData = async () => {
     setUsersLoading(true);
     try {
-      const response = await api.get("/admin/users");
+      const response = await api.get("/admin/users", {
+        params: { limit: 100 },
+      });
 
       let usersData = [];
       // Check if the response has a users property (paginated format)
@@ -495,6 +498,12 @@ export default function AdminDashboard() {
         console.error("Unexpected users data format:", response.data);
         usersData = [];
       }
+
+      // Map isActive boolean to status string for UsersTable compatibility
+      usersData = usersData.map((user: any) => ({
+        ...user,
+        status: user.status || (user.isActive === false ? "inactive" : "active"),
+      }));
 
       setUsers(usersData);
       return usersData;
@@ -653,7 +662,9 @@ export default function AdminDashboard() {
 
   // Load tab-specific data when tab changes
   useEffect(() => {
-    if (activeTab === "orders") {
+    if (activeTab === "products" && products.length === 0 && !productsLoading) {
+      fetchProducts();
+    } else if (activeTab === "orders") {
       fetchOrdersData();
     } else if (activeTab === "users") {
       fetchUsersData();
@@ -879,7 +890,7 @@ export default function AdminDashboard() {
     }
 
     try {
-      await api.delete(`/users/${userId}`);
+      await api.delete(`/admin/users/${userId}`);
 
       if (Array.isArray(users)) {
         setUsers(users.filter((user) => (user._id || user.id) !== userId));
@@ -903,14 +914,15 @@ export default function AdminDashboard() {
     userId: string,
     currentStatus: string = "active",
   ) => {
-    const newStatus = currentStatus === "active" ? "inactive" : "active";
+    const isCurrentlyActive = currentStatus === "active";
+    const newIsActive = !isCurrentlyActive;
     console.log(
-      `Toggling user status: ${userId} from ${currentStatus} to ${newStatus}`,
+      `Toggling user status: ${userId} from ${currentStatus} to ${newIsActive ? "active" : "inactive"}`,
     );
 
     try {
-      const response = await api.put(`/users/${userId}/status`, {
-        status: newStatus,
+      const response = await api.put(`/admin/users/${userId}`, {
+        isActive: newIsActive,
       });
       console.log("Status update response:", response.data);
 
@@ -918,7 +930,7 @@ export default function AdminDashboard() {
         setUsers(
           users.map((user) => {
             if ((user._id || user.id) === userId) {
-              return { ...user, status: newStatus };
+              return { ...user, isActive: newIsActive, status: newIsActive ? "active" : "inactive" };
             }
             return user;
           }),
@@ -928,7 +940,7 @@ export default function AdminDashboard() {
       toast({
         title: "Success",
         description: `User ${
-          newStatus === "active" ? "activated" : "deactivated"
+          newIsActive ? "activated" : "deactivated"
         } successfully`,
       });
     } catch (error) {
@@ -946,21 +958,10 @@ export default function AdminDashboard() {
     console.log(`Changing user role: ${userId} to ${newRole}`);
 
     try {
-      try {
-        const response = await api.put(`/users/${userId}/role`, {
-          role: newRole,
-        });
-        console.log("Role update response:", response.data);
-      } catch (roleError) {
-        console.warn(
-          "Role endpoint failed, falling back to general update:",
-          roleError,
-        );
-        const response = await api.put(`/users/${userId}`, {
-          role: newRole,
-        });
-        console.log("General update response:", response.data);
-      }
+      const response = await api.put(`/admin/users/${userId}`, {
+        role: newRole,
+      });
+      console.log("Role update response:", response.data);
 
       if (Array.isArray(users)) {
         setUsers(

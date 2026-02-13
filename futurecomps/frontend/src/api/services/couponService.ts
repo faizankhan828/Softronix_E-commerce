@@ -28,7 +28,16 @@ export interface Coupon {
 export const getAllCoupons = async (): Promise<Coupon[]> => {
   try {
     const response = await api.get("/coupons");
-    return response.data;
+    // Backend returns { coupons: [...], total, page, pages }
+    if (response.data && Array.isArray(response.data.coupons)) {
+      return response.data.coupons;
+    }
+    // Fallback: handle plain array response
+    if (Array.isArray(response.data)) {
+      return response.data;
+    }
+    console.error("Unexpected coupons response format:", response.data);
+    return [];
   } catch (error) {
     console.error("Error fetching coupons:", error);
     return [];
@@ -36,7 +45,9 @@ export const getAllCoupons = async (): Promise<Coupon[]> => {
 };
 
 // Get a specific coupon by ID (admin only)
-export const getCouponById = async (couponId: string): Promise<Coupon | null> => {
+export const getCouponById = async (
+  couponId: string,
+): Promise<Coupon | null> => {
   try {
     const response = await api.get(`/coupons/${couponId}`);
     return response.data;
@@ -47,13 +58,21 @@ export const getCouponById = async (couponId: string): Promise<Coupon | null> =>
 };
 
 // Create a new coupon (admin only)
-export const createCoupon = async (couponData: Omit<Coupon, "_id" | "usageCount" | "usedBy" | "createdAt" | "updatedAt">): Promise<Coupon> => {
+export const createCoupon = async (
+  couponData: Omit<
+    Coupon,
+    "_id" | "usageCount" | "usedBy" | "createdAt" | "updatedAt"
+  >,
+): Promise<Coupon> => {
   const response = await api.post("/coupons", couponData);
   return response.data;
 };
 
 // Update a coupon (admin only)
-export const updateCoupon = async (couponId: string, couponData: Partial<Coupon>): Promise<Coupon> => {
+export const updateCoupon = async (
+  couponId: string,
+  couponData: Partial<Coupon>,
+): Promise<Coupon> => {
   const response = await api.put(`/coupons/${couponId}`, couponData);
   return response.data;
 };
@@ -64,7 +83,9 @@ export const deleteCoupon = async (couponId: string): Promise<void> => {
 };
 
 // Validate a coupon code
-export const validateCoupon = async (code: string): Promise<{
+export const validateCoupon = async (
+  code: string,
+): Promise<{
   valid: boolean;
   coupon?: Partial<Coupon>;
   discountAmount?: number;
@@ -88,7 +109,9 @@ export const validateCoupon = async (code: string): Promise<{
 };
 
 // Apply a coupon to the cart
-export const applyCoupon = async (code: string): Promise<{
+export const applyCoupon = async (
+  code: string,
+): Promise<{
   discountAmount: number;
   couponCode: string;
   cartTotal: number;

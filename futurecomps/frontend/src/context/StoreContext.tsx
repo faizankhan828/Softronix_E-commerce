@@ -14,6 +14,8 @@ import type {
   ClerkAction,
 } from "@/types/store";
 import axios from "axios";
+import cartService from "@/api/services/cartService";
+import { useAuth } from "./AuthContext";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 
@@ -29,6 +31,7 @@ interface StoreContextType {
   // Cart
   cart: Cart;
   isCartOpen: boolean;
+  cartLoading: boolean;
 
   // Actions
   fetchProducts: () => Promise<void>;
@@ -68,6 +71,7 @@ const defaultFilters: FilterState = {
 const StoreContext = createContext<StoreContextType | undefined>(undefined);
 
 export function StoreProvider({ children }: { children: React.ReactNode }) {
+  const { isAuthenticated } = useAuth();
   const [products, setProducts] = useState<Product[]>([]);
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
@@ -75,6 +79,69 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   const [filters, setFiltersState] = useState<FilterState>(defaultFilters);
   const [cart, setCart] = useState<Cart>(defaultCart);
   const [isCartOpen, setIsCartOpen] = useState(false);
+  const [cartLoading, setCartLoading] = useState(true);
+
+  // Calculate cart totals helper
+  const calculateCartTotals = useCallback(
+    (items: CartItem[], discountPercent: number = 0) => {
+      const subtotal = items.reduce(
+        (sum, item) => sum + item.product.price * item.quantity,
+        0,
+      );
+      const discount = subtotal * (discountPercent / 100);
+      return {
+        items,
+        subtotal,
+        discount,
+        total: subtotal - discount,
+      };
+    },
+    [],
+  );
+
+  // Initialize cart
+  useEffect(() => {
+    const initCart = async () => {
+      setCartLoading(true);
+      try {
+        // If authenticated, we might want to sync local cart first
+        if (isAuthenticated) {
+          await cartService.syncCartAfterLogin();
+          // Transform backend items to CartItem format if needed
+          // Assuming cartService returns matching format or handles it
+           // For now, let's just fetch the cart
+        }
+        
+        const items = await cartService.getCart();
+        
+        // Transform items to ensure they match CartItem interface
+        // This might need adjustment based on exactly what cartService returns vs internal type
+        // Assuming cartService returns compatible items for now, or we map them:
+        const mappedItems: CartItem[] = items.map((item: any) => ({
+             productId: item.productId,
+             quantity: item.quantity,
+             size: item.size,
+             color: item.color,
+             product: item.product, // Ensure product structure matches
+             // Add other fields if missing
+        })) as unknown as CartItem[];
+
+
+        setCart(prev => ({
+            ...calculateCartTotals(mappedItems, prev.discount > 0 ? (prev.discount / prev.subtotal) * 100 : 0),
+            discountCode: prev.discountCode
+        }));
+
+      } catch (err) {
+        console.error("Failed to initialize cart", err);
+      } finally {
+        setCartLoading(false);
+      }
+    };
+
+    initCart();
+  }, [isAuthenticated, calculateCartTotals]);
+
 
   // Fetch products from API
   const fetchProducts = useCallback(async () => {
@@ -191,101 +258,125 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     setFilteredProducts(result);
   }, [products, filters]);
 
-  // Calculate cart totals
-  const calculateCartTotals = useCallback(
-    (items: CartItem[], discountPercent: number = 0) => {
-      const subtotal = items.reduce(
-        (sum, item) => sum + item.product.price * item.quantity,
-        0,
-      );
-      const discount = subtotal * (discountPercent / 100);
-      return {
-        items,
-        subtotal,
-        discount,
-        total: subtotal - discount,
-      };
-    },
-    [],
-  );
 
   // Cart actions
   const addToCart = useCallback(
-    (product: Product, quantity = 1, size?: string, color?: string) => {
-      setCart((prev) => {
-        const existingIndex = prev.items.findIndex(
-          (item) =>
-            item.productId === product._id &&
-            item.size === size &&
-            item.color === color,
-        );
+    async (product: Product, quantity = 1, size?: string, color?: string) => {
+      try {
+        // Optimistic update
+        setCart((prev) => {
+          const existingIndex = prev.items.findIndex(
+            (item) =>
+              item.productId === product._id &&
+              item.size === size &&
+              item.color === color,
+          );
 
-        let newItems: CartItem[];
-        if (existingIndex > -1) {
-          newItems = [...prev.items];
-          newItems[existingIndex].quantity += quantity;
-        } else {
-          newItems = [
-            ...prev.items,
-            { productId: product._id, product, quantity, size, color },
-          ];
-        }
+          let newItems: CartItem[];
+          if (existingIndex > -1) {
+            newItems = [...prev.items];
+            newItems[existingIndex].quantity += quantity;
+          } else {
+            newItems = [
+              ...prev.items,
+              { productId: product._id, product, quantity, size, color },
+            ];
+          }
 
-        const discountPercent = prev.discountCode
-          ? (prev.discount / prev.subtotal) * 100
-          : 0;
-        return {
-          ...calculateCartTotals(newItems, discountPercent),
-          discountCode: prev.discountCode,
-        };
-      });
-      setIsCartOpen(true);
+          const discountPercent = prev.discountCode
+            ? (prev.discount / prev.subtotal) * 100
+            : 0;
+          return {
+            ...calculateCartTotals(newItems, discountPercent),
+            discountCode: prev.discountCode,
+          };
+        });
+        
+        setIsCartOpen(true);
+
+        // Sync with service
+        await cartService.addToCart(product._id, quantity, size || "", color || "");
+
+      } catch (err) {
+        console.error("Failed to add to cart", err);
+        // revert logic could go here
+      }
     },
     [calculateCartTotals],
   );
 
   const removeFromCart = useCallback(
-    (productId: string) => {
-      setCart((prev) => {
-        const newItems = prev.items.filter(
-          (item) => item.productId !== productId,
-        );
-        const discountPercent = prev.discountCode
-          ? (prev.discount / prev.subtotal) * 100
-          : 0;
-        return {
-          ...calculateCartTotals(newItems, discountPercent),
-          discountCode: prev.discountCode,
-        };
-      });
+    async (productId: string) => {
+      try {
+          // Optimistic update
+          setCart((prev) => {
+            const newItems = prev.items.filter(
+              (item) => item.productId !== productId,
+            );
+            const discountPercent = prev.discountCode
+              ? (prev.discount / prev.subtotal) * 100
+              : 0;
+            return {
+              ...calculateCartTotals(newItems, discountPercent),
+              discountCode: prev.discountCode,
+            };
+          });
+
+          // Sync with service
+          // Note: cartService.removeFromCart expects an itemId (mapped to _id in CartItem usually), 
+          // but here we are passing productId. 
+          // If the cart items have a unique _id separate from productId, we should use that.
+          // However, based on cartService it seems to use itemId which might be confused with productId in local storage implementation.
+          // Let's assume for local/optimistic, we use productId to identify, but for service we might need the item's _id if available.
+          // The current cart structure in context uses productId as key sometimes. 
+          // Let's pass productId as that's what we have. 
+          await cartService.removeFromCart(productId);
+
+      } catch (err) {
+          console.error("Failed to remove from cart", err);
+      }
     },
     [calculateCartTotals],
   );
 
   const updateCartQuantity = useCallback(
-    (productId: string, quantity: number) => {
+    async (productId: string, quantity: number) => {
       if (quantity < 1) {
         removeFromCart(productId);
         return;
       }
-      setCart((prev) => {
-        const newItems = prev.items.map((item) =>
-          item.productId === productId ? { ...item, quantity } : item,
-        );
-        const discountPercent = prev.discountCode
-          ? (prev.discount / prev.subtotal) * 100
-          : 0;
-        return {
-          ...calculateCartTotals(newItems, discountPercent),
-          discountCode: prev.discountCode,
-        };
-      });
+      try {
+          // Optimistic update
+          setCart((prev) => {
+            const newItems = prev.items.map((item) =>
+              item.productId === productId ? { ...item, quantity } : item,
+            );
+            const discountPercent = prev.discountCode
+              ? (prev.discount / prev.subtotal) * 100
+              : 0;
+            return {
+              ...calculateCartTotals(newItems, discountPercent),
+              discountCode: prev.discountCode,
+            };
+          });
+
+          // Sync
+          await cartService.updateCartItem(productId, quantity);
+
+      } catch (err) {
+          console.error("Failed to update cart quantity", err);
+      }
     },
     [calculateCartTotals, removeFromCart],
   );
 
-  const clearCart = useCallback(() => {
-    setCart(defaultCart);
+  const clearCart = useCallback(async () => {
+    try {
+        setCart(defaultCart);
+        await cartService.clearCart();
+    } catch (err) {
+        console.error("Failed to clear cart", err);
+    }
   }, []);
 
   const applyDiscount = useCallback(
@@ -423,6 +514,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         filters,
         cart,
         isCartOpen,
+        cartLoading,
         fetchProducts,
         setFilters,
         clearFilters,

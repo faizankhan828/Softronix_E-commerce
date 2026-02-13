@@ -192,13 +192,13 @@ export default function UserAnalytics() {
         : productsResponse.data.products || [];
 
       // Process sales data
-      const salesData = dashboardData.salesData.map((item) => ({
+      const salesData = (dashboardData.salesData || []).map((item) => ({
         label: item.date,
         value: item.amount,
       }));
 
       // Process product views - use top products from dashboard
-      const productViews = dashboardData.topProducts.map((product) => ({
+      const productViews = (dashboardData.topProducts || []).map((product) => ({
         label:
           product.name.length > 10
             ? product.name.substring(0, 10) + "..."
@@ -226,8 +226,11 @@ export default function UserAnalytics() {
       ];
 
       // Create user growth based on total customers and trend
-      const totalCustomers = dashboardData.stats.totalCustomers;
-      const customerTrend = dashboardData.trends.customers;
+      const totalCustomers = dashboardData.stats?.totalCustomers || 0;
+      const customerTrend = dashboardData.trends?.customers || {
+        value: 0,
+        isPositive: true,
+      };
 
       // Generate realistic user growth data
       const userGrowth = months.map((month, index) => {
@@ -295,10 +298,10 @@ export default function UserAnalytics() {
 
       // Try to get orders directly from the API
       try {
-        const ordersResponse = await api.get("/orders/admin/all");
+        const ordersResponse = await api.get("/admin/orders");
         const allOrders = Array.isArray(ordersResponse.data)
           ? ordersResponse.data
-          : ordersResponse.data.orders || [];
+          : ordersResponse.data?.orders || [];
 
         // Count orders by status
         allOrders.forEach((order: any) => {
@@ -308,8 +311,8 @@ export default function UserAnalytics() {
       } catch (err) {
         console.error("Error fetching orders for status counts:", err);
         // Fallback to dashboard data
-        const pendingOrders = dashboardData.stats.pendingOrders || 0;
-        const totalOrders = dashboardData.stats.totalOrders || 0;
+        const pendingOrders = dashboardData.stats?.pendingOrders || 0;
+        const totalOrders = dashboardData.stats?.totalOrders || 0;
 
         // Calculate approximate distribution
         const remainingOrders = totalOrders - pendingOrders;

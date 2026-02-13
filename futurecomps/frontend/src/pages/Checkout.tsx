@@ -14,7 +14,7 @@ import { Footer } from "@/components/layout/Footer";
 
 export default function Checkout() {
   const navigate = useNavigate();
-  const { cart } = useStore();
+  const { cart, cartLoading } = useStore();
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState<"online" | "cod">("online");
@@ -33,11 +33,18 @@ export default function Checkout() {
   });
 
   useEffect(() => {
-    // Redirect if cart is empty
-    if (!cart || cart.items.length === 0) {
-      navigate("/shop");
+    // Wait for cart to finish loading before checking if it's empty
+    if (!cartLoading) {
+      if (!cart || !cart.items || cart.items.length === 0) {
+        console.log("Cart is empty, redirecting to shop");
+        // Optional: show a toast or message before redirecting
+        const timer = setTimeout(() => {
+          navigate("/shop");
+        }, 1000); // Give user a second to see "Cart empty" state
+        return () => clearTimeout(timer);
+      }
     }
-  }, [cart, navigate]);
+  }, [cart, cartLoading, navigate]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -142,8 +149,30 @@ export default function Checkout() {
     }
   };
 
+  if (cartLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
+        <div className="text-center">
+          <Loader2 className="w-10 h-10 animate-spin mx-auto text-primary mb-4" />
+          <p className="text-gray-500">Loading checkout...</p>
+        </div>
+      </div>
+    );
+  }
+
   if (!cart || cart.items.length === 0) {
-    return null;
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
+        <div className="text-center">
+          <ShoppingBag className="w-16 h-16 mx-auto text-gray-300 mb-4" />
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+            Your cart is empty
+          </h2>
+          <p className="text-gray-500 mb-4">Redirecting you to the shop...</p>
+          <Button onClick={() => navigate("/shop")}>Return to Shop</Button>
+        </div>
+      </div>
+    );
   }
 
   return (
