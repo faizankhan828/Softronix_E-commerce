@@ -21,6 +21,7 @@ import Shop from "./pages/Shop";
 import Success from "./pages/Success";
 import Cancel from "./pages/Cancel";
 import AdminProducts from "./pages/AdminProducts";
+import AiChat from "./pages/AiChat";
 
 function App() {
   return (
@@ -28,6 +29,7 @@ function App() {
       <Router>
         <Routes>
           <Route path="/" element={<Home />} />
+          <Route path="/ai-chat" element={<AiChat />} />
           <Route path="/todos" element={<Todos />} />
           <Route path="/shop" element={<Shop />} />
           <Route path="/success" element={<Success />} />
