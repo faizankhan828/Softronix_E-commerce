@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useAuth } from "../context/AuthContext";
+// import { useAuth } from "../context/AuthContext"; // Unused for now
 import { useSearchParams } from "react-router-dom";
 import { useToast } from "@/components/ui/use-toast";
 import {
@@ -491,7 +491,7 @@ export default function AdminDashboard() {
           </DialogHeader>
           <div className="overflow-y-auto pr-2 max-h-[calc(90vh-120px)]">
             <ProductForm
-              initialData={newProduct}
+              initialData={{} as Partial<Product>}
               onSubmit={handleAddProduct}
               onCancel={() => setIsAddProductOpen(false)}
             />
@@ -531,7 +531,7 @@ export default function AdminDashboard() {
                 initialData={selectedProduct}
                 onSubmit={(data) =>
                   handleSaveEdit(
-                    selectedProduct.id || selectedProduct._id,
+                    (selectedProduct.id || selectedProduct._id) as string,
                     data,
                   )
                 }
@@ -586,7 +586,7 @@ export default function AdminDashboard() {
                 initialData={selectedCoupon}
                 onSubmit={(data) =>
                   handleSaveEditCoupon(
-                    selectedCoupon._id || selectedCoupon.id,
+                    (selectedCoupon._id || selectedCoupon.id) as string,
                     data,
                   )
                 }

@@ -2,6 +2,7 @@ import api from "./api";
 
 export interface Coupon {
   _id?: string;
+  id?: string; // Alternative id field
   code: string;
   description: string;
   type: "percentage" | "fixed" | "shipping";

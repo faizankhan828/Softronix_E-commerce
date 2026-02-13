@@ -64,11 +64,7 @@ export function Navbar() {
           : "bg-white dark:bg-gray-900",
       )}
     >
-      {/* Top Bar */}
-      {/* <div className="hidden md:block bg-primary text-white text-center py-2 text-sm">
-        <span>Free shipping on orders over $50! Use code </span>
-        <span className="font-semibold">FREESHIP</span>
-      </div> */}
+    
 
       {/* Main Navbar */}
       <div className="container mx-auto px-4">
