@@ -44,6 +44,32 @@ export interface JazzCashDetails {
   paymentConfirmed?: boolean;
 }
 
+export interface TrackingTimeline {
+  status: string;
+  label: string;
+  description: string;
+  icon: string;
+  completed: boolean;
+  isCurrent?: boolean;
+  timestamp: string | null;
+  location?: string;
+}
+
+export interface TrackingInfo {
+  orderId: string;
+  trackingNumber: string;
+  status: string;
+  statusText: string;
+  carrier: string;
+  estimatedDelivery: string;
+  currentLocation: string;
+  progress: number;
+  timeline: TrackingTimeline[];
+  shippingAddress?: ShippingAddress;
+  items?: OrderItem[];
+  lastUpdate: string;
+}
+
 export interface Order {
   id?: string;
   _id?: string;
@@ -273,6 +299,57 @@ export const updateJazzCashPayment = async (
   }
 };
 
+// ── Tracking Functions ──────────────────────────────────
+
+export const getOrderTracking = async (orderId: string): Promise<TrackingInfo> => {
+  try {
+    const response = await api.get(`/payment/orders/${orderId}/tracking`);
+    return response.data;
+  } catch (error) {
+    if (
+      error &&
+      typeof error === "object" &&
+      "response" in error &&
+      error.response &&
+      typeof error.response === "object" &&
+      "status" in error.response &&
+      error.response.status === 401
+    ) {
+      throw new Error("Authentication required to track order");
+    }
+    throw error;
+  }
+};
+
+export const trackPackageByNumber = async (trackingNumber: string): Promise<TrackingInfo> => {
+  try {
+    const response = await api.get(`/payment/track/${trackingNumber}`);
+    return response.data;
+  } catch (error) {
+    if (
+      error &&
+      typeof error === "object" &&
+      "response" in error &&
+      error.response &&
+      typeof error.response === "object" &&
+      "status" in error.response &&
+      error.response.status === 404
+    ) {
+      throw new Error("Tracking number not found");
+    }
+    throw error;
+  }
+};
+
+export const getUserOrdersWithTracking = async (): Promise<{ orders: Order[]; total: number }> => {
+  try {
+    const response = await api.get("/payment/orders");
+    return response.data;
+  } catch (error) {
+    return { orders: [], total: 0 };
+  }
+};
+
 export default {
   getOrders,
   getOrderById,
@@ -280,4 +357,7 @@ export default {
   cancelOrder,
   updateShippingAddress,
   updateJazzCashPayment,
+  getOrderTracking,
+  trackPackageByNumber,
+  getUserOrdersWithTracking,
 };

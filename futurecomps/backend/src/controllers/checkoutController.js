@@ -295,3 +295,197 @@ export const getOrderById = async (req, res) => {
     res.status(500).json({ message: "Failed to fetch order" });
   }
 };
+
+// ── GET /api/payment/orders/:id/tracking ──────────────────
+// Get real-time tracking information for an order
+
+export const getOrderTracking = async (req, res) => {
+  try {
+    const order = await Order.findOne({
+      _id: req.params.id,
+      userId: req.user._id,
+    }).lean();
+
+    if (!order) {
+      return res.status(404).json({ message: "Order not found" });
+    }
+
+    // Generate tracking status based on order status
+    const trackingInfo = generateTrackingInfo(order);
+    
+    res.json(trackingInfo);
+  } catch (error) {
+    console.error("getOrderTracking error:", error);
+    res.status(500).json({ message: "Failed to fetch tracking information" });
+  }
+};
+
+// ── GET /api/payment/track/:trackingNumber ─────────────────
+// Track package by tracking number (public)
+
+export const trackByNumber = async (req, res) => {
+  try {
+    const { trackingNumber } = req.params;
+    
+    const order = await Order.findOne({
+      "tracking.trackingNumber": trackingNumber,
+    }).lean();
+
+    if (!order) {
+      return res.status(404).json({ message: "Tracking number not found" });
+    }
+
+    // Generate tracking status based on order status
+    const trackingInfo = generateTrackingInfo(order);
+    
+    // Return limited info for public tracking (no user details)
+    res.json({
+      trackingNumber: trackingInfo.trackingNumber,
+      status: trackingInfo.status,
+      statusText: trackingInfo.statusText,
+      carrier: trackingInfo.carrier,
+      estimatedDelivery: trackingInfo.estimatedDelivery,
+      currentLocation: trackingInfo.currentLocation,
+      progress: trackingInfo.progress,
+      timeline: trackingInfo.timeline,
+    });
+  } catch (error) {
+    console.error("trackByNumber error:", error);
+    res.status(500).json({ message: "Failed to fetch tracking information" });
+  }
+};
+
+// Helper function to generate tracking info based on order status
+function generateTrackingInfo(order) {
+  const statuses = ["pending", "paid", "processing", "shipped", "delivered"];
+  const currentStatusIndex = statuses.indexOf(order.status);
+  
+  // Generate a consistent tracking number if not set
+  const trackingNumber = order.tracking?.trackingNumber || 
+    `SFX${order._id.toString().slice(-8).toUpperCase()}`;
+
+  // Calculate estimated delivery (7 days from order creation by default)
+  const orderDate = new Date(order.createdAt);
+  const estimatedDelivery = order.tracking?.estimatedDelivery || 
+    new Date(orderDate.getTime() + 7 * 24 * 60 * 60 * 1000);
+
+  // Generate timeline based on status
+  const timeline = generateTimeline(order, orderDate);
+
+  // Determine current location based on status
+  let currentLocation = order.tracking?.currentLocation || "Processing Center";
+  if (order.status === "shipped") {
+    currentLocation = "In Transit";
+  } else if (order.status === "delivered") {
+    currentLocation = order.shippingAddress?.city || "Delivered";
+  }
+
+  // Calculate progress percentage
+  const progress = Math.min(100, Math.max(0, ((currentStatusIndex + 1) / statuses.length) * 100));
+
+  // Status text mapping
+  const statusTextMap = {
+    pending: "Order Placed",
+    paid: "Payment Confirmed", 
+    processing: "Preparing for Shipment",
+    shipped: "In Transit",
+    delivered: "Delivered",
+    cancelled: "Cancelled",
+    refunded: "Refunded",
+  };
+
+  return {
+    orderId: order._id,
+    trackingNumber,
+    status: order.status,
+    statusText: statusTextMap[order.status] || order.status,
+    carrier: order.tracking?.carrier || "softronix-express",
+    estimatedDelivery,
+    currentLocation,
+    progress: Math.round(progress),
+    timeline,
+    shippingAddress: order.shippingAddress,
+    items: order.items,
+    lastUpdate: order.tracking?.lastUpdate || order.updatedAt,
+  };
+}
+
+// Generate delivery timeline
+function generateTimeline(order, orderDate) {
+  const timeline = [];
+  const statuses = ["pending", "paid", "processing", "shipped", "delivered"];
+  const currentStatusIndex = statuses.indexOf(order.status);
+
+  // Use tracking history if available, otherwise generate from status
+  if (order.tracking?.history?.length > 0) {
+    return order.tracking.history.map(h => ({
+      status: h.status,
+      location: h.location,
+      description: h.description,
+      timestamp: h.timestamp,
+      completed: true,
+    }));
+  }
+
+  // Generate timeline based on order status
+  const stages = [
+    { 
+      status: "order_placed", 
+      label: "Order Placed", 
+      description: "Your order has been received",
+      icon: "package"
+    },
+    { 
+      status: "payment_confirmed", 
+      label: "Payment Confirmed", 
+      description: "Payment has been verified",
+      icon: "credit-card"
+    },
+    { 
+      status: "processing", 
+      label: "Processing", 
+      description: "Your order is being prepared",
+      icon: "settings"
+    },
+    { 
+      status: "shipped", 
+      label: "Shipped", 
+      description: "Package is on its way",
+      icon: "truck"
+    },
+    { 
+      status: "delivered", 
+      label: "Delivered", 
+      description: "Package has been delivered",
+      icon: "check-circle"
+    },
+  ];
+
+  stages.forEach((stage, index) => {
+    let completed = false;
+    let timestamp = null;
+    let isCurrent = false;
+
+    // Determine completion status
+    if (index <= currentStatusIndex) {
+      completed = true;
+      // Generate realistic timestamps
+      const hoursOffset = index * 12; // 12 hours between each stage
+      timestamp = new Date(orderDate.getTime() + hoursOffset * 60 * 60 * 1000);
+    }
+
+    if (index === currentStatusIndex) {
+      isCurrent = true;
+      timestamp = new Date(order.updatedAt);
+    }
+
+    timeline.push({
+      ...stage,
+      completed,
+      isCurrent,
+      timestamp,
+    });
+  });
+
+  return timeline;
+}

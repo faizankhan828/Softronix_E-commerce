@@ -82,6 +82,24 @@ const orderSchema = new mongoose.Schema(
       postalCode: { type: String, default: "" },
       country: { type: String, default: "" },
     },
+    // Package tracking fields
+    tracking: {
+      trackingNumber: { type: String, default: null },
+      carrier: { 
+        type: String, 
+        enum: ["fedex", "ups", "usps", "dhl", "other", null],
+        default: null 
+      },
+      estimatedDelivery: { type: Date, default: null },
+      currentLocation: { type: String, default: null },
+      lastUpdate: { type: Date, default: null },
+      history: [{
+        status: { type: String, required: true },
+        location: { type: String, default: "" },
+        description: { type: String, default: "" },
+        timestamp: { type: Date, default: Date.now },
+      }],
+    },
   },
   {
     timestamps: true,

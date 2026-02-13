@@ -6,6 +6,8 @@ import {
   handleWebhook,
   getMyOrders,
   getOrderById,
+  getOrderTracking,
+  trackByNumber,
 } from "../controllers/checkoutController.js";
 
 const router = express.Router();
@@ -32,5 +34,9 @@ router.post(
 );
 router.get("/orders", protect, getMyOrders);
 router.get("/orders/:id", protect, getOrderById);
+router.get("/orders/:id/tracking", protect, getOrderTracking);
+
+// ── Public tracking (no auth required) ───────────────────
+router.get("/track/:trackingNumber", trackByNumber);
 
 export default router;
