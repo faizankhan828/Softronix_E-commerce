@@ -1,37 +1,43 @@
-# Complete Git Merge and Push Script
+# Check Status and Push to GitHub
 Set-Location "D:\softronix-main\futurecomps"
 
-# Kill any stuck git processes
-Get-Process | Where-Object {$_.ProcessName -like "*git*" -or $_.ProcessName -like "*vim*" -or $_.ProcessName -like "*nano*"} | Stop-Process -Force -ErrorAction SilentlyContinue
+Write-Host "=== Checking Git Status ===" -ForegroundColor Cyan
+git status
 
-# Remove editor swap files
-Remove-Item ".git\.MERGE_MSG.swp" -Force -ErrorAction SilentlyContinue
+Write-Host "`n=== Checking Remote Status ===" -ForegroundColor Cyan
+git fetch origin main
+$local = git rev-parse main
+$remote = git rev-parse origin/main
 
-# Set GIT_EDITOR to bypass interactive editor
-$env:GIT_EDITOR = 'true'
-
-# Complete the merge commit
-Write-Host "Completing merge commit..." -ForegroundColor Yellow
-git commit --no-edit
-
-if ($LASTEXITCODE -eq 0) {
-    Write-Host "Merge completed successfully!" -ForegroundColor Green
+if ($local -eq $remote) {
+    Write-Host "`n✅ Already up to date! Your changes are on GitHub." -ForegroundColor Green
+} else {
+    Write-Host "`n⚠ Local and remote are different. Attempting to push..." -ForegroundColor Yellow
     
-    # Now push to origin
+    # Kill any stuck processes
+    Get-Process | Where-Object {$_.ProcessName -like "*vim*" -or $_.ProcessName -like "*nano*"} | Stop-Process -Force -ErrorAction SilentlyContinue
+    
+    # Remove swap files
+    Remove-Item ".git\.MERGE_MSG.swp" -Force -ErrorAction SilentlyContinue
+    
+    # Complete any pending merge
+    $env:GIT_EDITOR = 'true'
+    git commit --no-edit 2>$null
+    
+    # Push to GitHub
     Write-Host "Pushing to GitHub..." -ForegroundColor Yellow
     git push -u origin main
     
     if ($LASTEXITCODE -eq 0) {
-        Write-Host "Successfully pushed to GitHub!" -ForegroundColor Green
+        Write-Host "`n✅ Successfully pushed to GitHub!" -ForegroundColor Green
     } else {
-        Write-Host "Failed to push. You may need to authenticate." -ForegroundColor Red
+        Write-Host "`n❌ Failed to push. You may need to authenticate." -ForegroundColor Red
+        Write-Host "Error: GitHub credentials may be required." -ForegroundColor Red
     }
-} else {
-    Write-Host "Failed to complete merge commit." -ForegroundColor Red
 }
 
-# Show final status
-Write-Host "`nCurrent Git Status:" -ForegroundColor Cyan
+Write-Host "`n=== Final Status ===" -ForegroundColor Cyan
+git log --oneline -n 5
 git status
 
 Write-Host "`nPress any key to exit..."
