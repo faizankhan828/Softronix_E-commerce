@@ -422,7 +422,7 @@ export default function AdminDashboard() {
   const fetchOrdersData = async () => {
     setOrdersLoading(true);
     try {
-      const response = await api.get("/orders/admin/all");
+      const response = await api.get("/admin/orders");
       console.log("Raw orders response:", response);
 
       if (!response || !response.data) {
@@ -483,7 +483,7 @@ export default function AdminDashboard() {
   const fetchUsersData = async () => {
     setUsersLoading(true);
     try {
-      const response = await api.get("/users?all=true");
+      const response = await api.get("/admin/users");
 
       let usersData = [];
       // Check if the response has a users property (paginated format)
@@ -1131,9 +1131,9 @@ export default function AdminDashboard() {
 
           {/* Recent Activity */}
           <RecentActivity
-            recentOrders={recentActivity.orders}
-            recentUsers={recentActivity.users}
-            recentProducts={recentActivity.products}
+            recentOrders={recentActivity?.orders || []}
+            recentUsers={recentActivity?.users || []}
+            recentProducts={recentActivity?.products || []}
             isLoading={loading}
           />
         </TabsContent>

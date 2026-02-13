@@ -4,22 +4,22 @@ import api from "./api";
 const calculateDashboardData = (
   products: any[],
   orders: any[],
-  users: any[]
+  users: any[],
 ) => {
   // Calculate total revenue
   const totalRevenue = orders.reduce(
     (sum: number, order: any) => sum + (order.totalAmount || order.total || 0),
-    0
+    0,
   );
 
   // Calculate pending orders
   const pendingOrders = orders.filter(
-    (order: any) => order.status === "pending" || order.status === "processing"
+    (order: any) => order.status === "pending" || order.status === "processing",
   ).length;
 
   // Calculate low stock products
   const lowStockProducts = products.filter(
-    (product: any) => product.inventory !== undefined && product.inventory < 10
+    (product: any) => product.inventory !== undefined && product.inventory < 10,
   ).length;
 
   // Calculate sales data for the last 7 days
@@ -40,7 +40,7 @@ const calculateDashboardData = (
     const daySales = dayOrders.reduce(
       (sum: number, order: any) =>
         sum + (order.totalAmount || order.total || 0),
-      0
+      0,
     );
 
     return {
@@ -83,7 +83,7 @@ const calculateDashboardData = (
   const topProducts = topProductIds
     .map((productId) => {
       const product = products.find(
-        (p: any) => p.id === productId || p._id === productId
+        (p: any) => p.id === productId || p._id === productId,
       );
       if (!product) return null;
 
@@ -258,7 +258,7 @@ const dashboardService = {
       try {
         // Try the stats endpoint first
         try {
-          const response = await api.get("/stats/dashboard");
+          const response = await api.get("/admin/stats");
           return response.data;
         } catch (statsError) {
           // Check if it's an authentication error
@@ -280,8 +280,8 @@ const dashboardService = {
           const productsResponse = await api.get("/products", {
             params: { admin: true },
           });
-          const ordersResponse = await api.get("/orders/admin/all");
-          const usersResponse = await api.get("/users?all=true");
+          const ordersResponse = await api.get("/admin/orders");
+          const usersResponse = await api.get("/admin/users");
 
           // If we got all the data, calculate stats manually
           if (

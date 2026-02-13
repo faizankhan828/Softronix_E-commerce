@@ -37,7 +37,7 @@ const api = axios.create({
   headers: {
     "Content-Type": "application/json",
   },
-  withCredentials: true, // Important for cookies to be sent with requests
+  withCredentials: false, // Using token-based auth, not cookies
 }) as AxiosInstance & {
   checkApiAvailability: () => Promise<boolean>;
 };
@@ -47,6 +47,11 @@ api.interceptors.request.use(
   (config) => {
     // Get the token from cookies only
     const token: string | undefined = cookies.getAccessToken();
+
+    // Debug log for admin routes
+    if (config.url?.includes("/admin")) {
+      console.log("🔑 Admin request:", config.url, "Token present:", !!token);
+    }
 
     // Always attach the token if available
     if (token) {
@@ -61,45 +66,13 @@ api.interceptors.request.use(
       }
     }
 
-    // For admin routes, ensure we have admin privileges
+    // For admin routes, add timestamp to prevent caching
     if (
       config.url?.includes("/admin") ||
       config.params?.admin ||
       config.url?.includes("/stats/")
     ) {
-      // Add timestamp to prevent caching
       config.params = { ...config.params, _t: Date.now() };
-
-      // Check if user is admin
-      const userData = cookies.getUserData();
-
-      // Check if user exists and is admin
-      if (userData) {
-        try {
-          if (!userData || userData.role !== "admin") {
-            return Promise.reject({
-              response: {
-                status: 403,
-                data: { message: "Access denied. Admin privileges required." },
-              },
-            });
-          }
-        } catch (e) {
-          return Promise.reject({
-            response: {
-              status: 401,
-              data: { message: "Invalid user data. Please log in again." },
-            },
-          });
-        }
-      } else {
-        return Promise.reject({
-          response: {
-            status: 401,
-            data: { message: "Authentication required. Please log in." },
-          },
-        });
-      }
     }
 
     return config;
@@ -116,6 +89,11 @@ api.interceptors.response.use(
   },
   async (error) => {
     const originalRequest = error.config;
+
+    // If there's no config, we can't retry - just reject
+    if (!originalRequest) {
+      return Promise.reject(error);
+    }
 
     // No need to log API errors
 
@@ -157,21 +135,35 @@ api.interceptors.response.use(
 
     // Handle authentication errors
     if (error.response && error.response.status === 401) {
+      // Check if we have a token - if we do, don't try to refresh or redirect
+      const token = cookies.getAccessToken();
+
+      // If we have a token but still got 401, it means the token is invalid
+      // Don't create a redirect loop - just reject the error
+      if (token && window.location.pathname.includes("/admin")) {
+        console.error("Admin API call failed with 401 despite having token");
+        return Promise.reject(error);
+      }
+
       // Check if we should attempt to refresh the token
       const now = Date.now();
       const shouldAttemptRefresh =
+        originalRequest &&
         !originalRequest._retry &&
         refreshFailCount < MAX_REFRESH_ATTEMPTS &&
         now - lastRefreshTime > REFRESH_COOLDOWN_MS;
 
-      if (shouldAttemptRefresh) {
+      if (shouldAttemptRefresh && originalRequest) {
         originalRequest._retry = true;
 
         // If we're already refreshing, add this request to subscribers
         if (isRefreshing) {
           return new Promise((resolve, reject) => {
             subscribeToTokenRefresh((token: string) => {
-              if (token) {
+              if (token && originalRequest) {
+                if (!originalRequest.headers) {
+                  originalRequest.headers = {};
+                }
                 originalRequest.headers.Authorization = `Bearer ${token}`;
                 resolve(axios(originalRequest));
               } else {
@@ -194,7 +186,10 @@ api.interceptors.response.use(
           isRefreshing = false;
 
           // If successful, retry the original request and notify subscribers
-          if (newToken) {
+          if (newToken && originalRequest) {
+            if (!originalRequest.headers) {
+              originalRequest.headers = {};
+            }
             originalRequest.headers.Authorization = `Bearer ${newToken}`;
             onTokenRefreshed(newToken);
             return axios(originalRequest);
@@ -274,7 +269,7 @@ export const refreshAccessToken = async (): Promise<string> => {
     const refreshAxios = axios.create({
       baseURL: api.defaults.baseURL,
       timeout: 5000,
-      withCredentials: true,
+      withCredentials: false, // Using token-based auth
     });
 
     // Get refresh token from cookies

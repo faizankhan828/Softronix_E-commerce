@@ -27,9 +27,11 @@ connectDB();
 const app = express();
 
 // Security Middleware
-app.use(helmet({
-  crossOriginResourcePolicy: false,
-})); // Set security headers
+app.use(
+  helmet({
+    crossOriginResourcePolicy: false,
+  }),
+); // Set security headers
 app.use(mongoSanitize()); // Prevent MongoDB injection
 
 // Rate limiting disabled for development
@@ -53,11 +55,18 @@ app.use(mongoSanitize()); // Prevent MongoDB injection
 // });
 
 // Middleware
-app.use(cors({
-  origin: "*", // allow all origins
-  methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization"],
-}));
+app.use(
+  cors({
+    origin: [
+      "http://localhost:5173",
+      "http://localhost:3000",
+      "http://127.0.0.1:5173",
+    ],
+    methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+    credentials: true,
+  }),
+);
 
 // Webhook route must be registered BEFORE express.json()
 // because it needs the raw body for signature verification

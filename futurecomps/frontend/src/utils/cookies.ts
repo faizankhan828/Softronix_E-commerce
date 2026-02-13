@@ -35,13 +35,23 @@ const csrfCookieOptions = {
  */
 export const setAccessToken = (token: string): void => {
   Cookies.set(ACCESS_TOKEN_COOKIE, token, shortCookieOptions);
+  // Also store in localStorage for compatibility
+  localStorage.setItem("token", token);
 };
 
 /**
  * Get the access token from the cookie
  */
 export const getAccessToken = (): string | undefined => {
-  return Cookies.get(ACCESS_TOKEN_COOKIE);
+  // First try to get from cookie
+  const cookieToken = Cookies.get(ACCESS_TOKEN_COOKIE);
+  if (cookieToken) {
+    return cookieToken;
+  }
+
+  // Fallback to localStorage for compatibility
+  const localStorageToken = localStorage.getItem("token");
+  return localStorageToken || undefined;
 };
 
 /**
@@ -89,6 +99,8 @@ export const clearAuthCookies = (): void => {
   Cookies.remove(REFRESH_TOKEN_COOKIE, { path: "/" });
   Cookies.remove(USER_COOKIE, { path: "/" });
   Cookies.remove(CSRF_TOKEN_COOKIE, { path: "/" });
+  // Also clear localStorage token
+  localStorage.removeItem("token");
 };
 
 /**
