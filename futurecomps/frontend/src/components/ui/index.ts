@@ -4,3 +4,7 @@ export { Input } from "./Input";
 export { Badge, badgeVariants } from "./Badge";
 export { Rating } from "./Rating";
 export { Skeleton, ProductCardSkeleton } from "./Skeleton";
+export { Tabs, TabsList, TabsTrigger, TabsContent } from "./Tabs";
+export { Label } from "./Label";
+export { LoadingButton } from "./LoadingButton";
+export { Logo } from "./Logo";

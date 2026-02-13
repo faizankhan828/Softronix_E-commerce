@@ -16,8 +16,7 @@ import { ProductDetail } from "./pages/ProductDetail";
 import { Checkout } from "./pages/Checkout";
 
 // Auth & Admin Pages
-import Login from "./pages/Login";
-import Register from "./pages/Register";
+import Auth from "./pages/Auth";
 import VerifyOTP from "./pages/VerifyOTP";
 import ForgotPassword from "./pages/ForgotPassword";
 import Profile from "./pages/Profile";
@@ -44,8 +43,9 @@ function App() {
             <Route path="/checkout" element={<Checkout />} />
             
             {/* Auth Routes */}
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
+            <Route path="/login" element={<Auth />} />
+            <Route path="/register" element={<Auth />} />
+            <Route path="/auth" element={<Auth />} />
             <Route path="/verify-otp" element={<VerifyOTP />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
             

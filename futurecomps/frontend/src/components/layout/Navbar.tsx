@@ -124,7 +124,7 @@ export function Navbar() {
 
             {/* User Menu */}
             <Link
-              to={user ? "/profile" : "/login"}
+              to={user ? "/profile" : "/auth"}
               className="p-2.5 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl transition-colors"
               aria-label="Account"
             >
@@ -214,12 +214,12 @@ export function Navbar() {
                   </Link>
                 ) : (
                   <div className="space-y-2">
-                    <Link to="/login">
+                    <Link to="/auth">
                       <Button variant="outline" className="w-full">
                         Sign In
                       </Button>
                     </Link>
-                    <Link to="/register">
+                    <Link to="/auth">
                       <Button className="w-full">Create Account</Button>
                     </Link>
                   </div>
