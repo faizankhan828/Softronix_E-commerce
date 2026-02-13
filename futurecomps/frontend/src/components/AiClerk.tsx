@@ -29,9 +29,18 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 const GEMINI_API_KEY =
   import.meta.env.VITE_GEMINI_API_KEY ||
   "***REDACTED_GOOGLE_API_KEY_1***";
-const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`;
-const MAX_RETRIES = 3;
-const RETRY_BASE_DELAY = 5000; // 5 seconds
+
+// Models to try in order — each has its own separate free-tier quota
+// If one is rate-limited (429), we automatically try the next
+const GEMINI_MODELS = [
+  "gemini-2.5-flash", // best: fast, smart, free tier
+  "gemini-2.5-flash-lite", // fallback: cheapest, highest quota
+  "gemini-2.0-flash-lite", // fallback: lightweight
+  "gemini-2.0-flash", // original model
+];
+const GEMINI_BASE_URL = `https://generativelanguage.googleapis.com/v1beta/models`;
+const MAX_RETRIES_PER_MODEL = 1; // try each model once before moving on
+const RETRY_DELAY = 2000; // 2s between retries
 
 // ── Build the AI System Prompt ──────────────────────────
 function buildSystemPrompt(
@@ -922,63 +931,78 @@ Tags: ${product.tags?.join(", ") || "N/A"}
         },
       });
 
+      // Try each model in order — if one is rate-limited, try the next
       let responseText = "";
-      for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
-        const response = await fetch(GEMINI_API_URL, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: requestBody,
-        });
+      let lastError = "";
+      let succeeded = false;
 
-        if (response.ok) {
-          const data = await response.json();
-          responseText = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
-          break;
-        }
+      for (let modelIdx = 0; modelIdx < GEMINI_MODELS.length; modelIdx++) {
+        const model = GEMINI_MODELS[modelIdx];
+        const url = `${GEMINI_BASE_URL}/${model}:generateContent?key=${GEMINI_API_KEY}`;
 
-        if (response.status === 429) {
-          // Rate limited — parse retry delay or use exponential backoff
-          const errData = await response.json().catch(() => ({}));
-          const retryDetail = errData?.error?.details?.find(
-            (d: { "@type": string; retryDelay?: string }) =>
-              d["@type"]?.includes("RetryInfo"),
-          );
-          const delayStr = retryDetail?.retryDelay || "";
-          const delaySec = parseInt(delayStr) || 0;
-          const waitMs =
-            delaySec > 0
-              ? delaySec * 1000
-              : RETRY_BASE_DELAY * Math.pow(2, attempt);
-
-          if (attempt < MAX_RETRIES - 1) {
-            console.warn(
-              `Gemini rate limited (attempt ${attempt + 1}/${MAX_RETRIES}). Retrying in ${waitMs / 1000}s...`,
-            );
-            // Update the loading message to inform user
-            setMessages((prev) => {
-              const updated = [...prev];
-              const loadingIdx = updated.findIndex(
-                (m) => m.id === "loading-indicator",
-              );
-              if (loadingIdx !== -1) {
-                updated[loadingIdx] = {
-                  ...updated[loadingIdx],
-                  content: `Ek second boss, bahut traffic hai... retrying in ${Math.ceil(waitMs / 1000)}s ⏳`,
-                };
-              }
-              return updated;
+        for (let attempt = 0; attempt < MAX_RETRIES_PER_MODEL; attempt++) {
+          try {
+            console.log(`Trying model: ${model} (attempt ${attempt + 1})`);
+            const response = await fetch(url, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: requestBody,
             });
-            await new Promise((resolve) => setTimeout(resolve, waitMs));
-            continue;
+
+            if (response.ok) {
+              const data = await response.json();
+              responseText =
+                data.candidates?.[0]?.content?.parts?.[0]?.text || "";
+              succeeded = true;
+              console.log(`✅ Success with model: ${model}`);
+              break;
+            }
+
+            if (response.status === 429) {
+              console.warn(
+                `⚠️ Model ${model} rate limited (429). Trying next model...`,
+              );
+              // Update loading message
+              setMessages((prev) => {
+                const updated = [...prev];
+                const loadingIdx = updated.findIndex(
+                  (m) => m.id === "loading-indicator",
+                );
+                if (loadingIdx !== -1) {
+                  updated[loadingIdx] = {
+                    ...updated[loadingIdx],
+                    content: `Ek second boss, switching to backup AI... ⏳`,
+                  };
+                }
+                return updated;
+              });
+              lastError = "QUOTA_EXHAUSTED";
+              // Small delay before trying next model
+              await new Promise((r) => setTimeout(r, RETRY_DELAY));
+              break; // break retry loop, continue to next model
+            }
+
+            // Non-429 error
+            const errData = await response.json().catch(() => ({}));
+            console.error(
+              `Gemini API error (${model}):`,
+              response.status,
+              errData,
+            );
+            lastError = `Gemini API error: ${response.status}`;
+            break; // try next model
+          } catch (fetchErr) {
+            console.error(`Network error with model ${model}:`, fetchErr);
+            lastError = "Network error";
+            break; // try next model
           }
-          console.error("Gemini API quota exhausted after retries:", errData);
-          throw new Error("QUOTA_EXHAUSTED");
         }
 
-        // Non-429 error
-        const errData = await response.json().catch(() => ({}));
-        console.error("Gemini API error:", response.status, errData);
-        throw new Error(`Gemini API error: ${response.status}`);
+        if (succeeded) break;
+      }
+
+      if (!succeeded) {
+        throw new Error(lastError || "QUOTA_EXHAUSTED");
       }
 
       // Parse AI response robustly
