@@ -5,10 +5,7 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { motion, AnimatePresence } from "framer-motion";
-import { 
-  Eye, 
-  EyeOff,
-} from "lucide-react";
+import { Eye, EyeOff } from "lucide-react";
 import { Logo } from "../components/ui/Logo";
 import { cn } from "@/lib/utils";
 
@@ -44,7 +41,14 @@ interface UnderlineInputProps extends React.InputHTMLAttributes<HTMLInputElement
   onFocusChange?: (focused: boolean) => void;
 }
 
-function UnderlineInput({ label, error, className, type, onFocusChange, ...props }: UnderlineInputProps) {
+function UnderlineInput({
+  label,
+  error,
+  className,
+  type,
+  onFocusChange,
+  ...props
+}: UnderlineInputProps) {
   const [isFocused, setIsFocused] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const isPassword = type === "password";
@@ -52,10 +56,10 @@ function UnderlineInput({ label, error, className, type, onFocusChange, ...props
 
   return (
     <div className="relative">
-      <label 
+      <label
         className={cn(
           "text-xs font-medium transition-colors duration-200",
-          isFocused || hasValue ? "text-orange-500" : "text-gray-500"
+          isFocused || hasValue ? "text-orange-500" : "text-gray-500",
         )}
       >
         {label}
@@ -80,12 +84,12 @@ function UnderlineInput({ label, error, className, type, onFocusChange, ...props
             "placeholder:text-gray-400 placeholder:font-normal",
             isFocused ? "border-orange-500" : "border-gray-300",
             isPassword && "pr-10",
-            className
+            className,
           )}
-          style={{ 
-            caretColor: '#f97316',
-            fontSize: '16px',
-            color: '#111827'
+          style={{
+            caretColor: "#f97316",
+            fontSize: "16px",
+            color: "#111827",
           }}
         />
         {isPassword && (
@@ -94,13 +98,15 @@ function UnderlineInput({ label, error, className, type, onFocusChange, ...props
             onClick={() => setShowPassword(!showPassword)}
             className="absolute right-0 top-1/2 -translate-y-1/2 p-1 text-gray-400 hover:text-gray-600 transition-colors"
           >
-            {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+            {showPassword ? (
+              <EyeOff className="w-5 h-5" />
+            ) : (
+              <Eye className="w-5 h-5" />
+            )}
           </button>
         )}
       </div>
-      {error && (
-        <p className="text-xs text-red-500 mt-1">{error}</p>
-      )}
+      {error && <p className="text-xs text-red-500 mt-1">{error}</p>}
     </div>
   );
 }
@@ -112,59 +118,74 @@ interface CharacterIllustrationProps {
   focusedField: FocusState;
 }
 
-function CharacterIllustration({ mouseX, mouseY, focusedField }: CharacterIllustrationProps) {
+function CharacterIllustration({
+  mouseX,
+  mouseY,
+  focusedField,
+}: CharacterIllustrationProps) {
   // Calculate eye offset based on mouse position (limited range)
   const maxOffset = 4;
-  const eyeOffsetX = Math.max(-maxOffset, Math.min(maxOffset, (mouseX - 200) / 50));
-  const eyeOffsetY = Math.max(-maxOffset, Math.min(maxOffset, (mouseY - 150) / 50));
+  const eyeOffsetX = Math.max(
+    -maxOffset,
+    Math.min(maxOffset, (mouseX - 200) / 50),
+  );
+  const eyeOffsetY = Math.max(
+    -maxOffset,
+    Math.min(maxOffset, (mouseY - 150) / 50),
+  );
 
   // Determine if characters should hide eyes (password fields)
-  const isPasswordFocused = focusedField === "password" || focusedField === "confirmPassword";
-  const isEmailOrNameFocused = focusedField === "email" || focusedField === "name";
+  const isPasswordFocused =
+    focusedField === "password" || focusedField === "confirmPassword";
+  const isEmailOrNameFocused =
+    focusedField === "email" || focusedField === "name";
 
   // When email focused, eyes look right (toward form)
   const lookAtFormX = isEmailOrNameFocused ? 6 : eyeOffsetX;
   const lookAtFormY = isEmailOrNameFocused ? 2 : eyeOffsetY;
 
   return (
-    <svg 
-      viewBox="0 0 400 350" 
-      className="w-full max-w-xl"
-    >
+    <svg viewBox="0 0 400 350" className="w-full max-w-xl">
       {/* Purple Rectangle Character */}
       <motion.g
-        animate={{ 
+        animate={{
           y: [0, -8, 0],
-          rotate: [-2, 2, -2]
+          rotate: [-2, 2, -2],
         }}
-        transition={{ 
-          duration: 3, 
-          repeat: Infinity, 
-          ease: "easeInOut" 
+        transition={{
+          duration: 3,
+          repeat: Infinity,
+          ease: "easeInOut",
         }}
       >
-        <path 
-          d="M120 50 Q120 30 140 30 L200 30 Q220 30 220 50 L220 180 Q220 200 200 200 L140 200 Q120 200 120 180 Z" 
-          fill="#7C3AED" 
+        <path
+          d="M120 50 Q120 30 140 30 L200 30 Q220 30 220 50 L220 180 Q220 200 200 200 L140 200 Q120 200 120 180 Z"
+          fill="#7C3AED"
           className="drop-shadow-lg"
         />
         {/* Eyes - follow mouse or hide for password */}
         {isPasswordFocused ? (
           // Hands covering eyes
           <>
-            <motion.ellipse 
-              cx="155" cy="100" rx="15" ry="10" 
-              fill="#7C3AED" 
-              stroke="#6D28D9" 
+            <motion.ellipse
+              cx="155"
+              cy="100"
+              rx="15"
+              ry="10"
+              fill="#7C3AED"
+              stroke="#6D28D9"
               strokeWidth="2"
               initial={{ y: 30 }}
               animate={{ y: 0 }}
               transition={{ duration: 0.3 }}
             />
-            <motion.ellipse 
-              cx="185" cy="100" rx="15" ry="10" 
-              fill="#7C3AED" 
-              stroke="#6D28D9" 
+            <motion.ellipse
+              cx="185"
+              cy="100"
+              rx="15"
+              ry="10"
+              fill="#7C3AED"
+              stroke="#6D28D9"
               strokeWidth="2"
               initial={{ y: 30 }}
               animate={{ y: 0 }}
@@ -173,46 +194,68 @@ function CharacterIllustration({ mouseX, mouseY, focusedField }: CharacterIllust
           </>
         ) : (
           // Normal eyes that follow
-          <motion.g animate={{ x: lookAtFormX, y: lookAtFormY }} transition={{ type: "spring", stiffness: 300, damping: 30 }}>
+          <motion.g
+            animate={{ x: lookAtFormX, y: lookAtFormY }}
+            transition={{ type: "spring", stiffness: 300, damping: 30 }}
+          >
             <circle cx="155" cy="100" r="6" fill="#1F2937" />
             <circle cx="185" cy="100" r="6" fill="#1F2937" />
           </motion.g>
         )}
         {/* Mouth */}
-        <path d="M155 130 Q170 120 185 130" stroke="#1F2937" strokeWidth="3" fill="none" strokeLinecap="round" />
+        <path
+          d="M155 130 Q170 120 185 130"
+          stroke="#1F2937"
+          strokeWidth="3"
+          fill="none"
+          strokeLinecap="round"
+        />
       </motion.g>
 
       {/* Orange Circle Character */}
       <motion.g
-        animate={{ 
+        animate={{
           y: [0, -5, 0],
-          scale: [1, 1.02, 1]
+          scale: [1, 1.02, 1],
         }}
-        transition={{ 
-          duration: 2.5, 
-          repeat: Infinity, 
+        transition={{
+          duration: 2.5,
+          repeat: Infinity,
           ease: "easeInOut",
-          delay: 0.5
+          delay: 0.5,
         }}
       >
-        <ellipse cx="130" cy="280" rx="90" ry="70" fill="#F97316" className="drop-shadow-lg" />
+        <ellipse
+          cx="130"
+          cy="280"
+          rx="90"
+          ry="70"
+          fill="#F97316"
+          className="drop-shadow-lg"
+        />
         {/* Eyes */}
         {isPasswordFocused ? (
           // Covering eyes with "hands"
           <>
-            <motion.ellipse 
-              cx="105" cy="260" rx="12" ry="8" 
-              fill="#F97316" 
-              stroke="#EA580C" 
+            <motion.ellipse
+              cx="105"
+              cy="260"
+              rx="12"
+              ry="8"
+              fill="#F97316"
+              stroke="#EA580C"
               strokeWidth="2"
               initial={{ y: 20 }}
               animate={{ y: 0 }}
               transition={{ duration: 0.3 }}
             />
-            <motion.ellipse 
-              cx="135" cy="260" rx="12" ry="8" 
-              fill="#F97316" 
-              stroke="#EA580C" 
+            <motion.ellipse
+              cx="135"
+              cy="260"
+              rx="12"
+              ry="8"
+              fill="#F97316"
+              stroke="#EA580C"
               strokeWidth="2"
               initial={{ y: 20 }}
               animate={{ y: 0 }}
@@ -220,46 +263,63 @@ function CharacterIllustration({ mouseX, mouseY, focusedField }: CharacterIllust
             />
           </>
         ) : (
-          <motion.g animate={{ x: lookAtFormX * 1.2, y: lookAtFormY * 1.2 }} transition={{ type: "spring", stiffness: 300, damping: 30 }}>
+          <motion.g
+            animate={{ x: lookAtFormX * 1.2, y: lookAtFormY * 1.2 }}
+            transition={{ type: "spring", stiffness: 300, damping: 30 }}
+          >
             <circle cx="105" cy="260" r="7" fill="#1F2937" />
             <circle cx="155" cy="260" r="7" fill="#1F2937" />
           </motion.g>
         )}
         {/* Mouth */}
-        <path d="M110 295 Q130 310 150 295" stroke="#1F2937" strokeWidth="3" fill="none" strokeLinecap="round" />
+        <path
+          d="M110 295 Q130 310 150 295"
+          stroke="#1F2937"
+          strokeWidth="3"
+          fill="none"
+          strokeLinecap="round"
+        />
       </motion.g>
 
       {/* Grey Rectangle Character */}
       <motion.g
-        animate={{ 
+        animate={{
           y: [0, -6, 0],
-          rotate: [0, 1, -1, 0]
+          rotate: [0, 1, -1, 0],
         }}
-        transition={{ 
-          duration: 2.8, 
-          repeat: Infinity, 
+        transition={{
+          duration: 2.8,
+          repeat: Infinity,
           ease: "easeInOut",
-          delay: 1
+          delay: 1,
         }}
       >
-        <rect x="200" y="160" width="70" height="120" rx="10" fill="#374151" className="drop-shadow-lg" />
+        <rect
+          x="200"
+          y="160"
+          width="70"
+          height="120"
+          rx="10"
+          fill="#374151"
+          className="drop-shadow-lg"
+        />
         {/* Eyes */}
         {isPasswordFocused ? (
           // Closed eyes (lines)
           <>
-            <motion.path 
-              d="M212 200 L228 200" 
-              stroke="white" 
-              strokeWidth="3" 
+            <motion.path
+              d="M212 200 L228 200"
+              stroke="white"
+              strokeWidth="3"
               strokeLinecap="round"
               initial={{ pathLength: 0 }}
               animate={{ pathLength: 1 }}
               transition={{ duration: 0.3 }}
             />
-            <motion.path 
-              d="M242 200 L258 200" 
-              stroke="white" 
-              strokeWidth="3" 
+            <motion.path
+              d="M242 200 L258 200"
+              stroke="white"
+              strokeWidth="3"
               strokeLinecap="round"
               initial={{ pathLength: 0 }}
               animate={{ pathLength: 1 }}
@@ -270,7 +330,10 @@ function CharacterIllustration({ mouseX, mouseY, focusedField }: CharacterIllust
           <>
             <circle cx="220" cy="200" r="6" fill="white" />
             <circle cx="250" cy="200" r="6" fill="white" />
-            <motion.g animate={{ x: lookAtFormX * 0.5, y: lookAtFormY * 0.5 }} transition={{ type: "spring", stiffness: 300, damping: 30 }}>
+            <motion.g
+              animate={{ x: lookAtFormX * 0.5, y: lookAtFormY * 0.5 }}
+              transition={{ type: "spring", stiffness: 300, damping: 30 }}
+            >
               <circle cx="222" cy="200" r="3" fill="#374151" />
               <circle cx="252" cy="200" r="3" fill="#374151" />
             </motion.g>
@@ -280,43 +343,59 @@ function CharacterIllustration({ mouseX, mouseY, focusedField }: CharacterIllust
 
       {/* Yellow Pill Character */}
       <motion.g
-        animate={{ 
+        animate={{
           y: [0, -10, 0],
-          rotate: [-3, 3, -3]
+          rotate: [-3, 3, -3],
         }}
-        transition={{ 
-          duration: 3.2, 
-          repeat: Infinity, 
+        transition={{
+          duration: 3.2,
+          repeat: Infinity,
           ease: "easeInOut",
-          delay: 0.8
+          delay: 0.8,
         }}
       >
-        <rect x="280" y="180" width="60" height="120" rx="30" fill="#FBBF24" className="drop-shadow-lg" />
+        <rect
+          x="280"
+          y="180"
+          width="60"
+          height="120"
+          rx="30"
+          fill="#FBBF24"
+          className="drop-shadow-lg"
+        />
         {/* Eyes */}
         {isPasswordFocused ? (
           // Peeking through fingers
           <>
-            <motion.ellipse 
-              cx="298" cy="220" rx="10" ry="6" 
-              fill="#FBBF24" 
-              stroke="#D97706" 
+            <motion.ellipse
+              cx="298"
+              cy="220"
+              rx="10"
+              ry="6"
+              fill="#FBBF24"
+              stroke="#D97706"
               strokeWidth="2"
               initial={{ y: 15 }}
               animate={{ y: 0 }}
               transition={{ duration: 0.3 }}
             />
-            <motion.ellipse 
-              cx="322" cy="220" rx="10" ry="6" 
-              fill="#FBBF24" 
-              stroke="#D97706" 
+            <motion.ellipse
+              cx="322"
+              cy="220"
+              rx="10"
+              ry="6"
+              fill="#FBBF24"
+              stroke="#D97706"
               strokeWidth="2"
               initial={{ y: 15 }}
               animate={{ y: 0 }}
               transition={{ duration: 0.3 }}
             />
             {/* One eye peeking */}
-            <motion.circle 
-              cx="322" cy="220" r="2" 
+            <motion.circle
+              cx="322"
+              cy="220"
+              r="2"
               fill="#1F2937"
               initial={{ opacity: 0 }}
               animate={{ opacity: [0, 1, 1, 0] }}
@@ -324,7 +403,10 @@ function CharacterIllustration({ mouseX, mouseY, focusedField }: CharacterIllust
             />
           </>
         ) : (
-          <motion.g animate={{ x: lookAtFormX * 0.6, y: lookAtFormY * 0.6 }} transition={{ type: "spring", stiffness: 300, damping: 30 }}>
+          <motion.g
+            animate={{ x: lookAtFormX * 0.6, y: lookAtFormY * 0.6 }}
+            transition={{ type: "spring", stiffness: 300, damping: 30 }}
+          >
             <circle cx="298" cy="220" r="4" fill="#1F2937" />
             <circle cx="322" cy="220" r="4" fill="#1F2937" />
           </motion.g>
@@ -358,14 +440,14 @@ export default function Auth() {
     const handleMouseMove = (e: MouseEvent) => {
       if (containerRef.current) {
         const rect = containerRef.current.getBoundingClientRect();
-        setMousePos({ 
-          x: e.clientX - rect.left, 
-          y: e.clientY - rect.top 
+        setMousePos({
+          x: e.clientX - rect.left,
+          y: e.clientY - rect.top,
         });
       }
     };
-    window.addEventListener('mousemove', handleMouseMove);
-    return () => window.removeEventListener('mousemove', handleMouseMove);
+    window.addEventListener("mousemove", handleMouseMove);
+    return () => window.removeEventListener("mousemove", handleMouseMove);
   }, []);
 
   // Login form
@@ -404,13 +486,17 @@ export default function Auth() {
           navigate("/verify-otp", { state: { email: values.email } });
         } catch (resendError: any) {
           loginForm.setError("root", {
-            message: resendError.response?.data?.message || "Failed to send verification code. Please try again.",
+            message:
+              resendError.response?.data?.message ||
+              "Failed to send verification code. Please try again.",
           });
         }
         return;
       }
       loginForm.setError("root", {
-        message: error.response?.data?.message || "Invalid email or password. Please try again.",
+        message:
+          error.response?.data?.message ||
+          "Invalid email or password. Please try again.",
       });
     }
   };
@@ -423,7 +509,9 @@ export default function Auth() {
       navigate("/verify-otp", { state: { email: values.email } });
     } catch (error: any) {
       registerForm.setError("root", {
-        message: error.response?.data?.message || "This email may already be registered. Please try again.",
+        message:
+          error.response?.data?.message ||
+          "This email may already be registered. Please try again.",
       });
     }
   };
@@ -431,14 +519,14 @@ export default function Auth() {
   return (
     <div className="min-h-screen flex bg-gray-100">
       {/* Left Side - Illustration */}
-      <div 
+      <div
         ref={containerRef}
         className="hidden lg:flex lg:w-1/2 items-center justify-center bg-gray-100 p-12"
       >
-        <CharacterIllustration 
-          mouseX={mousePos.x} 
-          mouseY={mousePos.y} 
-          focusedField={focusedField} 
+        <CharacterIllustration
+          mouseX={mousePos.x}
+          mouseY={mousePos.y}
+          focusedField={focusedField}
         />
       </div>
 
@@ -466,8 +554,8 @@ export default function Auth() {
               {activeTab === "login" ? "Welcome back!" : "Create account"}
             </h1>
             <p className="text-gray-500 text-sm">
-              {activeTab === "login" 
-                ? "Please enter your details" 
+              {activeTab === "login"
+                ? "Please enter your details"
                 : "Fill in your information to get started"}
             </p>
           </motion.div>
@@ -501,7 +589,9 @@ export default function Auth() {
                   {...loginForm.register("email")}
                   value={loginForm.watch("email")}
                   error={loginForm.formState.errors.email?.message}
-                  onFocusChange={(focused) => setFocusedField(focused ? "email" : "none")}
+                  onFocusChange={(focused) =>
+                    setFocusedField(focused ? "email" : "none")
+                  }
                 />
 
                 <UnderlineInput
@@ -511,7 +601,9 @@ export default function Auth() {
                   {...loginForm.register("password")}
                   value={loginForm.watch("password")}
                   error={loginForm.formState.errors.password?.message}
-                  onFocusChange={(focused) => setFocusedField(focused ? "password" : "none")}
+                  onFocusChange={(focused) =>
+                    setFocusedField(focused ? "password" : "none")
+                  }
                 />
 
                 {/* Remember me & Forgot password */}
@@ -523,7 +615,9 @@ export default function Auth() {
                       onChange={(e) => setRememberMe(e.target.checked)}
                       className="w-4 h-4 rounded border-gray-300 text-orange-500 focus:ring-orange-500"
                     />
-                    <span className="text-sm text-gray-600">Remember for 30 days</span>
+                    <span className="text-sm text-gray-600">
+                      Remember for 30 days
+                    </span>
                   </label>
                   <Link
                     to="/forgot-password"
@@ -542,34 +636,22 @@ export default function Auth() {
                   className={cn(
                     "w-full py-3.5 rounded-full font-medium text-white transition-all duration-200",
                     "bg-neutral-900 hover:bg-neutral-800",
-                    "disabled:opacity-70 disabled:cursor-not-allowed"
+                    "disabled:opacity-70 disabled:cursor-not-allowed",
                   )}
                 >
                   {loginForm.formState.isSubmitting ? (
                     <motion.div
                       animate={{ rotate: 360 }}
-                      transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                      transition={{
+                        duration: 1,
+                        repeat: Infinity,
+                        ease: "linear",
+                      }}
                       className="w-5 h-5 border-2 border-white border-t-transparent rounded-full mx-auto"
                     />
                   ) : (
                     "Login"
                   )}
-                </motion.button>
-
-                {/* Google Login */}
-                <motion.button
-                  type="button"
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  className="w-full py-3.5 rounded-full font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 transition-all duration-200 flex items-center justify-center gap-2"
-                >
-                  <svg className="w-5 h-5" viewBox="0 0 24 24">
-                    <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-                    <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-                    <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
-                    <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
-                  </svg>
-                  Log in with Google
                 </motion.button>
 
                 {/* Sign Up Link */}
@@ -614,7 +696,9 @@ export default function Auth() {
                   {...registerForm.register("name")}
                   value={registerForm.watch("name")}
                   error={registerForm.formState.errors.name?.message}
-                  onFocusChange={(focused) => setFocusedField(focused ? "name" : "none")}
+                  onFocusChange={(focused) =>
+                    setFocusedField(focused ? "name" : "none")
+                  }
                 />
 
                 <UnderlineInput
@@ -624,7 +708,9 @@ export default function Auth() {
                   {...registerForm.register("email")}
                   value={registerForm.watch("email")}
                   error={registerForm.formState.errors.email?.message}
-                  onFocusChange={(focused) => setFocusedField(focused ? "email" : "none")}
+                  onFocusChange={(focused) =>
+                    setFocusedField(focused ? "email" : "none")
+                  }
                 />
 
                 <UnderlineInput
@@ -634,7 +720,9 @@ export default function Auth() {
                   {...registerForm.register("password")}
                   value={registerForm.watch("password")}
                   error={registerForm.formState.errors.password?.message}
-                  onFocusChange={(focused) => setFocusedField(focused ? "password" : "none")}
+                  onFocusChange={(focused) =>
+                    setFocusedField(focused ? "password" : "none")
+                  }
                 />
 
                 <UnderlineInput
@@ -644,7 +732,9 @@ export default function Auth() {
                   {...registerForm.register("confirmPassword")}
                   value={registerForm.watch("confirmPassword")}
                   error={registerForm.formState.errors.confirmPassword?.message}
-                  onFocusChange={(focused) => setFocusedField(focused ? "confirmPassword" : "none")}
+                  onFocusChange={(focused) =>
+                    setFocusedField(focused ? "confirmPassword" : "none")
+                  }
                 />
 
                 {/* Register Button */}
@@ -656,34 +746,22 @@ export default function Auth() {
                   className={cn(
                     "w-full py-3.5 rounded-full font-medium text-white transition-all duration-200",
                     "bg-neutral-900 hover:bg-neutral-800",
-                    "disabled:opacity-70 disabled:cursor-not-allowed"
+                    "disabled:opacity-70 disabled:cursor-not-allowed",
                   )}
                 >
                   {registerForm.formState.isSubmitting ? (
                     <motion.div
                       animate={{ rotate: 360 }}
-                      transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                      transition={{
+                        duration: 1,
+                        repeat: Infinity,
+                        ease: "linear",
+                      }}
                       className="w-5 h-5 border-2 border-white border-t-transparent rounded-full mx-auto"
                     />
                   ) : (
                     "Create Account"
                   )}
-                </motion.button>
-
-                {/* Google Signup */}
-                <motion.button
-                  type="button"
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  className="w-full py-3.5 rounded-full font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 transition-all duration-200 flex items-center justify-center gap-2"
-                >
-                  <svg className="w-5 h-5" viewBox="0 0 24 24">
-                    <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-                    <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-                    <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
-                    <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
-                  </svg>
-                  Sign up with Google
                 </motion.button>
 
                 {/* Login Link */}
