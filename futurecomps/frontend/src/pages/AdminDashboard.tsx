@@ -811,6 +811,9 @@ export default function AdminDashboard() {
         ),
       );
 
+      // Re-fetch products to ensure data is consistent
+      fetchProducts();
+
       // Close the dialog and reset selected product
       setIsEditProductOpen(false);
       setSelectedProduct(null);
