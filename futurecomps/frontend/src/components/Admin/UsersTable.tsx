@@ -37,11 +37,7 @@ import {
   MailOpen,
   AlertCircle,
 } from "lucide-react";
-import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage,
-} from "@/components/ui/Avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/Avatar";
 
 export interface User {
   _id?: string;
@@ -51,6 +47,7 @@ export interface User {
   role?: string;
   createdAt?: string;
   status?: string;
+  isActive?: boolean;
   avatarUrl?: string;
 }
 
@@ -93,7 +90,7 @@ export default function UsersTable({
 
   // Get unique roles for filter
   const uniqueRoles = Array.from(
-    new Set(users.map((user) => user.role || "user"))
+    new Set(users.map((user) => user.role || "user")),
   );
 
   // Filter users based on search and filters

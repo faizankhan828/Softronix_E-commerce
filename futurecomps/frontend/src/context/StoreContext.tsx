@@ -14,6 +14,10 @@ import type {
   ClerkAction,
 } from "@/types/store";
 import axios from "axios";
+import cartService from "@/api/services/cartService";
+import wishlistService from "@/api/services/wishlistService";
+import type { WishlistItem } from "@/api/services/wishlistService";
+import { useAuth } from "./AuthContext";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 
@@ -29,6 +33,11 @@ interface StoreContextType {
   // Cart
   cart: Cart;
   isCartOpen: boolean;
+  cartLoading: boolean;
+
+  // Wishlist
+  wishlist: WishlistItem[];
+  wishlistLoading: boolean;
 
   // Actions
   fetchProducts: () => Promise<void>;
@@ -46,6 +55,11 @@ interface StoreContextType {
   applyDiscount: (code: string, percentage: number) => void;
   removeDiscount: () => void;
   setCartOpen: (open: boolean) => void;
+
+  // Wishlist Actions
+  addToWishlist: (productId: string) => Promise<void>;
+  removeFromWishlist: (productId: string) => Promise<void>;
+  isInWishlist: (productId: string) => boolean;
 
   // Clerk Actions
   handleClerkAction: (action: ClerkAction) => void;
@@ -68,6 +82,7 @@ const defaultFilters: FilterState = {
 const StoreContext = createContext<StoreContextType | undefined>(undefined);
 
 export function StoreProvider({ children }: { children: React.ReactNode }) {
+  const { isAuthenticated } = useAuth();
   const [products, setProducts] = useState<Product[]>([]);
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
@@ -75,6 +90,74 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   const [filters, setFiltersState] = useState<FilterState>(defaultFilters);
   const [cart, setCart] = useState<Cart>(defaultCart);
   const [isCartOpen, setIsCartOpen] = useState(false);
+  const [cartLoading, setCartLoading] = useState(true);
+  const [wishlist, setWishlist] = useState<WishlistItem[]>([]);
+  const [wishlistLoading, setWishlistLoading] = useState(true);
+
+  // Calculate cart totals helper
+  const calculateCartTotals = useCallback(
+    (items: CartItem[], discountPercent: number = 0) => {
+      const subtotal = items.reduce(
+        (sum, item) => sum + item.product.price * item.quantity,
+        0,
+      );
+      const discount = subtotal * (discountPercent / 100);
+      return {
+        items,
+        subtotal,
+        discount,
+        total: subtotal - discount,
+      };
+    },
+    [],
+  );
+
+  // Initialize cart and wishlist
+  useEffect(() => {
+    const initStore = async () => {
+      setCartLoading(true);
+      setWishlistLoading(true);
+      try {
+        // If authenticated, we might want to sync local cart/wishlist first
+        if (isAuthenticated) {
+          await Promise.all([
+            cartService.syncCartAfterLogin(),
+            wishlistService.syncWishlistAfterLogin()
+          ]);
+        }
+        
+        const [cartItems, wishlistItems] = await Promise.all([
+          cartService.getCart(),
+          wishlistService.getWishlist()
+        ]);
+        
+        // Transform items to ensure they match CartItem interface
+        const mappedCartItems: CartItem[] = cartItems.map((item: any) => ({
+             productId: item.productId,
+             quantity: item.quantity,
+             size: item.size,
+             color: item.color,
+             product: item.product,
+        })) as unknown as CartItem[];
+
+        setCart(prev => ({
+            ...calculateCartTotals(mappedCartItems, prev.discount > 0 ? (prev.discount / prev.subtotal) * 100 : 0),
+            discountCode: prev.discountCode
+        }));
+
+        setWishlist(wishlistItems);
+
+      } catch (err) {
+        console.error("Failed to initialize store", err);
+      } finally {
+        setCartLoading(false);
+        setWishlistLoading(false);
+      }
+    };
+
+    initStore();
+  }, [isAuthenticated, calculateCartTotals]);
+
 
   // Fetch products from API
   const fetchProducts = useCallback(async () => {
@@ -191,101 +274,117 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     setFilteredProducts(result);
   }, [products, filters]);
 
-  // Calculate cart totals
-  const calculateCartTotals = useCallback(
-    (items: CartItem[], discountPercent: number = 0) => {
-      const subtotal = items.reduce(
-        (sum, item) => sum + item.product.price * item.quantity,
-        0,
-      );
-      const discount = subtotal * (discountPercent / 100);
-      return {
-        items,
-        subtotal,
-        discount,
-        total: subtotal - discount,
-      };
-    },
-    [],
-  );
 
   // Cart actions
   const addToCart = useCallback(
-    (product: Product, quantity = 1, size?: string, color?: string) => {
-      setCart((prev) => {
-        const existingIndex = prev.items.findIndex(
-          (item) =>
-            item.productId === product._id &&
-            item.size === size &&
-            item.color === color,
-        );
+    async (product: Product, quantity = 1, size?: string, color?: string) => {
+      try {
+        // Optimistic update
+        setCart((prev) => {
+          const existingIndex = prev.items.findIndex(
+            (item) =>
+              item.productId === product._id &&
+              item.size === size &&
+              item.color === color,
+          );
 
-        let newItems: CartItem[];
-        if (existingIndex > -1) {
-          newItems = [...prev.items];
-          newItems[existingIndex].quantity += quantity;
-        } else {
-          newItems = [
-            ...prev.items,
-            { productId: product._id, product, quantity, size, color },
-          ];
-        }
+          let newItems: CartItem[];
+          if (existingIndex > -1) {
+            newItems = [...prev.items];
+            newItems[existingIndex].quantity += quantity;
+          } else {
+            newItems = [
+              ...prev.items,
+              { productId: product._id, product, quantity, size, color },
+            ];
+          }
 
-        const discountPercent = prev.discountCode
-          ? (prev.discount / prev.subtotal) * 100
-          : 0;
-        return {
-          ...calculateCartTotals(newItems, discountPercent),
-          discountCode: prev.discountCode,
-        };
-      });
-      setIsCartOpen(true);
+          const discountPercent = prev.discountCode
+            ? (prev.discount / prev.subtotal) * 100
+            : 0;
+          return {
+            ...calculateCartTotals(newItems, discountPercent),
+            discountCode: prev.discountCode,
+          };
+        });
+        
+        setIsCartOpen(true);
+
+        // Sync with service
+        await cartService.addToCart(product._id, quantity, size || "", color || "");
+
+      } catch (err) {
+        console.error("Failed to add to cart", err);
+        // revert logic could go here
+      }
     },
     [calculateCartTotals],
   );
 
   const removeFromCart = useCallback(
-    (productId: string) => {
-      setCart((prev) => {
-        const newItems = prev.items.filter(
-          (item) => item.productId !== productId,
-        );
-        const discountPercent = prev.discountCode
-          ? (prev.discount / prev.subtotal) * 100
-          : 0;
-        return {
-          ...calculateCartTotals(newItems, discountPercent),
-          discountCode: prev.discountCode,
-        };
-      });
+    async (productId: string) => {
+      try {
+          // Optimistic update
+          setCart((prev) => {
+            const newItems = prev.items.filter(
+              (item) => item.productId !== productId,
+            );
+            const discountPercent = prev.discountCode
+              ? (prev.discount / prev.subtotal) * 100
+              : 0;
+            return {
+              ...calculateCartTotals(newItems, discountPercent),
+              discountCode: prev.discountCode,
+            };
+          });
+
+          await cartService.removeFromCart(productId);
+
+      } catch (err) {
+          console.error("Failed to remove from cart", err);
+      }
     },
     [calculateCartTotals],
   );
 
   const updateCartQuantity = useCallback(
-    (productId: string, quantity: number) => {
+    async (productId: string, quantity: number) => {
       if (quantity < 1) {
         removeFromCart(productId);
         return;
       }
-      setCart((prev) => {
-        const newItems = prev.items.map((item) =>
-          item.productId === productId ? { ...item, quantity } : item,
-        );
-        const discountPercent = prev.discountCode
-          ? (prev.discount / prev.subtotal) * 100
-          : 0;
-        return {
-          ...calculateCartTotals(newItems, discountPercent),
-          discountCode: prev.discountCode,
-        };
-      });
+      try {
+          // Optimistic update
+          setCart((prev) => {
+            const newItems = prev.items.map((item) =>
+              item.productId === productId ? { ...item, quantity } : item,
+            );
+            const discountPercent = prev.discountCode
+              ? (prev.discount / prev.subtotal) * 100
+              : 0;
+            return {
+              ...calculateCartTotals(newItems, discountPercent),
+              discountCode: prev.discountCode,
+            };
+          });
+
+          // Sync
+          await cartService.updateCartItem(productId, quantity);
+
+      } catch (err) {
+          console.error("Failed to update cart quantity", err);
+      }
     },
     [calculateCartTotals, removeFromCart],
   );
 
-  const clearCart = useCallback(() => {
-    setCart(defaultCart);
+  const clearCart = useCallback(async () => {
+    try {
+        setCart(defaultCart);
+        await cartService.clearCart();
+    } catch (err) {
+        console.error("Failed to clear cart", err);
+    }
   }, []);
 
   const applyDiscount = useCallback(
@@ -304,6 +403,34 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       discountCode: undefined,
     }));
   }, [calculateCartTotals]);
+
+  // Wishlist Actions
+  const addToWishlist = useCallback(async (productId: string) => {
+      try {
+        // Optimistic update: we need the product details to add it nicely
+        // But for now, just sync with backend and refresh wishlist
+        await wishlistService.addToWishlist(productId);
+        const updatedWishlist = await wishlistService.getWishlist();
+        setWishlist(updatedWishlist);
+      } catch (err) {
+        console.error("Failed to add to wishlist", err);
+      }
+    }, []);
+
+  const removeFromWishlist = useCallback(async (productId: string) => {
+    try {
+      // Optimistic
+      setWishlist(prev => prev.filter(item => item.productId !== productId));
+      await wishlistService.removeFromWishlist(productId);
+    } catch (err) {
+      console.error("Failed to remove from wishlist", err);
+    }
+  }, []);
+
+  const isInWishlist = useCallback((productId: string) => {
+    return wishlist.some(item => item.productId === productId);
+  }, [wishlist]);
+
 
   const setFilters = useCallback((newFilters: Partial<FilterState>) => {
     setFiltersState((prev) => ({ ...prev, ...newFilters }));
@@ -423,6 +550,9 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         filters,
         cart,
         isCartOpen,
+        cartLoading,
+        wishlist,
+        wishlistLoading,
         fetchProducts,
         setFilters,
         clearFilters,
@@ -433,6 +563,9 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         applyDiscount,
         removeDiscount,
         setCartOpen,
+        addToWishlist,
+        removeFromWishlist,
+        isInWishlist,
         handleClerkAction,
         updateProductPrice,
       }}

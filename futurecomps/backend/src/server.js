@@ -17,6 +17,7 @@ import productRoutes from "./routes/productRoutes.js";
 import cartRoutes from "./routes/cartRoutes.js";
 import couponRoutes from "./routes/couponRoutes.js";
 import clerkRoutes from "./routes/clerkRoutes.js";
+import settingsRoutes from "./routes/settingsRoutes.js";
 
 // Load environment variables
 dotenv.config();
@@ -27,9 +28,11 @@ connectDB();
 const app = express();
 
 // Security Middleware
-app.use(helmet({
-  crossOriginResourcePolicy: false,
-})); // Set security headers
+app.use(
+  helmet({
+    crossOriginResourcePolicy: false,
+  }),
+); // Set security headers
 app.use(mongoSanitize()); // Prevent MongoDB injection
 
 // Rate limiting disabled for development
@@ -53,11 +56,18 @@ app.use(mongoSanitize()); // Prevent MongoDB injection
 // });
 
 // Middleware
-app.use(cors({
-  origin: "*", // allow all origins
-  methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization"],
-}));
+app.use(
+  cors({
+    origin: [
+      "http://localhost:5173",
+      "http://localhost:3000",
+      "http://127.0.0.1:5173",
+    ],
+    methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization", "x-csrf-token"],
+    credentials: true,
+  }),
+);
 
 // Webhook route must be registered BEFORE express.json()
 // because it needs the raw body for signature verification
@@ -83,6 +93,7 @@ app.use("/api/products", productRoutes);
 app.use("/api/cart", cartRoutes);
 app.use("/api/coupons", couponRoutes);
 app.use("/api/clerk", clerkRoutes);
+app.use("/api/settings", settingsRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {

@@ -22,20 +22,12 @@ export const ThemeContext = createContext<ThemeContextType | undefined>(
 export const ThemeProvider = ({ children }: ThemeProviderProps) => {
   const [theme, setTheme] = useState<Theme>("light");
 
-  // Initialize theme from localStorage if available
+  // Initialize theme from localStorage only (ignore system preference)
   useEffect(() => {
     const savedTheme = localStorage.getItem("theme") as Theme;
-    const prefersDark = window.matchMedia(
-      "(prefers-color-scheme: dark)",
-    ).matches;
 
-    let initialTheme: Theme = "light"; // Default to light
-
-    if (savedTheme) {
-      initialTheme = savedTheme;
-    } else if (prefersDark) {
-      initialTheme = "dark";
-    }
+    // Always default to light theme unless user explicitly changed it
+    let initialTheme: Theme = savedTheme || "light";
 
     setTheme(initialTheme);
 

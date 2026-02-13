@@ -17,12 +17,14 @@ export default function ProtectedRoute({
   }
 
   if (!user) {
-    return <Navigate to="/login" replace />;
+    return <Navigate to="/auth" replace />;
   }
 
-  if (!user.isVerified) {
-    return <Navigate to="/verify-otp" replace />;
-  }
+  // Allow unverified users to access protected routes
+  // Verification can be enforced at specific endpoints if needed
+  // if (!user.isVerified) {
+  //   return <Navigate to="/verify-otp" replace />;
+  // }
 
   return <>{children}</>;
 }

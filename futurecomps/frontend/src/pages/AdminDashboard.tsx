@@ -36,7 +36,8 @@ import TopProducts from "../components/Admin/TopProducts";
 
 // Types
 interface Product {
-  id: string;
+  id?: string;
+  _id?: string;
   name: string;
   price: number;
   description: string;
@@ -103,6 +104,7 @@ interface User {
   role?: string;
   createdAt?: string;
   status?: string;
+  isActive?: boolean;
 }
 
 export default function AdminDashboard() {
@@ -402,8 +404,14 @@ export default function AdminDashboard() {
         return [];
       }
 
-      setProducts(response);
-      return response;
+      // Normalize products to always have an id field
+      const normalizedProducts = response.map((product: any) => ({
+        ...product,
+        id: product.id || product._id || "",
+      }));
+
+      setProducts(normalizedProducts);
+      return normalizedProducts;
     } catch (error) {
       console.error("Error fetching products:", error);
       toast({
@@ -422,7 +430,7 @@ export default function AdminDashboard() {
   const fetchOrdersData = async () => {
     setOrdersLoading(true);
     try {
-      const response = await api.get("/orders/admin/all");
+      const response = await api.get("/admin/orders");
       console.log("Raw orders response:", response);
 
       if (!response || !response.data) {
@@ -483,7 +491,9 @@ export default function AdminDashboard() {
   const fetchUsersData = async () => {
     setUsersLoading(true);
     try {
-      const response = await api.get("/users?all=true");
+      const response = await api.get("/admin/users", {
+        params: { limit: 100 },
+      });
 
       let usersData = [];
       // Check if the response has a users property (paginated format)
@@ -495,6 +505,12 @@ export default function AdminDashboard() {
         console.error("Unexpected users data format:", response.data);
         usersData = [];
       }
+
+      // Map isActive boolean to status string for UsersTable compatibility
+      usersData = usersData.map((user: any) => ({
+        ...user,
+        status: user.status || (user.isActive === false ? "inactive" : "active"),
+      }));
 
       setUsers(usersData);
       return usersData;
@@ -653,7 +669,9 @@ export default function AdminDashboard() {
 
   // Load tab-specific data when tab changes
   useEffect(() => {
-    if (activeTab === "orders") {
+    if (activeTab === "products" && products.length === 0 && !productsLoading) {
+      fetchProducts();
+    } else if (activeTab === "orders") {
       fetchOrdersData();
     } else if (activeTab === "users") {
       fetchUsersData();
@@ -742,8 +760,9 @@ export default function AdminDashboard() {
     try {
       const response = await productService.createProduct(productData);
 
-      // Add the new product to the state
-      setProducts([...products, response]);
+      // Add the new product to the state (normalize id field)
+      const newProductWithId = { ...response, id: response.id || response._id || "" };
+      setProducts([...products, newProductWithId]);
 
       // Close the dialog
       setIsAddProductOpen(false);
@@ -804,10 +823,11 @@ export default function AdminDashboard() {
         productData,
       );
 
-      // Update the product in the state
+      // Update the product in the state (normalize id field)
+      const updatedProductWithId = { ...response, id: response.id || response._id || productId };
       setProducts(
         products.map((product) =>
-          product.id === productId ? { ...response } : product,
+          (product.id === productId || product._id === productId) ? updatedProductWithId : product,
         ),
       );
 
@@ -848,7 +868,7 @@ export default function AdminDashboard() {
       await productService.deleteProduct(productId);
 
       // Remove the product from the state
-      setProducts(products.filter((product) => product.id !== productId));
+      setProducts(products.filter((product) => product.id !== productId && product._id !== productId));
 
       toast({
         title: "Success",
@@ -879,7 +899,7 @@ export default function AdminDashboard() {
     }
 
     try {
-      await api.delete(`/users/${userId}`);
+      await api.delete(`/admin/users/${userId}`);
 
       if (Array.isArray(users)) {
         setUsers(users.filter((user) => (user._id || user.id) !== userId));
@@ -903,14 +923,15 @@ export default function AdminDashboard() {
     userId: string,
     currentStatus: string = "active",
   ) => {
-    const newStatus = currentStatus === "active" ? "inactive" : "active";
+    const isCurrentlyActive = currentStatus === "active";
+    const newIsActive = !isCurrentlyActive;
     console.log(
-      `Toggling user status: ${userId} from ${currentStatus} to ${newStatus}`,
+      `Toggling user status: ${userId} from ${currentStatus} to ${newIsActive ? "active" : "inactive"}`,
     );
 
     try {
-      const response = await api.put(`/users/${userId}/status`, {
-        status: newStatus,
+      const response = await api.put(`/admin/users/${userId}`, {
+        isActive: newIsActive,
       });
       console.log("Status update response:", response.data);
 
@@ -918,7 +939,7 @@ export default function AdminDashboard() {
         setUsers(
           users.map((user) => {
             if ((user._id || user.id) === userId) {
-              return { ...user, status: newStatus };
+              return { ...user, isActive: newIsActive, status: newIsActive ? "active" : "inactive" };
             }
             return user;
           }),
@@ -928,7 +949,7 @@ export default function AdminDashboard() {
       toast({
         title: "Success",
         description: `User ${
-          newStatus === "active" ? "activated" : "deactivated"
+          newIsActive ? "activated" : "deactivated"
         } successfully`,
       });
     } catch (error) {
@@ -946,21 +967,10 @@ export default function AdminDashboard() {
     console.log(`Changing user role: ${userId} to ${newRole}`);
 
     try {
-      try {
-        const response = await api.put(`/users/${userId}/role`, {
-          role: newRole,
-        });
-        console.log("Role update response:", response.data);
-      } catch (roleError) {
-        console.warn(
-          "Role endpoint failed, falling back to general update:",
-          roleError,
-        );
-        const response = await api.put(`/users/${userId}`, {
-          role: newRole,
-        });
-        console.log("General update response:", response.data);
-      }
+      const response = await api.put(`/admin/users/${userId}`, {
+        role: newRole,
+      });
+      console.log("Role update response:", response.data);
 
       if (Array.isArray(users)) {
         setUsers(
@@ -1131,9 +1141,9 @@ export default function AdminDashboard() {
 
           {/* Recent Activity */}
           <RecentActivity
-            recentOrders={recentActivity.orders}
-            recentUsers={recentActivity.users}
-            recentProducts={recentActivity.products}
+            recentOrders={recentActivity?.orders || []}
+            recentUsers={recentActivity?.users || []}
+            recentProducts={recentActivity?.products || []}
             isLoading={loading}
           />
         </TabsContent>
@@ -1293,7 +1303,7 @@ export default function AdminDashboard() {
             <div className="overflow-y-auto pr-2 max-h-[calc(90vh-120px)]">
               <ProductForm
                 initialData={selectedProduct}
-                onSubmit={(data) => handleSaveEdit(selectedProduct.id, data)}
+                onSubmit={(data) => handleSaveEdit(selectedProduct.id || selectedProduct._id || "", data)}
                 onCancel={() => setIsEditProductOpen(false)}
               />
             </div>
