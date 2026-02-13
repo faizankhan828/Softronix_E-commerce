@@ -27,7 +27,9 @@ connectDB();
 const app = express();
 
 // Security Middleware
-app.use(helmet()); // Set security headers
+app.use(helmet({
+  crossOriginResourcePolicy: false,
+})); // Set security headers
 app.use(mongoSanitize()); // Prevent MongoDB injection
 
 // Rate limiting for auth routes
@@ -51,7 +53,11 @@ const apiLimiter = rateLimit({
 });
 
 // Middleware
-app.use(cors());
+app.use(cors({
+  origin: "*", // allow all origins
+  methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+}));
 
 // Webhook route must be registered BEFORE express.json()
 // because it needs the raw body for signature verification
