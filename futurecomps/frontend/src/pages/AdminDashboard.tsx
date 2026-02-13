@@ -10,9 +10,10 @@ import {
   DialogTitle,
 } from "@/components/ui/Dialog";
 // import { fixUI } from "../../lib/ui-fix";
-import { TabsContent } from "@/components/ui/Tabs";
+// import { TabsContent } from "@/components/ui/Tabs"; // Unused
 
 // API services
+import api from "../api/services/api";
 import productService from "../api/services/productService";
 import dashboardService from "../api/services/dashboardService";
 import couponService from "../api/services/couponService";
@@ -49,9 +50,9 @@ const fixUI = () => {
 };
 
 export default function AdminDashboard() {
-  const { user: currentUser } = useAuth();
+  // const { user: currentUser } = useAuth(); // Unused for now
   const { toast } = useToast();
-  const [searchParams, setSearchParams] = useSearchParams();
+  const [searchParams] = useSearchParams();
 
   // State
   const [products, setProducts] = useState<Product[]>([]);
@@ -95,38 +96,9 @@ export default function AdminDashboard() {
 
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [selectedCoupon, setSelectedCoupon] = useState<Coupon | null>(null);
-  const [newProduct, setNewProduct] = useState({
-    name: "",
-    price: 0,
-    description: "",
-    category: "",
-    images: [""],
-    inventory: 0,
-    colors: ["Black", "White"],
-    sizes: ["S", "M", "L"],
-    inStock: true,
-    isNew: false,
-    isFeatured: false,
-    material: "",
-    fit: "",
-    care: "",
-    origin: "",
-  });
 
   const tabFromUrl = searchParams.get("tab") || "dashboard";
   const [activeTab, setActiveTab] = useState(tabFromUrl);
-
-  const handleTabChange = (value: string) => {
-    setActiveTab(value);
-    setSearchParams({ tab: value });
-  };
-
-  useEffect(() => {
-    setLoading(false);
-    setProductsLoading(false);
-    setOrdersLoading(false);
-    setUsersLoading(false);
-  }, []);
 
   useEffect(() => {
     const currentTab = searchParams.get("tab") || "dashboard";
@@ -141,7 +113,7 @@ export default function AdminDashboard() {
 
       try {
         // Fetch everything in parallel
-        const [dashboardData, productsData, ordersData, usersData] =
+        const [dashboardData, productsData, _ordersData, _usersData] =
           await Promise.all([
             dashboardService.getDashboardStats(),
             productService.getAdminProducts(),
@@ -166,7 +138,7 @@ export default function AdminDashboard() {
         const realOrders = await import("../api/services/orderService").then(
           (m) => m.getOrders().catch(() => []),
         );
-        setOrders(realOrders);
+        setOrders(realOrders as any);
 
         const realUsers = await userService.getUsers().catch(() => []);
         setUsers(realUsers);
@@ -335,7 +307,7 @@ export default function AdminDashboard() {
     setIsEditProductOpen(true);
   };
 
-  const handleUpdateOrderStatus = async (orderId: string, status: string) => {
+  const handleUpdateOrderStatus = async (_orderId: string, _status: string) => {
     // Implement logic
     toast({
       title: "Info",
@@ -473,9 +445,7 @@ export default function AdminDashboard() {
           )}
 
           {/* Activity Tab (if separate) or Analytics */}
-          {activeTab === "analytics" && (
-            <UserAnalytics users={users} orders={orders} />
-          )}
+          {activeTab === "analytics" && <UserAnalytics />}
 
           {/* Coupons Tab */}
           {activeTab === "coupons" && (

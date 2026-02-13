@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/Button";
 
 export function Footer() {
   return (
-    <footer className="bg-gray-900 text-gray-300">
+    <footer className="bg-background dark:bg-gray-900 text-foreground dark:text-gray-300">
       {/* Newsletter Section */}
       <div className="bg-gradient-to-r from-primary to-blue-600 py-12">
         <div className="container mx-auto px-4">
@@ -49,19 +49,19 @@ export function Footer() {
             <div className="flex gap-3">
               <a
                 href="#"
-                className="w-10 h-10 rounded-lg bg-gray-800 flex items-center justify-center hover:bg-primary transition-colors"
+                className="w-10 h-10 rounded-lg bg-card dark:bg-gray-800 flex items-center justify-center hover:bg-primary transition-colors"
               >
                 <Facebook className="w-5 h-5" />
               </a>
               <a
                 href="#"
-                className="w-10 h-10 rounded-lg bg-gray-800 flex items-center justify-center hover:bg-primary transition-colors"
+                className="w-10 h-10 rounded-lg bg-card dark:bg-gray-800 flex items-center justify-center hover:bg-primary transition-colors"
               >
                 <Instagram className="w-5 h-5" />
               </a>
               <a
                 href="#"
-                className="w-10 h-10 rounded-lg bg-gray-800 flex items-center justify-center hover:bg-primary transition-colors"
+                className="w-10 h-10 rounded-lg bg-card dark:bg-gray-800 flex items-center justify-center hover:bg-primary transition-colors"
               >
                 <Twitter className="w-5 h-5" />
               </a>

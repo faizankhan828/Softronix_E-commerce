@@ -16,7 +16,7 @@ type ThemeProviderProps = {
 };
 
 export const ThemeContext = createContext<ThemeContextType | undefined>(
-  undefined
+  undefined,
 );
 
 export const ThemeProvider = ({ children }: ThemeProviderProps) => {
@@ -26,26 +26,24 @@ export const ThemeProvider = ({ children }: ThemeProviderProps) => {
   useEffect(() => {
     const savedTheme = localStorage.getItem("theme") as Theme;
     const prefersDark = window.matchMedia(
-      "(prefers-color-scheme: dark)"
+      "(prefers-color-scheme: dark)",
     ).matches;
 
+    let initialTheme: Theme = "light"; // Default to light
+
     if (savedTheme) {
-      setTheme(savedTheme);
-      document.documentElement.classList.toggle("dark", savedTheme === "dark");
-      // Apply better dark mode colors
-      if (savedTheme === "dark") {
-        document.documentElement.style.setProperty("--background", "#121212");
-        document.documentElement.style.setProperty("--foreground", "#e0e0e0");
-      } else {
-        document.documentElement.style.removeProperty("--background");
-        document.documentElement.style.removeProperty("--foreground");
-      }
+      initialTheme = savedTheme;
     } else if (prefersDark) {
-      setTheme("dark");
+      initialTheme = "dark";
+    }
+
+    setTheme(initialTheme);
+
+    // Apply theme class
+    if (initialTheme === "dark") {
       document.documentElement.classList.add("dark");
-      // Apply better dark mode colors
-      document.documentElement.style.setProperty("--background", "#121212");
-      document.documentElement.style.setProperty("--foreground", "#e0e0e0");
+    } else {
+      document.documentElement.classList.remove("dark");
     }
   }, []);
 
@@ -53,15 +51,12 @@ export const ThemeProvider = ({ children }: ThemeProviderProps) => {
     setTheme((prevTheme) => {
       const newTheme = prevTheme === "light" ? "dark" : "light";
       localStorage.setItem("theme", newTheme);
-      document.documentElement.classList.toggle("dark", newTheme === "dark");
 
-      // Apply better dark mode colors
+      // Toggle dark class
       if (newTheme === "dark") {
-        document.documentElement.style.setProperty("--background", "#121212");
-        document.documentElement.style.setProperty("--foreground", "#e0e0e0");
+        document.documentElement.classList.add("dark");
       } else {
-        document.documentElement.style.removeProperty("--background");
-        document.documentElement.style.removeProperty("--foreground");
+        document.documentElement.classList.remove("dark");
       }
 
       return newTheme;

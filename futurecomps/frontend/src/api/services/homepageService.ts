@@ -1,5 +1,5 @@
 import api from "./api";
-import { Product } from "../../types/product";
+import type { Product } from "../../types/product";
 
 export interface CarouselItem {
   productId: string;

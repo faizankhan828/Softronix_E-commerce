@@ -1,19 +1,12 @@
 import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import {
-  Menu,
-  X,
-  ShoppingBag,
-  User,
-  Search,
-  Sun,
-  Moon,
-} from "lucide-react";
+import { Menu, X, ShoppingBag, User, Search } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { useStore } from "@/context/StoreContext";
 import { useAuth } from "@/context/AuthContext";
+import { useTheme } from "@/context/ThemeContext";
 import { cn } from "@/lib/utils";
 
 const categories = [
@@ -30,9 +23,10 @@ export function Navbar() {
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const location = useLocation();
-  
+
   const { cart, setCartOpen, setFilters } = useStore();
   const { user } = useAuth();
+  const { toggleTheme, ThemeIcon } = useTheme();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -46,19 +40,6 @@ export function Navbar() {
     setMobileMenuOpen(false);
   }, [location]);
 
-  useEffect(() => {
-    // Initialize theme
-    const savedTheme = localStorage.getItem("theme");
-    const systemTheme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
-    const theme = savedTheme || systemTheme;
-    
-    if (theme === "dark") {
-      document.documentElement.classList.add("dark");
-    } else {
-      document.documentElement.classList.remove("dark");
-    }
-  }, []);
-
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (searchQuery.trim()) {
@@ -69,7 +50,10 @@ export function Navbar() {
     }
   };
 
-  const cartItemsCount = cart.items.reduce((sum, item) => sum + item.quantity, 0);
+  const cartItemsCount = cart.items.reduce(
+    (sum, item) => sum + item.quantity,
+    0,
+  );
 
   return (
     <header
@@ -77,14 +61,14 @@ export function Navbar() {
         "sticky top-0 z-40 w-full transition-all duration-300",
         isScrolled
           ? "bg-white/95 dark:bg-gray-900/95 backdrop-blur-md shadow-lg"
-          : "bg-white dark:bg-gray-900"
+          : "bg-white dark:bg-gray-900",
       )}
     >
       {/* Top Bar */}
-      <div className="hidden md:block bg-primary text-white text-center py-2 text-sm">
+      {/* <div className="hidden md:block bg-primary text-white text-center py-2 text-sm">
         <span>Free shipping on orders over $50! Use code </span>
         <span className="font-semibold">FREESHIP</span>
-      </div>
+      </div> */}
 
       {/* Main Navbar */}
       <div className="container mx-auto px-4">
@@ -95,7 +79,11 @@ export function Navbar() {
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             aria-label="Toggle menu"
           >
-            {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+            {mobileMenuOpen ? (
+              <X className="w-6 h-6" />
+            ) : (
+              <Menu className="w-6 h-6" />
+            )}
           </button>
 
           {/* Logo */}
@@ -118,7 +106,7 @@ export function Navbar() {
                   "px-4 py-2 rounded-lg text-sm font-medium transition-colors",
                   location.pathname + location.search === category.path
                     ? "bg-primary/10 text-primary"
-                    : "hover:bg-gray-100 dark:hover:bg-gray-800"
+                    : "hover:bg-gray-100 dark:hover:bg-gray-800",
                 )}
               >
                 {category.name}
@@ -130,20 +118,11 @@ export function Navbar() {
           <div className="flex items-center gap-2">
             {/* Theme Toggle */}
             <button
-              onClick={() => {
-                const newTheme = document.documentElement.classList.contains("dark") ? "light" : "dark";
-                if (newTheme === "dark") {
-                  document.documentElement.classList.add("dark");
-                } else {
-                  document.documentElement.classList.remove("dark");
-                }
-                localStorage.setItem("theme", newTheme);
-              }}
+              onClick={toggleTheme}
               className="p-2.5 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl transition-colors"
               aria-label="Toggle theme"
             >
-              <span className="dark:hidden"><Moon className="w-5 h-5" /></span>
-              <span className="hidden dark:block"><Sun className="w-5 h-5" /></span>
+              {ThemeIcon}
             </button>
 
             {/* Search Button */}
@@ -190,7 +169,10 @@ export function Navbar() {
             exit={{ opacity: 0, y: -10 }}
             className="absolute top-full left-0 right-0 bg-white dark:bg-gray-900 border-b shadow-lg p-4"
           >
-            <form onSubmit={handleSearch} className="container mx-auto max-w-2xl">
+            <form
+              onSubmit={handleSearch}
+              className="container mx-auto max-w-2xl"
+            >
               <div className="relative">
                 <Input
                   value={searchQuery}
@@ -231,7 +213,7 @@ export function Navbar() {
                     "block px-4 py-3 rounded-xl text-sm font-medium transition-colors",
                     location.pathname + location.search === category.path
                       ? "bg-primary/10 text-primary"
-                      : "hover:bg-gray-100 dark:hover:bg-gray-800"
+                      : "hover:bg-gray-100 dark:hover:bg-gray-800",
                   )}
                 >
                   {category.name}

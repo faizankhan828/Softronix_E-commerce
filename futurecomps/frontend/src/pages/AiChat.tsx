@@ -135,13 +135,13 @@ const AiChat = () => {
       </div>
 
       {/* Header */}
-      <header className="bg-slate-900/80 backdrop-blur-xl shadow-2xl border-b border-blue-500/20 sticky top-0 z-10">
+      <header className="bg-background/80 dark:bg-slate-900/80 backdrop-blur-xl shadow-2xl border-b border-border dark:border-blue-500/20 sticky top-0 z-10">
         <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6 py-3 sm:py-4">
           <div className="flex items-center justify-between flex-wrap gap-2">
             <div className="flex items-center space-x-2 sm:space-x-4">
               <Link
                 to="/"
-                className="flex items-center space-x-1 sm:space-x-2 px-2 sm:px-4 py-1.5 sm:py-2 rounded-lg sm:rounded-xl bg-slate-800/50 hover:bg-slate-700/50 border border-slate-700 hover:border-blue-500/50 transition-all group"
+                className="flex items-center space-x-1 sm:space-x-2 px-2 sm:px-4 py-1.5 sm:py-2 rounded-lg sm:rounded-xl bg-card/50 dark:bg-slate-800/50 hover:bg-card/70 dark:hover:bg-slate-700/50 border border-border dark:border-slate-700 hover:border-primary dark:hover:border-blue-500/50 transition-all group"
               >
                 <svg
                   className="w-4 h-4 sm:w-5 sm:h-5 text-blue-400 group-hover:text-blue-300 transition"
@@ -156,7 +156,7 @@ const AiChat = () => {
                     d="M10 19l-7-7m0 0l7-7m-7 7h18"
                   />
                 </svg>
-                <span className="text-slate-300 font-medium text-xs sm:text-sm">
+                <span className="text-foreground dark:text-slate-300 font-medium text-xs sm:text-sm">
                   Home
                 </span>
               </Link>
@@ -202,7 +202,7 @@ const AiChat = () => {
 
       {/* Chat Container */}
       <div className="relative max-w-6xl mx-auto px-3 sm:px-4 lg:px-6 py-4 sm:py-6 lg:py-8">
-        <div className="bg-slate-800/40 backdrop-blur-xl rounded-2xl sm:rounded-3xl shadow-2xl border border-slate-700/50 overflow-hidden">
+        <div className="bg-card/40 dark:bg-slate-800/40 backdrop-blur-xl rounded-2xl sm:rounded-3xl shadow-2xl border border-border dark:border-slate-700/50 overflow-hidden">
           {/* Messages Area */}
           <div
             className="h-[calc(100vh-240px)] sm:h-[calc(100vh-280px)] overflow-y-auto p-3 sm:p-4 lg:p-6 space-y-4 sm:space-y-6 scroll-smooth"
@@ -221,7 +221,7 @@ const AiChat = () => {
                     className={`shrink-0 w-9 h-9 sm:w-11 sm:h-11 rounded-xl sm:rounded-2xl flex items-center justify-center shadow-xl ${
                       message.role === "user"
                         ? "bg-linear-to-br from-blue-600 to-cyan-600 shadow-blue-500/50"
-                        : "bg-linear-to-br from-slate-700 to-slate-600 shadow-slate-900/50 border border-slate-600"
+                        : "bg-linear-to-br from-gray-200 to-gray-300 dark:from-slate-700 dark:to-slate-600 shadow-lg dark:shadow-slate-900/50 border border-gray-300 dark:border-slate-600"
                     }`}
                   >
                     {message.role === "user" ? (
@@ -257,7 +257,7 @@ const AiChat = () => {
                     className={`rounded-xl sm:rounded-2xl px-3 sm:px-4 lg:px-6 py-2.5 sm:py-3 lg:py-4 shadow-xl ${
                       message.role === "user"
                         ? "bg-linear-to-br from-blue-600 to-cyan-600 text-white shadow-blue-500/30"
-                        : "bg-slate-700/50 text-slate-100 border border-slate-600/50 shadow-slate-900/30"
+                        : "bg-gray-100 dark:bg-slate-700/50 text-foreground dark:text-slate-100 border border-border dark:border-slate-600/50 shadow-lg dark:shadow-slate-900/30"
                     }`}
                   >
                     {message.role === "assistant" ? (
@@ -271,7 +271,9 @@ const AiChat = () => {
                     )}
                     <div className="flex items-center justify-between mt-2 sm:mt-3 pt-1.5 sm:pt-2 border-t border-white/10">
                       <p
-                        className={`text-[10px] sm:text-xs ${message.role === "user" ? "text-blue-100" : "text-slate-400"}`}
+                        className={`text-[10px] sm:text-xs ${
+                          message.role === "user" ? "text-blue-100" : "text-muted-foreground dark:text-slate-400"
+                        }`}
                       >
                         {message.timestamp.toLocaleTimeString([], {
                           hour: "2-digit",
@@ -279,7 +281,7 @@ const AiChat = () => {
                         })}
                       </p>
                       {message.role === "assistant" && (
-                        <span className="text-[10px] sm:text-xs text-slate-400 flex items-center space-x-1">
+                        <span className="text-[10px] sm:text-xs text-muted-foreground dark:text-slate-400 flex items-center space-x-1">
                           <svg
                             className="w-2.5 h-2.5 sm:w-3 sm:h-3"
                             fill="currentColor"
@@ -298,7 +300,7 @@ const AiChat = () => {
             {isLoading && (
               <div className="flex justify-start animate-fade-in">
                 <div className="flex items-start space-x-2 sm:space-x-3 max-w-[85%] sm:max-w-[80%]">
-                  <div className="shrink-0 w-9 h-9 sm:w-11 sm:h-11 rounded-xl sm:rounded-2xl flex items-center justify-center bg-linear-to-br from-slate-700 to-slate-600 shadow-xl border border-slate-600">
+                  <div className="shrink-0 w-9 h-9 sm:w-11 sm:h-11 rounded-xl sm:rounded-2xl flex items-center justify-center bg-linear-to-br from-gray-200 to-gray-300 dark:from-slate-700 dark:to-slate-600 shadow-xl border border-gray-300 dark:border-slate-600">
                     <svg
                       className="w-5 h-5 sm:w-6 sm:h-6 text-blue-400 animate-spin"
                       fill="none"
@@ -319,7 +321,7 @@ const AiChat = () => {
                       ></path>
                     </svg>
                   </div>
-                  <div className="bg-slate-700/50 rounded-xl sm:rounded-2xl px-3 sm:px-4 lg:px-6 py-2.5 sm:py-3 lg:py-4 border border-slate-600/50 shadow-xl">
+                  <div className="bg-gray-100 dark:bg-slate-700/50 rounded-xl sm:rounded-2xl px-3 sm:px-4 lg:px-6 py-2.5 sm:py-3 lg:py-4 border border-border dark:border-slate-600/50 shadow-xl">
                     <div className="flex space-x-1.5 sm:space-x-2">
                       <div className="w-2 h-2 sm:w-2.5 sm:h-2.5 bg-blue-400 rounded-full animate-bounce"></div>
                       <div
@@ -339,7 +341,7 @@ const AiChat = () => {
           </div>
 
           {/* Input Area */}
-          <div className="border-t border-slate-700/50 bg-slate-800/60 backdrop-blur-xl p-3 sm:p-4 lg:p-5">
+          <div className="border-t border-border dark:border-slate-700/50 bg-card/60 dark:bg-slate-800/60 backdrop-blur-xl p-3 sm:p-4 lg:p-5">
             <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-3 items-stretch sm:items-end">
               <div className="flex-1 relative">
                 <textarea
@@ -347,13 +349,13 @@ const AiChat = () => {
                   onChange={(e) => setInput(e.target.value)}
                   onKeyPress={handleKeyPress}
                   placeholder="Type your message here..."
-                  className="w-full px-3 sm:px-4 lg:px-5 py-3 sm:py-4 pr-12 sm:pr-16 rounded-xl sm:rounded-2xl border-2 border-slate-600 focus:border-blue-500 focus:ring-2 sm:focus:ring-4 focus:ring-blue-500/20 outline-none resize-none bg-slate-900/50 text-slate-100 placeholder-slate-400 transition-all shadow-inner text-sm sm:text-base"
+                  className="w-full px-3 sm:px-4 lg:px-5 py-3 sm:py-4 pr-12 sm:pr-16 rounded-xl sm:rounded-2xl border-2 border-input dark:border-slate-600 focus:border-primary dark:focus:border-blue-500 focus:ring-2 sm:focus:ring-4 focus:ring-primary/20 dark:focus:ring-blue-500/20 outline-none resize-none bg-background dark:bg-slate-900/50 text-foreground dark:text-slate-100 placeholder-muted-foreground dark:placeholder-slate-400 transition-all shadow-inner text-sm sm:text-base"
                   rows={1}
                   disabled={isLoading}
                   style={{ minHeight: "48px", maxHeight: "120px" }}
                 />
                 <div className="absolute right-2 sm:right-4 bottom-2 sm:bottom-4 flex items-center space-x-2">
-                  <span className="text-[10px] sm:text-xs text-slate-500">
+                  <span className="text-[10px] sm:text-xs text-muted-foreground dark:text-slate-500">
                     {input.length}/2000
                   </span>
                 </div>
@@ -380,7 +382,7 @@ const AiChat = () => {
               </button>
             </div>
             <div className="mt-2 sm:mt-3 flex flex-col sm:flex-row items-center justify-between gap-2">
-              <p className="text-[10px] sm:text-xs text-slate-400 flex items-center space-x-1 sm:space-x-2">
+              <p className="text-[10px] sm:text-xs text-muted-foreground dark:text-slate-400 flex items-center space-x-1 sm:space-x-2">
                 <svg
                   className="w-3 h-3 sm:w-4 sm:h-4 text-green-400"
                   fill="currentColor"
@@ -403,25 +405,25 @@ const AiChat = () => {
 
         {/* Stats Footer */}
         <div className="mt-4 sm:mt-6 grid grid-cols-3 gap-2 sm:gap-4 text-center">
-          <div className="bg-slate-800/40 backdrop-blur-xl border border-slate-700/50 rounded-lg sm:rounded-xl p-2 sm:p-4">
+          <div className="bg-card/40 dark:bg-slate-800/40 backdrop-blur-xl border border-border dark:border-slate-700/50 rounded-lg sm:rounded-xl p-2 sm:p-4">
             <div className="text-lg sm:text-2xl font-bold text-blue-400">
               {messages.length}
             </div>
-            <div className="text-[10px] sm:text-xs text-slate-400 mt-0.5 sm:mt-1">
+            <div className="text-[10px] sm:text-xs text-muted-foreground dark:text-slate-400 mt-0.5 sm:mt-1">
               Messages
             </div>
           </div>
-          <div className="bg-slate-800/40 backdrop-blur-xl border border-slate-700/50 rounded-lg sm:rounded-xl p-2 sm:p-4">
+          <div className="bg-card/40 dark:bg-slate-800/40 backdrop-blur-xl border border-border dark:border-slate-700/50 rounded-lg sm:rounded-xl p-2 sm:p-4">
             <div className="text-lg sm:text-2xl font-bold text-cyan-400">∞</div>
-            <div className="text-[10px] sm:text-xs text-slate-400 mt-0.5 sm:mt-1">
+            <div className="text-[10px] sm:text-xs text-muted-foreground dark:text-slate-400 mt-0.5 sm:mt-1">
               Unlimited
             </div>
           </div>
-          <div className="bg-slate-800/40 backdrop-blur-xl border border-slate-700/50 rounded-lg sm:rounded-xl p-2 sm:p-4">
+          <div className="bg-card/40 dark:bg-slate-800/40 backdrop-blur-xl border border-border dark:border-slate-700/50 rounded-lg sm:rounded-xl p-2 sm:p-4">
             <div className="text-lg sm:text-2xl font-bold text-green-400">
               24/7
             </div>
-            <div className="text-[10px] sm:text-xs text-slate-400 mt-0.5 sm:mt-1">
+            <div className="text-[10px] sm:text-xs text-muted-foreground dark:text-slate-400 mt-0.5 sm:mt-1">
               Available
             </div>
           </div>
