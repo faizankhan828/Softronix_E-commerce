@@ -220,7 +220,7 @@ function CharacterIllustration({ mouseX, mouseY, focusedField }: CharacterIllust
             />
           </>
         ) : (
-          <motion.g animate={{ x: lookAtFormX * 0.8, y: lookAtFormY * 0.8 }} transition={{ type: "spring", stiffness: 300, damping: 30 }}>
+          <motion.g animate={{ x: lookAtFormX * 1.2, y: lookAtFormY * 1.2 }} transition={{ type: "spring", stiffness: 300, damping: 30 }}>
             <circle cx="105" cy="260" r="7" fill="#1F2937" />
             <circle cx="155" cy="260" r="7" fill="#1F2937" />
           </motion.g>
@@ -504,20 +504,15 @@ export default function Auth() {
                   onFocusChange={(focused) => setFocusedField(focused ? "email" : "none")}
                 />
 
-                <div>
-                  <div className="flex justify-between items-center">
-                    <UnderlineInput
-                      label="Password"
-                      type="password"
-                      placeholder="••••••••••"
-                      {...loginForm.register("password")}
-                      value={loginForm.watch("password")}
-                      error={loginForm.formState.errors.password?.message}
-                      className="flex-1"
-                      onFocusChange={(focused) => setFocusedField(focused ? "password" : "none")}
-                    />
-                  </div>
-                </div>
+                <UnderlineInput
+                  label="Password"
+                  type="password"
+                  placeholder="••••••••••"
+                  {...loginForm.register("password")}
+                  value={loginForm.watch("password")}
+                  error={loginForm.formState.errors.password?.message}
+                  onFocusChange={(focused) => setFocusedField(focused ? "password" : "none")}
+                />
 
                 {/* Remember me & Forgot password */}
                 <div className="flex items-center justify-between">
@@ -578,12 +573,12 @@ export default function Auth() {
                 </motion.button>
 
                 {/* Sign Up Link */}
-                <p className="text-center text-sm text-gray-500">
+                <p className="text-center text-sm text-gray-700">
                   Don't have an account?{" "}
                   <button
                     type="button"
                     onClick={() => setActiveTab("register")}
-                    className="font-medium text-gray-900 hover:underline"
+                    className="font-semibold text-orange-600 hover:text-orange-700 hover:underline"
                   >
                     Sign Up
                   </button>
@@ -715,7 +710,7 @@ export default function Auth() {
           >
             <Link
               to="/"
-              className="text-sm text-gray-400 hover:text-gray-600 transition-colors"
+              className="text-sm font-medium text-gray-600 hover:text-gray-800 transition-colors"
             >
               ← Back to Home
             </Link>
