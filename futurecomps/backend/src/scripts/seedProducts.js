@@ -25,19 +25,7 @@ const products = [
     isFeatured: true,
     isNew: false
   },
-  {
-    name: "Ultra-Slim 4K Smart Monitor",
-    price: 449.99,
-    description: "A stunning 27-inch 4K monitor with ultra-slim bezels and vibrant color accuracy. Perfect for creatives and professionals.",
-    category: "Electronics",
-    images: [
-      "https://images.unsplash.com/photo-1527443224154-c4a3942d3acf?q=80&w=1000&auto=format&fit=crop",
-      "https://images.unsplash.com/photo-1547082299-bb196bcc749c?q=80&w=1000&auto=format&fit=crop"
-    ],
-    stock: 15,
-    attributes: { colors: ["Black"], sizes: ["27-inch"] },
-    isFeatured: true
-  },
+
   {
     name: "Minimalist Mechanical Keyboard",
     price: 129.99,

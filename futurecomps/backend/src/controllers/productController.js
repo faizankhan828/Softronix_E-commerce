@@ -150,6 +150,38 @@ export const getFeaturedProducts = async (req, res) => {
 };
 
 /**
+ * GET /api/products/random
+ * Get random products with optional limit
+ */
+export const getRandomProducts = async (req, res) => {
+  try {
+    const { limit = 5 } = req.query;
+
+    console.log("Fetching random products with limit:", limit);
+
+    const products = await Product.aggregate([
+      { $match: { isActive: true } },
+      { $sample: { size: Number(limit) } },
+      {
+        $project: {
+          hiddenBottomPrice: 0,
+          negotiationEnabled: 0,
+        },
+      },
+    ]);
+
+    console.log(`Found ${products.length} random products`);
+    res.json(products);
+  } catch (error) {
+    console.error("getRandomProducts error:", error);
+    res.status(500).json({
+      message: "Failed to fetch random products",
+      error: process.env.NODE_ENV === "development" ? error.message : undefined,
+    });
+  }
+};
+
+/**
  * GET /api/products/categories
  */
 export const getCategories = async (_req, res) => {

@@ -4,6 +4,7 @@ import { adminOnly } from "../middleware/adminMiddleware.js";
 import {
   getProducts,
   getFeaturedProducts,
+  getRandomProducts,
   getCategories,
   getProductById,
   createProduct,
@@ -18,6 +19,7 @@ const router = express.Router();
 // ── Public ──────────────────────────────────────────────
 router.get("/", getProducts);
 router.get("/featured", getFeaturedProducts); // Must be before /:id
+router.get("/random", getRandomProducts); // Must be before /:id
 router.get("/categories", getCategories);
 
 // ── Admin (must be before /:id to avoid catch-all) ──────

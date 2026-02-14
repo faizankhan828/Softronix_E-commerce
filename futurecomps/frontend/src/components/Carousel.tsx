@@ -162,9 +162,9 @@ export default function BoundaryCarousel() {
     const fetchCarouselItems = async () => {
       try {
         setLoading(true);
-        const response = await api.get("/products/featured?limit=5");
+        const response = await api.get("/products/random?limit=5");
 
-        console.log("Featured products response:", response.data);
+        console.log("Random products response:", response.data);
 
         if (
           response.data &&
@@ -172,40 +172,49 @@ export default function BoundaryCarousel() {
           response.data.length > 0
         ) {
           const items: CarouselItem[] = response.data.map(
-            (product: any, index: number) => ({
-              productId: product._id || product.id || String(index + 1),
-              title: product.name?.toUpperCase() || "PRODUCT",
-              subTitle: product.category?.toUpperCase() || "COLLECTION",
-              description: product.description || "Premium quality product",
-              mainImage:
-                product.imageUrl ||
-                product.images?.[0] ||
-                defaultCollections[index % 3].mainImage,
-              detailImage:
-                product.images?.[1] ||
-                defaultCollections[index % 3].detailImage,
-              lightBackground: defaultCollections[index % 3].lightBackground,
-              darkBackground: defaultCollections[index % 3].darkBackground,
-              accentColor: defaultCollections[index % 3].accentColor,
-              darkAccentColor: defaultCollections[index % 3].darkAccentColor,
-              price: `$${product.price || 299}`,
-              material: product.material || "Premium Material",
-              model: `MODEL.0${index + 1}`,
-              collection: product.category || "COLLECTION",
-              displayOrder: index,
-            }),
+            (product: any, index: number) => {
+              // Cycle through default collections to get styling
+              const styleSource = defaultCollections[index % defaultCollections.length];
+              
+              const hasMultipleImages = product.images && product.images.length > 1;
+              const mainImg = product.imageUrl || product.images?.[0] || "/placeholder.svg";
+              // If we have multiple images, use the second one as detail.
+              // Otherwise try to find a distinct image or fallback to main.
+              const detailImg = hasMultipleImages 
+                ? product.images[1] 
+                : (product.images?.[0] && product.images?.[0] !== mainImg ? product.images[0] : mainImg);
+
+              return {
+                productId: product._id || product.id || String(index + 1),
+                title: product.name?.toUpperCase() || "PRODUCT",
+                subTitle: product.category?.toUpperCase() || "COLLECTION",
+                description: product.description || "Premium quality product",
+                mainImage: mainImg,
+                detailImage: detailImg,
+                lightBackground: styleSource.lightBackground,
+                darkBackground: styleSource.darkBackground,
+                accentColor: styleSource.accentColor,
+                darkAccentColor: styleSource.darkAccentColor,
+                price: `$${product.price || 0}`,
+                material: product.material || "Premium Material",
+                model: `MODEL.0${index + 1}`,
+                collection: product.category || "COLLECTION",
+                displayOrder: index,
+              };
+            }
           );
           setCollections(items);
-          console.log("Loaded featured products for carousel:", items.length);
+          console.log("Loaded random products for carousel:", items.length);
         } else {
-          console.log("No featured products found, using default collections");
+          console.log("No random products found");
+          // Do NOT fallback to defaultCollections as per user request to remove dummy products
+          setCollections([]); 
         }
         setError(null);
       } catch (err: any) {
         console.error("Error fetching carousel items:", err);
-        console.error("Error response:", err.response?.data);
-        // Keep default collections on error - don't break the UI
-        setError(err.message || "Failed to load featured products");
+        setError(err.message || "Failed to load products");
+        setCollections([]); // Clear collections on error to avoid showing dummy data
       } finally {
         setLoading(false);
       }
