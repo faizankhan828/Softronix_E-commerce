@@ -98,10 +98,16 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   const calculateCartTotals = useCallback(
     (items: CartItem[], discountPercent: number = 0) => {
       const subtotal = items.reduce(
-        (sum, item) => sum + item.product.price * item.quantity,
+        (sum, item) =>
+          sum +
+          (item.product.discountedPrice ?? item.product.price ?? 0) *
+            item.quantity,
         0,
       );
-      const discount = subtotal * (discountPercent / 100);
+      const safePercent = Number.isFinite(discountPercent)
+        ? discountPercent
+        : 0;
+      const discount = subtotal * (safePercent / 100);
       return {
         items,
         subtotal,
@@ -146,7 +152,9 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         setCart((prev) => ({
           ...calculateCartTotals(
             mappedCartItems,
-            prev.discount > 0 ? (prev.discount / prev.subtotal) * 100 : 0,
+            prev.discount > 0 && prev.subtotal > 0
+              ? (prev.discount / prev.subtotal) * 100
+              : 0,
           ),
           discountCode: prev.discountCode,
         }));
@@ -302,9 +310,10 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
             ];
           }
 
-          const discountPercent = prev.discountCode
-            ? (prev.discount / prev.subtotal) * 100
-            : 0;
+          const discountPercent =
+            prev.discountCode && prev.subtotal > 0
+              ? (prev.discount / prev.subtotal) * 100
+              : 0;
           return {
             ...calculateCartTotals(newItems, discountPercent),
             discountCode: prev.discountCode,
@@ -336,9 +345,10 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
           const newItems = prev.items.filter(
             (item) => item.productId !== productId,
           );
-          const discountPercent = prev.discountCode
-            ? (prev.discount / prev.subtotal) * 100
-            : 0;
+          const discountPercent =
+            prev.discountCode && prev.subtotal > 0
+              ? (prev.discount / prev.subtotal) * 100
+              : 0;
           return {
             ...calculateCartTotals(newItems, discountPercent),
             discountCode: prev.discountCode,
@@ -365,9 +375,10 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
           const newItems = prev.items.map((item) =>
             item.productId === productId ? { ...item, quantity } : item,
           );
-          const discountPercent = prev.discountCode
-            ? (prev.discount / prev.subtotal) * 100
-            : 0;
+          const discountPercent =
+            prev.discountCode && prev.subtotal > 0
+              ? (prev.discount / prev.subtotal) * 100
+              : 0;
           return {
             ...calculateCartTotals(newItems, discountPercent),
             discountCode: prev.discountCode,
@@ -463,22 +474,29 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
             : p,
         ),
       );
-      // Also update in cart
-      setCart((prev) => ({
-        ...prev,
-        items: prev.items.map((item) =>
+      // Also update in cart (set discountedPrice so cart uses it)
+      setCart((prev) => {
+        const newItems = prev.items.map((item) =>
           item.productId === productId
             ? {
                 ...item,
                 product: {
                   ...item.product,
-                  price: newPrice,
+                  discountedPrice: newPrice,
                   originalPrice: item.product.price,
                 },
               }
             : item,
-        ),
-      }));
+        );
+        const discountPercent =
+          prev.discountCode && prev.subtotal > 0
+            ? (prev.discount / prev.subtotal) * 100
+            : 0;
+        return {
+          ...calculateCartTotals(newItems, discountPercent),
+          discountCode: prev.discountCode,
+        };
+      });
     },
     [],
   );

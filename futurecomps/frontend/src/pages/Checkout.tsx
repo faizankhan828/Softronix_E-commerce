@@ -406,7 +406,10 @@ export default function Checkout() {
                         )}
                       </div>
                       <div className="text-sm font-medium">
-                        {formatCurrency(item.product.price * item.quantity)}
+                        {formatCurrency(
+                          (item.product.discountedPrice ?? item.product.price) *
+                            item.quantity,
+                        )}
                       </div>
                     </div>
                   ))}

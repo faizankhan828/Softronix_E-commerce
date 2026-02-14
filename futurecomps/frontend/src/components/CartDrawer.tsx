@@ -231,7 +231,8 @@ export function CartDrawer() {
                               </p>
                               <p className="font-bold text-base text-gray-900 dark:text-white">
                                 {formatCurrency(
-                                  item.product.price * item.quantity,
+                                  (item.product.discountedPrice ??
+                                    item.product.price) * item.quantity,
                                   item.product.currency,
                                 )}
                               </p>
