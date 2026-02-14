@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import ReactMarkdown from "react-markdown";
 import {
   X,
   Send,
@@ -1843,13 +1844,19 @@ Be specific to MY appearance from the photo! Use emojis, be enthusiastic, and ta
 
                         <div
                           className={cn(
-                            "px-4 py-3 rounded-2xl text-sm whitespace-pre-line",
+                            "px-4 py-3 rounded-2xl text-sm",
                             message.role === "user"
-                              ? "bg-primary text-white rounded-br-md"
-                              : "bg-white dark:bg-gray-800 shadow-sm rounded-bl-md",
+                              ? "bg-primary text-white rounded-br-md whitespace-pre-line"
+                              : "bg-white dark:bg-gray-800 shadow-sm rounded-bl-md prose prose-sm dark:prose-invert max-w-none [&_p]:my-1 [&_ul]:my-1 [&_ol]:my-1 [&_li]:my-0.5 [&_strong]:font-bold [&_a]:text-indigo-500 [&_a]:underline [&_h1]:text-base [&_h2]:text-sm [&_h3]:text-sm [&_code]:bg-gray-100 [&_code]:dark:bg-gray-700 [&_code]:px-1 [&_code]:rounded",
                           )}
                         >
-                          {cleanMessageContent(message.content)}
+                          {message.role === "user" ? (
+                            cleanMessageContent(message.content)
+                          ) : (
+                            <ReactMarkdown>
+                              {cleanMessageContent(message.content)}
+                            </ReactMarkdown>
+                          )}
                         </div>
 
                         {/* AI-generated image (try-on result) */}
