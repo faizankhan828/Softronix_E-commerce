@@ -3,7 +3,7 @@
  * Usage: node test-single.js <model_name>
  */
 
-const KEY = "***REDACTED_GOOGLE_API_KEY_1***";
+const KEY = process.env.GEMINI_API_KEY || "YOUR_API_KEY_HERE";
 const BASE = "https://generativelanguage.googleapis.com/v1beta/models";
 const model = process.argv[2] || "gemini-2.5-flash";
 

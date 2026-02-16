@@ -30,9 +30,7 @@ import { cn } from "@/lib/utils";
 import type { Product, ClerkMessage, ClerkAction } from "@/types/store";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 
-const GEMINI_API_KEY =
-  import.meta.env.VITE_GEMINI_API_KEY ||
-  "***REDACTED_GOOGLE_API_KEY_1***";
+const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY || "";
 
 // Models to try in order — each has its own separate free-tier quota
 // If one is rate-limited (429), we automatically try the next

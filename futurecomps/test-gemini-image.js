@@ -5,7 +5,7 @@
  * for image generation on the free tier.
  */
 
-const API_KEY = "***REDACTED_GOOGLE_API_KEY_1***";
+const API_KEY = process.env.GEMINI_API_KEY || "YOUR_API_KEY_HERE";
 const BASE_URL = "https://generativelanguage.googleapis.com/v1beta/models";
 
 // Models to test for image generation

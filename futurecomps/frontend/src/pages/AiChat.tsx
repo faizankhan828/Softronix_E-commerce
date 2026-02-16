@@ -21,7 +21,7 @@ const AiChat = () => {
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  const GEMINI_API_KEY = "***REDACTED_GOOGLE_API_KEY_2***";
+  const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY || "";
   // Using gemini-flash-latest as it is confirmed working and stable
   const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=${GEMINI_API_KEY}`;
 

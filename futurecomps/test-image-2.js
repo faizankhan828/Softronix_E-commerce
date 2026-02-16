@@ -3,7 +3,7 @@
  * Wait for rate limits to cool, then try with responseModalities.
  */
 
-const KEY = "***REDACTED_GOOGLE_API_KEY_1***";
+const KEY = process.env.GEMINI_API_KEY || "YOUR_API_KEY_HERE";
 const BASE = "https://generativelanguage.googleapis.com/v1beta/models";
 
 async function test(model) {
